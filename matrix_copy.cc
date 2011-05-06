@@ -9,10 +9,9 @@
 void
 matrix_copy_shallow_inplace(matrix_t *mr, matrix_t const *m1)
 {
-  error(D_INFORMATION, "Matrix Copy (inplace, shallow) (%d, %d) => (%d, %d)\n",
-	mr->m, mr->n, m1->m, m1->n);
+  information("Matrix Copy (inplace, shallow)\n");
   
-  mr->owner = VIEWER;
+  mr->owner = viewer;
   mr->data  = m1->data;
 }
 
@@ -21,13 +20,8 @@ matrix_copy_shallow(matrix_t const *m1)
 {
   matrix_t *mr;
   
-  error(D_INFORMATION, "Matrix Copy (shallow) (%d, %d)\n",
-	m1->m, m1->n);
-  
-  if (NULL == (mr = matrix_new(m1->m, m1->n, VIEWER))) {
-    die("Failed to allocate matrix.\n");
-  }
-  
+  information("Matrix Copy (shallow)\n");
+  mr = matrix_new_or_die(m1->m, m1->n, viewer);
   matrix_copy_shallow_inplace(mr, m1);
 
   return mr;
@@ -38,9 +32,7 @@ matrix_copy_inplace_with_offset(matrix_t *mr, uint oi, uint oj, matrix_t const *
 {
   uint i, j;
   
-  error(D_INFORMATION, "Matrix Copy (inplace, with offset) (%d, %d) => (%d, %d)\n",
-	mr->m, mr->n, m1->m, m1->n);
-  
+  information("Matrix Copy (inplace, with offset)");  
   matrix_check_range(mr, oi, oj, m1->m+oi, m1->n+oj);
   
   for (i = 0; i < m1->m; ++i) {
@@ -55,9 +47,7 @@ matrix_copy_inplace(matrix_t *mr, matrix_t const *m1)
 {
   uint i, j;
   
-  error(D_INFORMATION, "Matrix Copy (inplace) (%d, %d) => (%d, %d)\n",
-	mr->m, mr->n, m1->m, m1->n);
-  
+  information("Matrix Copy (inplace)\n");  
   matrix_compatible(mr, m1);
   
   for (i = 0; i < m1->m; ++i) {
@@ -72,13 +62,8 @@ matrix_copy(matrix_t const *m1)
 {
   matrix_t *mr;
   
-  error(D_INFORMATION, "Matrix Copy (%d, %d)\n",
-	m1->m, m1->n);
-  
-  if (NULL == (mr = matrix_new(m1->m, m1->n))) {
-    die("Failed to allocate matrix.\n");
-  }
-  
+  information("Matrix Copy\n");  
+  mr = matrix_new_or_die(m1->m, m1->n);
   matrix_copy_inplace(mr, m1);
   
   return mr;

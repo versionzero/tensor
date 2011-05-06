@@ -12,22 +12,20 @@ typedef struct {
 } matrix_t;
 
 matrix_t *matrix_new(uint m, uint n, ownership_t owner = creator);
+matrix_t *matrix_new_or_die(uint m, uint n, ownership_t owner = creator);
 void matrix_delete(matrix_t *m);
 void matrix_clear(matrix_t *m1);
 matrix_t *matrix_copy_shallow(matrix_t const *m1);
 void matrix_copy_shallow_inplace(matrix_t *mr, matrix_t const *m1);
 void matrix_copy_inplace(matrix_t *mr, matrix_t const *m1);
-void matrix_copy_inplace_with_offset(matrix_t *mr, uint oi, uint oj, 
-				     matrix_t const *m1);
+void matrix_copy_inplace_with_offset(matrix_t *mr, matrix_t const *m1, uint oi, uint oj);
 matrix_t* matrix_copy(matrix_t const *m1);
 matrix_t* matrix_partition(matrix_t const *m1, uint i, uint j, uint m, uint n);
-void matrix_partition_inplace(matrix_t *mr, matrix_t const *m1, 
-			      uint i, uint j, uint m, uint n);
+void matrix_partition_inplace(matrix_t *mr, matrix_t const *m1, uint i, uint j, uint m, uint n);
 
 matrix_t *matrix_read(char const *filename);
 matrix_t *matrix_fread(FILE *stream);
-void matrix_write(char const *filename, matrix_t const *m,
-		  uint coordinate = 0);
+void matrix_write(char const *filename, matrix_t const *m, uint coordinate = 0);
 void matrix_fwrite(FILE *stream, matrix_t const *m, uint coordinate = 0);
 
 void matrix_supported(matrix_t const *m1);

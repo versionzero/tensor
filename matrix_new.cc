@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 matrix_t*
-matrix_new(uint m, uint n, uint owner)
+matrix_new(uint m, uint n, ownership_t owner)
 {
   uint     i;
   matrix_t *mr;
@@ -38,3 +38,14 @@ matrix_new(uint m, uint n, uint owner)
   return mr;
 }
 
+matrix_t*
+matrix_new_or_die(uint m, uint n, ownership_t owner)
+{
+  matrix_t *mr;
+
+  if (NULL == (mr = matrix_new(m, n))) {
+    die("Failed to allocate matrix.\n");
+  }
+  
+  return mr;
+}

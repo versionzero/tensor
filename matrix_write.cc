@@ -1,5 +1,6 @@
 
 #include "error.h"
+#include "file.h"
 #include "matrix.h"
 #include "mmio.h"
 
@@ -25,15 +26,11 @@ matrix_write_array(FILE *f, matrix_t const *m1)
   mm_set_array(&type);
   
   if (0 != (result = mm_write_banner(f, type))) {
-    die( 
-	  "Could not write Matrix Market banner (%d).\n",
-	  result);
+    die("Could not write Matrix Market banner (%d).\n", result);
   }
   
-  if (0 != (result = mm_write_mtx_array_size(f, m1->m, m1->n))) {
-    die( 
-	  "Failed to write matrix array size (%d).\n", 
-	  result);
+  if (0 != (result = mm_write_matrix_array_size(f, m1->m, m1->n))) {
+    die("Failed to write matrix array size (%d).\n", result);
   }
 
   for (i = 0; i < m1->m; ++i) {
@@ -54,9 +51,7 @@ matrix_write_coordinate(FILE *f, matrix_t const *m1)
   mm_set_coordinate(&type);
   
   if (0 != (result = mm_write_banner(f, type))) {
-    die( 
-	  "Could not write Matrix Market banner (%d).\n",
-	  result);
+    die("Could not write Matrix Market banner (%d).\n", result);
   }
   
   nnz = 0;
@@ -68,10 +63,8 @@ matrix_write_coordinate(FILE *f, matrix_t const *m1)
     }
   }
   
-  if (0 != (result = mm_write_mtx_crd_size(f, m1->m, m1->n, nnz))) {
-    die( 
-	  "Failed to write matrix coordinate size %d (%d).\n", 
-	  nnz, result);
+  if (0 != (result = mm_write_matrix_coordinate_size(f, m1->m, m1->n, nnz))) {
+    die("Failed to write matrix coordinate size %d (%d).\n", nnz, result);
   }
 
   for (i = 0; i < m1->m; ++i) {
@@ -84,24 +77,21 @@ matrix_write_coordinate(FILE *f, matrix_t const *m1)
 }
 
 void
-matrix_fwrite(FILE *f, matrix_t const *m1, uint coordinate)
+matrix_fwrite(FILE *f, matrix_t const *m1, bool coordinate)
 {
-  if (0 == coordinate) {
-    matrix_write_array(f, m1);
-  } else {
+  if (coordinate) {
     matrix_write_coordinate(f, m1);
+  } else {
+    matrix_write_array(f, m1);
   }
 }
 
 void
-matrix_write(char const *filename, matrix_t const *m1, uint coordinate)
+matrix_write(char const *filename, matrix_t const *m1, bool coordinate)
 {
   FILE *f;
 
-  if (NULL == (f = fopen(filename, "w+"))) {
-    die( "Failed to open '%s' for writing.\n", filename);
-  }
-
+  f = open_or_die(filename, "w+");
   matrix_fwrite(f, m1, coordinate);
   fclose(f);
 }

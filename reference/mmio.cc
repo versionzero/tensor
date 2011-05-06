@@ -48,7 +48,7 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
  
     /* find out size of sparse matrix: M, N, nz .... */
  
-    if (mm_read_mtx_crd_size(f, &M, &N, &nz) !=0)
+    if (mm_read_matrix_coordinate_size(f, &M, &N, &nz) !=0)
     {
         fprintf(stderr, "read_unsymmetric_sparse(): could not parse matrix size.\n");
         return -1;
@@ -178,7 +178,7 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
     return 0;
 }
 
-int mm_write_mtx_crd_size(FILE *f, int M, int N, int nz)
+int mm_write_matrix_coordinate_size(FILE *f, int M, int N, int nz)
 {
   if (fprintf(f, "%d %d %d\n", M, N, nz) < 3)
     return MM_COULD_NOT_WRITE_FILE;
@@ -186,7 +186,7 @@ int mm_write_mtx_crd_size(FILE *f, int M, int N, int nz)
     return 0;
 }
 
-int mm_read_mtx_crd_size(FILE *f, int *M, int *N, int *nz )
+int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz )
 {
     char line[MM_MAX_LINE_LENGTH];
     int num_items_read;
@@ -217,7 +217,7 @@ int mm_read_mtx_crd_size(FILE *f, int *M, int *N, int *nz )
 }
 
 
-int mm_read_mtx_array_size(FILE *f, int *M, int *N)
+int mm_read_matrix_array_size(FILE *f, int *M, int *N)
 {
     char line[MM_MAX_LINE_LENGTH];
     int num_items_read;
@@ -246,7 +246,7 @@ int mm_read_mtx_array_size(FILE *f, int *M, int *N)
     return 0;
 }
 
-int mm_write_mtx_array_size(FILE *f, int M, int N)
+int mm_write_matrix_array_size(FILE *f, int M, int N)
 {
     if (fprintf(f, "%d %d\n", M, N) <= 0)
         return MM_COULD_NOT_WRITE_FILE;
@@ -262,7 +262,7 @@ int mm_write_mtx_array_size(FILE *f, int M, int N)
 /* use when I[], J[], and val[]J, and val[] are already allocated */
 /******************************************************************/
 
-int mm_read_mtx_crd_data(FILE *f, int M, int N, int nz, int I[], int J[],
+int mm_read_matrix_coordinate_data(FILE *f, int M, int N, int nz, int I[], int J[],
         double val[], MM_typecode matcode)
 {
     int i;
@@ -295,7 +295,7 @@ int mm_read_mtx_crd_data(FILE *f, int M, int N, int nz, int I[], int J[],
         
 }
 
-int mm_read_mtx_crd_entry(FILE *f, int *I, int *J,
+int mm_read_matrix_coordinate_entry(FILE *f, int *I, int *J,
         double *real, double *imag, MM_typecode matcode)
 {
     if (mm_is_complex(matcode))
@@ -323,14 +323,14 @@ int mm_read_mtx_crd_entry(FILE *f, int *I, int *J,
 
 
 /************************************************************************
-    mm_read_mtx_crd()  fills M, N, nz, array of values, and return
+    mm_read_matrix_coordinate()  fills M, N, nz, array of values, and return
                         type code, e.g. 'MCRS'
 
                         if matrix is complex, values[] is of size 2*nz,
                             (nz pairs of real/imaginary values)
 ************************************************************************/
 
-int mm_read_mtx_crd(char *fname, int *M, int *N, int *nz, int **I, int **J, 
+int mm_read_matrix_coordinate(char *fname, int *M, int *N, int *nz, int **I, int **J, 
         double **val, MM_typecode *matcode)
 {
     int ret_code;
@@ -349,7 +349,7 @@ int mm_read_mtx_crd(char *fname, int *M, int *N, int *nz, int **I, int **J,
             mm_is_matrix(*matcode)))
         return MM_UNSUPPORTED_TYPE;
 
-    if ((ret_code = mm_read_mtx_crd_size(f, M, N, nz)) != 0)
+    if ((ret_code = mm_read_matrix_coordinate_size(f, M, N, nz)) != 0)
         return ret_code;
 
 
@@ -360,21 +360,21 @@ int mm_read_mtx_crd(char *fname, int *M, int *N, int *nz, int **I, int **J,
     if (mm_is_complex(*matcode))
     {
         *val = (double *) malloc(*nz * 2 * sizeof(double));
-        ret_code = mm_read_mtx_crd_data(f, *M, *N, *nz, *I, *J, *val, 
+        ret_code = mm_read_matrix_coordinate_data(f, *M, *N, *nz, *I, *J, *val, 
                 *matcode);
         if (ret_code != 0) return ret_code;
     }
     else if (mm_is_real(*matcode))
     {
         *val = (double *) malloc(*nz * sizeof(double));
-        ret_code = mm_read_mtx_crd_data(f, *M, *N, *nz, *I, *J, *val, 
+        ret_code = mm_read_matrix_coordinate_data(f, *M, *N, *nz, *I, *J, *val, 
                 *matcode);
         if (ret_code != 0) return ret_code;
     }
 
     else if (mm_is_pattern(*matcode))
     {
-        ret_code = mm_read_mtx_crd_data(f, *M, *N, *nz, *I, *J, *val, 
+        ret_code = mm_read_matrix_coordinate_data(f, *M, *N, *nz, *I, *J, *val, 
                 *matcode);
         if (ret_code != 0) return ret_code;
     }
@@ -396,7 +396,7 @@ int mm_write_banner(FILE *f, MM_typecode matcode)
         return 0;
 }
 
-int mm_write_mtx_crd(char fname[], int M, int N, int nz, int I[], int J[],
+int mm_write_matrix_coordinate(char fname[], int M, int N, int nz, int I[], int J[],
         double val[], MM_typecode matcode)
 {
     FILE *f;

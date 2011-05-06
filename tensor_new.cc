@@ -7,45 +7,56 @@
 #include <stdlib.h>
 
 tensor_t*
-tensor_new(uint l, uint m, uint n, uint owner)
+tensor_new(uint l, uint m, uint n, ownership_t owner)
 {
   uint     i, j, k;
-  tensor_t *result;
+  tensor_t *tr;
   double   *p;
   
-  if (NULL == (result = (tensor_t*) malloc(sizeof(tensor_t)))) {
-    die(Failed to allocate tensor.\n");
+  if (NULL == (tr = (tensor_t*) malloc(sizeof(tensor_t)))) {
+    die("Failed to allocate tensor.\n");
   }
 
-  result->l     = l;
-  result->m     = m;
-  result->n     = n;
-  result->data  = NULL;
-  result->owner = owner;
+  tr->l     = l;
+  tr->m     = m;
+  tr->n     = n;
+  tr->data  = NULL;
+  tr->owner = owner;
   
-  if (VIEWER == owner) {
-    return result;
+  if (viewer == owner) {
+    return tr;
   }
 
   if (NULL == (p = (double*) malloc(l*m*n*sizeof(double)))) {
-    die(Failed to allocate tensor storage.\n");
+    die("Failed to allocate tensor storage.\n");
   }
 
-  result->storage = p;
+  tr->storage = p;
 
-  if (NULL == (result->data = (double***) malloc(l*sizeof(double)))) {
-    die(Failed to allocate tensor slice data layout.\n");
+  if (NULL == (tr->data = (double***) malloc(l*sizeof(double)))) {
+    die("Failed to allocate tensor slice data layout.\n");
   }
   for (i = 0; i < l; ++i) {
-    if (NULL == (result->data[i] = (double**) malloc(m*sizeof(double)))) {
-      die(Failed to allocate row data layout.\n");
+    if (NULL == (tr->data[i] = (double**) malloc(m*sizeof(double)))) {
+      die("Failed to allocate row data layout.\n");
     }
     for (j = 0; j < m; ++j) {
-      result->data[i][j] = p;
+      tr->data[i][j] = p;
       p += n;
     }    
   }
 
-  return result;
+  return tr;
 }
 
+tensor_t*
+tensor_new(uint l, uint m, uint n, ownership_t owner)
+{
+  tensor_t *tr;
+
+  if (NULL == (tr = tensor_new(m, n))) {
+    die("Failed to allocate tensor.\n");
+  }
+  
+  return tr;
+}

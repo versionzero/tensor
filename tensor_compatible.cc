@@ -1,15 +1,14 @@
 
 #include "error.h"
-#include "matrix.h"
+#include "tensor.h"
 
 void
-matrix_compatible(matrix_t const *m1, matrix_t const *m2)
+tensor_compatible(tensor_t const *t1, tensor_t const *t2)
 {
-  error(D_INFORMATION, "Checking compatability (%d, %d) => (%d, %d)\n",
-	m1->m, m1->n, m2->m, m2->n);
+  information("Checking tensor compatability\n");
 
-  if (m1->m != m2->m || m1->n != m2->n) {
-    die( "Input matrices are not of the same size.\n");
+  if (t1->l != t2->l || t1->m != t2->m || t1->n != t2->n) {
+    die( "Input tensors do not have same dimensions.\n");
   }
 }
 

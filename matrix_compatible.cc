@@ -5,11 +5,10 @@
 void
 matrix_compatible(matrix_t const *m1, matrix_t const *m2)
 {
-  error(D_INFORMATION, "Checking compatability (%d, %d) => (%d, %d)\n",
-	m1->m, m1->n, m2->m, m2->n);
+  information("Checking matrix compatability\n");
 
   if (m1->m != m2->m || m1->n != m2->n) {
-    die( "Input matrices are not of the same size.\n");
+    die( "Input matrices do not have same dimensions.\n");
   }
 }
 

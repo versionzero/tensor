@@ -1,5 +1,6 @@
 
 #include "error.h"
+#include "file.h"
 #include "matrix.h"
 #include "mmio.h"
 
@@ -13,16 +14,12 @@ matrix_read_array(FILE *f)
   uint     i, j;
   matrix_t *mr;
 
-  if (0 != (result = mm_read_mtx_array_size(f, &m, &n))) {
-    die( 
-	  "Failed to read matrix size (%d).\n", 
-	  result);
+  if (0 != (result = mm_read_matrix_array_size(f, &m, &n))) {
+    die("Failed to read matrix size (%d).\n", result);
   }
   
-  if (NULL == (mr = matrix_new(m, n))) {
-    die( "Failed to allocate matrix.\n");
-  }
-  
+  mr = matrix_new_or_die(m, n);
+
   for (i = 0; i < mr->m; ++i) {
     for (j = 0; j < mr->n; ++j) {
       fscanf(f, "%lg\n", &mr->data[i][j]);
@@ -40,16 +37,11 @@ matrix_read_coordinate(FILE *f)
   double   d;
   matrix_t *mr;
 
-  if (0 != (result = mm_read_mtx_crd_size(f, &m, &n, &nnz))) {
-    die( 
-	  "Failed to read matrix size (%d).\n", 
-	  result);
+  if (0 != (result = mm_read_matrix_coordinate_size(f, &m, &n, &nnz))) {
+    die("Failed to read matrix size (%d).\n", result);
   }
   
-  if (NULL == (mr = matrix_new(m, n))) {
-    die( "Failed to allocate matrix.\n");
-  }
-  
+  mr = matrix_new_or_die(m, n);
   matrix_clear(mr);
   
   while (nnz--) {
@@ -69,14 +61,11 @@ matrix_fread(FILE *f)
   matrix_t    *mr;
   
   if (0 != mm_read_banner(f, &type)) {
-    die( 
-	  "Could not process Matrix Market banner.\n");
+    die("Could not process Matrix Market banner.\n");
   }
   
   if (!mm_is_matrix(type) || !mm_is_real(type)) {
-    die( 
-	  "No support for matrix type: [%s]\n", 
-	  mm_typecode_to_str(type));
+    die("No support for matrix type: [%s]\n", mm_typecode_to_str(type));
   }
   
   if (mm_is_array(type)) {
@@ -94,10 +83,7 @@ matrix_read(char const *filename)
   FILE     *f;
   matrix_t *t;
   
-  if (NULL == (f = fopen(filename, "r"))) {
-    die( "Failed to open '%s' for reading.\n", filename);
-  }
-  
+  f = open_or_die(filename, "r");
   t = matrix_fread(f);
   fclose(f);
 
