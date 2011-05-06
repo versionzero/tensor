@@ -14,7 +14,7 @@ tensor_new(uint l, uint m, uint n, uint owner)
   double   *p;
   
   if (NULL == (result = (tensor_t*) malloc(sizeof(tensor_t)))) {
-    die("Failed to allocate tensor.\n");
+    die(Failed to allocate tensor.\n");
   }
 
   result->l     = l;
@@ -28,17 +28,17 @@ tensor_new(uint l, uint m, uint n, uint owner)
   }
 
   if (NULL == (p = (double*) malloc(l*m*n*sizeof(double)))) {
-    die("Failed to allocate tensor storage.\n");
+    die(Failed to allocate tensor storage.\n");
   }
 
   result->storage = p;
 
   if (NULL == (result->data = (double***) malloc(l*sizeof(double)))) {
-    die("Failed to allocate tensor slice data layout.\n");
+    die(Failed to allocate tensor slice data layout.\n");
   }
   for (i = 0; i < l; ++i) {
     if (NULL == (result->data[i] = (double**) malloc(m*sizeof(double)))) {
-      die("Failed to allocate row data layout.\n");
+      die(Failed to allocate row data layout.\n");
     }
     for (j = 0; j < m; ++j) {
       result->data[i][j] = p;

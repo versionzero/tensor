@@ -26,13 +26,13 @@ matrix_write_array(FILE *f, matrix_t const *m1)
   mm_set_array(&type);
   
   if (0 != (result = mm_write_banner(f, type))) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Could not write Matrix Market banner (%d).\n",
 	  result);
   }
   
   if (0 != (result = mm_write_mtx_array_size(f, m1->m, m1->n))) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Failed to write matrix array size (%d).\n", 
 	  result);
   }
@@ -55,7 +55,7 @@ matrix_write_coordinate(FILE *f, matrix_t const *m1)
   mm_set_coordinate(&type);
   
   if (0 != (result = mm_write_banner(f, type))) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Could not write Matrix Market banner (%d).\n",
 	  result);
   }
@@ -70,7 +70,7 @@ matrix_write_coordinate(FILE *f, matrix_t const *m1)
   }
   
   if (0 != (result = mm_write_mtx_crd_size(f, m1->m, m1->n, nnz))) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Failed to write matrix coordinate size %d (%d).\n", 
 	  nnz, result);
   }
@@ -100,7 +100,7 @@ matrix_write(char const *filename, matrix_t const *m1, uint coordinate)
   FILE *f;
 
   if (NULL == (f = fopen(filename, "w+"))) {
-    error(D_ERROR|D_FATAL, "Failed to open '%s' for writing.\n", filename);
+    die( "Failed to open '%s' for writing.\n", filename);
   }
 
   matrix_fwrite(f, m1, coordinate);

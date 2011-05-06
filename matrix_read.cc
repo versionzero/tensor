@@ -14,13 +14,13 @@ matrix_read_array(FILE *f)
   matrix_t *mr;
 
   if (0 != (result = mm_read_mtx_array_size(f, &m, &n))) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Failed to read matrix size (%d).\n", 
 	  result);
   }
   
   if (NULL == (mr = matrix_new(m, n))) {
-    error(D_ERROR|D_FATAL, "Failed to allocate matrix.\n");
+    die( "Failed to allocate matrix.\n");
   }
   
   for (i = 0; i < mr->m; ++i) {
@@ -41,13 +41,13 @@ matrix_read_coordinate(FILE *f)
   matrix_t *mr;
 
   if (0 != (result = mm_read_mtx_crd_size(f, &m, &n, &nnz))) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Failed to read matrix size (%d).\n", 
 	  result);
   }
   
   if (NULL == (mr = matrix_new(m, n))) {
-    error(D_ERROR|D_FATAL, "Failed to allocate matrix.\n");
+    die( "Failed to allocate matrix.\n");
   }
   
   matrix_clear(mr);
@@ -69,12 +69,12 @@ matrix_fread(FILE *f)
   matrix_t    *mr;
   
   if (0 != mm_read_banner(f, &type)) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "Could not process Matrix Market banner.\n");
   }
   
   if (!mm_is_matrix(type) || !mm_is_real(type)) {
-    error(D_ERROR|D_FATAL, 
+    die( 
 	  "No support for matrix type: [%s]\n", 
 	  mm_typecode_to_str(type));
   }
@@ -95,7 +95,7 @@ matrix_read(char const *filename)
   matrix_t *t;
   
   if (NULL == (f = fopen(filename, "r"))) {
-    error(D_ERROR|D_FATAL, "Failed to open '%s' for reading.\n", filename);
+    die( "Failed to open '%s' for reading.\n", filename);
   }
   
   t = matrix_fread(f);

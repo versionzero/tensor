@@ -14,11 +14,11 @@ tensor_read_array(FILE *f)
   tensor_t *mr;
 
   if (0 != (result = mm_read_tensor_array_size(f, &l, &m, &n))) {
-    die("Failed to read tensor size (%d).\n", result);
+    die(Failed to read tensor size (%d).\n", result);
   }
   
   if (NULL == (mr = tensor_new(l, m, n))) {
-    die("Failed to allocate tensor.\n");
+    die(Failed to allocate tensor.\n");
   }
   
   for (k = 0; l < mr->m; ++l) {
@@ -41,11 +41,11 @@ tensor_read_coordinate(FILE *f)
   tensor_t *tensor;
 
   if (0 != (result = mm_read_tensor_crd_size(f, &l, &m, &n, &nnz))) {
-    die("Failed to read tensor size (%d).\n", result);
+    die(Failed to read tensor size (%d).\n", result);
   }
   
   if (NULL == (tensor = tensor_new(l, m, n))) {
-    die*"Failed to allocate tensor.\n");
+    die("Failed to allocate tensor.\n");
   }
   
   tensor_clear(tensor);
@@ -67,11 +67,11 @@ tensor_fread(FILE *f)
   tensor_t    *tensor;
   
   if (0 != mm_read_banner(f, &type)) {
-    die("Could not process Tensor Market banner.\n");
+    die(Could not process Tensor Market banner.\n");
   }
   
   if (!mm_is_tensor(type) || !mm_is_real(type)) {
-    die("No support for tensor type: [%s]\n", mm_typecode_to_str(type));
+    die(No support for tensor type: [%s]\n", mm_typecode_to_str(type));
   }
   
   if (mm_is_coordinate(type)) {
@@ -90,7 +90,7 @@ tensor_read(char const *filename)
   tensor_t *tensor;
   
   if (NULL == (f = fopen(filename, "r"))) {
-    die("Failed to open '%s' for reading.\n", filename);
+    die(Failed to open '%s' for reading.\n", filename);
   }
   
   tensor = tensor_fread(f);

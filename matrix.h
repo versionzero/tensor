@@ -3,20 +3,15 @@
 #define _MATRIX_H_
 
 #include "types.h"
-
-/* Define if the data for the matrix is ownded an created by the user,
-   or if it is just a view of the data */
-#define CREATOR 0
-#define VIEWER  1
+#include <stdio.h>
 
 typedef struct {
-  uint   i, j;
-  uint   m, n;
-  uint   owner;
-  double **data;
+  uint        m, n;
+  ownership_t owner;
+  double      **data;
 } matrix_t;
 
-matrix_t *matrix_new(uint m, uint n, uint owner = CREATOR);
+matrix_t *matrix_new(uint m, uint n, ownership_t owner = creator);
 void matrix_delete(matrix_t *m);
 void matrix_clear(matrix_t *m1);
 matrix_t *matrix_copy_shallow(matrix_t const *m1);

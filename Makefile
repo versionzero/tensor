@@ -4,12 +4,12 @@ DEBUG=-g -O0
 CXXFLAGS=-pedantic -ansi -Wall -c $(DEBUG) $(INCLUDES) -fverbose-asm
 LDFLAGS=-Wall $(DEBUG)
 
-HEADERS_GENERAL=utility.h error.h random.h
+HEADERS_GENERAL=error.h file.h random.h utility.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=tensor.h
 HEADERS=$(HEADERS_GENERAL) $(HEADERS_MATRIX) $(HEADERS_TENSOR)
 
-SOURCES_GENERAL=error.cc mmio.cc random.cc
+SOURCES_GENERAL=error.cc file.cc mmio.cc random.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc		\
 	matrix_compatible.cc matrix_copy.cc matrix_delete.cc	\
 	matrix_new.cc matrix_partition.cc matrix_supported.cc	\

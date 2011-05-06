@@ -25,7 +25,7 @@ matrix_copy_shallow(matrix_t const *m1)
 	m1->m, m1->n);
   
   if (NULL == (mr = matrix_new(m1->m, m1->n, VIEWER))) {
-    error(D_ERROR, "Failed to allocate matrix.\n");
+    die("Failed to allocate matrix.\n");
   }
   
   matrix_copy_shallow_inplace(mr, m1);
@@ -76,7 +76,7 @@ matrix_copy(matrix_t const *m1)
 	m1->m, m1->n);
   
   if (NULL == (mr = matrix_new(m1->m, m1->n))) {
-    error(D_ERROR, "Failed to allocate matrix.\n");
+    die("Failed to allocate matrix.\n");
   }
   
   matrix_copy_inplace(mr, m1);

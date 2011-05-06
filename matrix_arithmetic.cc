@@ -41,7 +41,7 @@ matrix_operation(matrix_t const *m1,
   matrix_compatible(m1, m2);
 
   if (NULL == (mr = matrix_new(m1->m, m1->n))) {
-    error(D_ERROR|D_FATAL, "Failed to allocate output matrix.\n");
+    die( "Failed to allocate output matrix.\n");
   }
 
   matrix_copy_inplace(mr, m1);
@@ -99,7 +99,7 @@ matrix_multiply(matrix_t const *m1, matrix_t const *m2)
   matrix_compatible(m1, m2);
   
   if (NULL == (mr = matrix_new(m1->m, m1->n))) {
-    error(D_ERROR|D_FATAL, "Failed to allocate output matrix.\n");
+    die( "Failed to allocate output matrix.\n");
   }
   
   matrix_multiply_inplace(mr, m1, m2);

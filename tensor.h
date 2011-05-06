@@ -3,25 +3,16 @@
 #define _TENSOR_H_
 
 #include "types.h"
-
 #include <stdio.h>
 
-/* Define if the data for the ownded an created by the user, or if it
-   is just a view of the data.  We may extend this to
-   copy-on-write. */
-enum { 
-  CREATOR, 
-  VIEWER 
-} ownership_t;
-
 typedef struct {
-  uint        l, m, n;
-  ownership_t owner;
-  double      ***data;
-  double      *storage;
+  uint               l, m, n;
+  ownership_t        owner;
+  storage_strategy_t strategy;
+  tensor_storage_t   *storage;
 } tensor_t;
 
-tensor_t *tensor_new(uint l, uint m, uint n, ownership_t owner = CREATOR);
+tensor_t *tensor_new(uint l, uint m, uint n, ownership_t owner = creator);
 void tensor_delete(tensor_t *tensor);
 
 tensor_t *tensor_read(char const *filename);

@@ -13,7 +13,7 @@ matrix_new(uint m, uint n, uint owner)
   matrix_t *mr;
 
   if (NULL == (mr = (matrix_t*) malloc(sizeof(matrix_t)))) {
-    error(D_ERROR, "Failed to allocate matrix.\n");
+    die("Failed to allocate matrix.\n");
   }
 
   mr->m     = m;
@@ -21,17 +21,17 @@ matrix_new(uint m, uint n, uint owner)
   mr->data  = NULL;
   mr->owner = owner;
   
-  if (VIEWER == owner) {
+  if (viewer == owner) {
     return mr;
   }
 
   if (NULL == (mr->data = (double**) malloc(m*sizeof(double)))) {
-    error(D_ERROR, "Failed to allocate matrix storage.\n");
+    die("Failed to allocate matrix storage.\n");
   }
   
   for (i = 0; i < m; ++i) {
     if (NULL == (mr->data[i] = (double*) malloc(n*sizeof(double)))) {
-      error(D_ERROR, "Failed to allocate row storage.\n");
+      die("Failed to allocate row storage.\n");
     }
   }
   

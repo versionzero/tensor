@@ -78,7 +78,7 @@ die(char const *format, ...)
   va_list args;
   
   va_start(args, format);
-  verror(D_ERROR|D_FATAL, format, args);
+  vdie( format, args);
   va_end(args);
 }
 
