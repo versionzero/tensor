@@ -1,56 +1,56 @@
 
-#include "matrix.h"
+#include "error.h"
+#include "tensor.h"
+#include "utility.h"
 
 #include <stdio.h>
 #include <assert.h>
 
 void
-matrix_delete_cooridinate_storage(cooridinate_storage_t *s)
+tensor_delete_cooridinate_storage(cooridinate_storage_t *s)
 {
-  safe_delete(I);
-  safe_delete(J);
-  safe_delete(K);
-  safe_delete(values);
+  safe_delete(s->I);
+  safe_delete(s->J);
+  safe_delete(s->K);
+  safe_delete(s->values);
 }
 
 void
-matrix_delete_ekmr_storage(ekmr_storage_t *s)
+tensor_delete_ekmr_storage(ekmr_storage_t *s)
 {
-  safe_delete(I);
-  safe_delete(J);
-  safe_delete(values);
+  safe_delete(s->I);
+  safe_delete(s->J);
+  safe_delete(s->values);
 }
 
 void
-matrix_delete_storage(matrix_t *t)
+tensor_delete_storage(tensor_t *t)
 {
+  assert(NULL != t->storage);
+
   switch(t->strategy) {
   case cooridinate:
-    matrix_delete_cooridinate_storage(COORIDINATE_DATA(t));
+    tensor_delete_cooridinate_storage(COORIDINATE_STORAGE(t));
     break;
   case ekmr:
-    matrix_delete_ekmr_storage(EKMR_DATA(t));
+    tensor_delete_ekmr_storage(EKMR_STORAGE(t));
     break;
   default:
     die("Unknown storage strategy '%d'.\n", t->strategy);
   }
+
+  safe_delete(t->storage);
 }
 
 void
-matrix_delete(matrix_t *t)
+tensor_delete(tensor_t *t)
 {
-  uint i;
-
   assert(NULL != t);
-  if (creator == t->owner) {
-    assert(NULL != t->data);
-    for (i = 0; i < t->m; ++i) {
-      assert(NULL != t->data[i]);
-      safe_delete(t->data[i]);
-    }
-    tensor_delete_storage(t->data);
-    safe_delete(t->data);
+
+  if (creator == t->owner) {    
+    tensor_delete_storage(t);    
   }
+
   if (NULL != t) {
     safe_delete(t);
   }

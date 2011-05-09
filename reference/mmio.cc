@@ -60,9 +60,9 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
  
     /* reseve memory for matrices */
  
-    I = (int *) malloc(nz * sizeof(int));
-    J = (int *) malloc(nz * sizeof(int));
-    val = (double *) malloc(nz * sizeof(double));
+    I = (int *) malloc_or_die(nz * sizeof(int));
+    J = (int *) malloc_or_die(nz * sizeof(int));
+    val = (double *) malloc_or_die(nz * sizeof(double));
  
     *val_ = val;
     *I_ = I;
@@ -353,20 +353,20 @@ int mm_read_matrix_coordinate(char *fname, int *M, int *N, int *nz, int **I, int
         return ret_code;
 
 
-    *I = (int *)  malloc(*nz * sizeof(int));
-    *J = (int *)  malloc(*nz * sizeof(int));
+    *I = (int *)  malloc_or_die(*nz * sizeof(int));
+    *J = (int *)  malloc_or_die(*nz * sizeof(int));
     *val = NULL;
 
     if (mm_is_complex(*matcode))
     {
-        *val = (double *) malloc(*nz * 2 * sizeof(double));
+        *val = (double *) malloc_or_die(*nz * 2 * sizeof(double));
         ret_code = mm_read_matrix_coordinate_data(f, *M, *N, *nz, *I, *J, *val, 
                 *matcode);
         if (ret_code != 0) return ret_code;
     }
     else if (mm_is_real(*matcode))
     {
-        *val = (double *) malloc(*nz * sizeof(double));
+        *val = (double *) malloc_or_die(*nz * sizeof(double));
         ret_code = mm_read_matrix_coordinate_data(f, *M, *N, *nz, *I, *J, *val, 
                 *matcode);
         if (ret_code != 0) return ret_code;
@@ -448,7 +448,7 @@ int mm_write_matrix_coordinate(char fname[], int M, int N, int nz, int I[], int 
 char *mm_strdup(const char *s)
 {
 	int len = strlen(s);
-	char *s2 = (char *) malloc((len+1)*sizeof(char));
+	char *s2 = (char *) malloc_or_die((len+1)*sizeof(char));
 	return strcpy(s2, s);
 }
 

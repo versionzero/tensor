@@ -22,7 +22,7 @@ RANDOM* rng_create (int type, unsigned int *seeds)
   int    i;                     /* loop variable */
   RANDOM *rng;                  /* created random number generator */
 
-  rng = (RANDOM*)malloc(sizeof(RANDOM) +5 *sizeof(unsigned int));
+  rng = (RANDOM*)malloc_or_die(sizeof(RANDOM) +5 *sizeof(unsigned int));
   if (!rng) return NULL;        /* create a random number generator */
   if (seeds) for (i = 5; --i >= 0; ) rng->regs[i] = seeds[i];
   else       for (i = 5; --i >= 0; ) rng->regs[i] = rand();

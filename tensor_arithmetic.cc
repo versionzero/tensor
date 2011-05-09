@@ -39,7 +39,7 @@ tensor_operation(tensor_t const *t1,
 
   information("Operation '%s'\n", name);  
   tensor_compatible(t1, t2);
-  tensor_new_or_die(t1->l, t1->m, t1->n);
+  tr = tensor_new(t1->l, t1->m, t1->n);
   tensor_copy_inplace(tr, t1);
   tensor_operation_inplace(tr, t2, op, name);
 
