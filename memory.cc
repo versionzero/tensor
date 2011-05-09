@@ -4,12 +4,12 @@
 #include <stdlib.h>
 
 void*
-malloc_or_die(size_t size)
+malloc_or_die(size_t size, char const* file, uint const line)
 {
   void *p;
   
   if (NULL == (p = malloc(size))) {
-    die("Failed to allocate memory %d.\n", size);
+    die("%s:%d: Failed to allocate memory block: %d.\n", file, line, size);
   }
   
   return p;
@@ -18,7 +18,7 @@ malloc_or_die(size_t size)
 void
 safe_delete(void *p)
 {
-  if (NULL != p ){
+  if (NULL != p){
     free(p);
   }
   p = NULL;

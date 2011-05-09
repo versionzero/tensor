@@ -23,11 +23,11 @@ tensor_new(uint l, uint m, uint n, uint nnz, storage_strategy_t strategy)
   
   if (0 == nnz ) {
     switch(strategy) {
-    case cooridinate:
-      p = storage_cooridinate_strategy_new(nnz);
+    case coordinate:
+      p = tensor_storage_coordinate_strategy_new(nnz);
       break;
     case ekmr:
-      p = storage_ekmr_strategy_new(nnz);
+      p = tensor_storage_ekmr_strategy_new(nnz);
       break;
     }    
   }

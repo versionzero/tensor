@@ -7,11 +7,11 @@
 #include <stdlib.h>
 
 void*
-storage_cooridinate_strategy_new(uint nnz)
+tensor_storage_coordinate_strategy_new(uint nnz)
 {
-  cooridinate_storage_t *storage;
+  coordinate_storage_t *storage;
   
-  storage         = CASTED_MALLOC(cooridinate_storage_t);
+  storage         = CASTED_MALLOC(coordinate_storage_t);
   storage->values = CASTED_MALLOC_N(double, nnz);
   storage->I      = CASTED_MALLOC_N(uint, nnz);
   storage->J      = CASTED_MALLOC_N(uint, nnz);
@@ -21,7 +21,7 @@ storage_cooridinate_strategy_new(uint nnz)
 }
 
 void*
-storage_ekmr_strategy_new(uing nnz)
+tensor_storage_ekmr_strategy_new(uing nnz)
 {
   ekmr_storage_t *storage;
   
@@ -55,8 +55,8 @@ tensor_new(uint l, uint m, uint n, uint nnz, storage_strategy_t s, ownership_t o
   }
 
   switch(s) {
-  case cooridinate:
-    p = tensor_new_cooridinate_storage(nnz);
+  case coordinate:
+    p = tensor_new_coordinate_storage(nnz);
     break;
   case ekmr:
     p = tensor_new_ekmr_storage(nnz);

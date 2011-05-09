@@ -1,4 +1,4 @@
-CXX=g++
+tensor_storage_new.ccCXX=g++
 INCLUDES=-I.
 DEBUG=-g -O0 -fverbose-asm
 STRICT=-pedantic -ansi -std -Wall
@@ -19,7 +19,7 @@ SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc		\
 SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc		\
 	tensor_compatible.cc tensor_copy.cc tensor_delete.cc	\
 	tensor_new.cc tensor_partition.cc tensor_supported.cc	\
-	tensor_read.cc tensor_write.cc
+	tensor_storage_new.cc tensor_read.cc tensor_write.cc
 SOURCES=main.cc $(SOURCES_GENERAL) $(SOURCES_MATRIX) $(SOURCES_TENSOR)
 
 ASSEMBLER=$(SOURCES:.cc=.s)

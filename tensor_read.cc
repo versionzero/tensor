@@ -44,7 +44,7 @@ tensor_read_coordinate(FILE *f)
     die("Failed to read tensor size (%d).\n", result);
   }
   
-  tr = tensor_new_or_die(l, m, n);
+  tr = tensor_new(l, m, n);
   tensor_clear(t);
   
   while (nnz--) {

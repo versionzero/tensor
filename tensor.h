@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 typedef enum {
-  none,
   coordinate,
   ekmr,
 } storage_strategy_t;
@@ -28,18 +27,21 @@ typedef struct {
 typedef struct {
   uint   *I, *J, *K;
   double *values;
-} cooridinate_storage_t;
+} coordinate_storage_t;
 
 typedef struct {
   uint   *I, *J;
   double *values;
 } ekmr_storage_t;
 
-#define COORIDINATE_STORAGE(x) ((cooridinate_storage_t*)x->storage)
+#define COORIDINATE_STORAGE(x) ((coordinate_storage_t*)x->storage)
 #define EKMR_STORAGE(x) ((ekmr_storage_t*)x->storage)
 
 tensor_t *tensor_new(uint l, uint m, uint n, uint nnz = 0, storage_strategy_t strategy = coordinate);
 void tensor_delete(tensor_t *t);
+void tensor_clear(tensor_t *t);
+void tensor_copy_inplace(tensor_t *tr, tensor_t const *t1);
+tensor_t *tensor_copy(tensor_t const *t1);
 
 tensor_t *tensor_read(char const *filename);
 tensor_t *tensor_fread(FILE *stream);
@@ -48,19 +50,8 @@ void tensor_supported(tensor_t const *t1);
 void tensor_compatible(tensor_t const *t1, tensor_t const *t2);
 
 #if 0
-void tensor_clear(tensor_t *t);
-tensor_t *tensor_copy_shallow(tensor_t const *t1);
-void tensor_copy_shallow_inplace(tensor_t *tr, tensor_t const *t1);
-void tensor_copy_inplace(tensor_t *tr, tensor_t const *t1);
-void tensor_copy_inplace_with_offset(tensor_t *tr, tensor_t const *t1, uint oi, uint oj);
-tensor_t *tensor_copy(tensor_t const *t1);
-tensor_t *tensor_partition(tensor_t const *t1, uint i, uint j, uint k, uint m, uint n, uint l);
-void tensor_partition_inplace(tensor_t *tr, tensor_t const *t1, uint i, uint j, uint j, uint m, uint n, uint l);
-
 void tensor_write(char const *filename, tensor_t const *t, bool coordinate = false);
 void tensor_fwrite(FILE *stream, tensor_t const *t, bool coordinate = 0);
-
-void tensor_check_range(tensor_t const *t1, uint i, uint j, uint m, uint n);
 
 void tensor_add_inplace(tensor_t *t1, tensor_t const *t2);
 tensor_t *tensor_add(tensor_t const *t1, tensor_t const *t2);

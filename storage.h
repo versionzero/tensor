@@ -4,8 +4,8 @@
 
 #include "types.h"
 
-void *storage_ekmr_strategy_new(uint nnz);
-void *storage_ekmr_strategy_new(uing nnz);
+void *tensor_storage_coordinate_strategy_new(uint nnz);
+void *tensor_storage_ekmr_strategy_new(uint nnz);
 
 #endif
 
