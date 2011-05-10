@@ -86,10 +86,7 @@ tensor_read(char const *filename)
   FILE     *f;
   tensor_t *tr;
   
-  if (NULL == (f = fopen(filename, "r"))) {
-    die("Failed to open '%s' for reading.\n", filename);
-  }
-  
+  f = fopen_of_die(filename, "r");  
   tr = tensor_fread(f);
   fclose(f);
 

@@ -91,7 +91,7 @@ matrix_write(char const *filename, matrix_t const *m1, bool coordinate)
 {
   FILE *f;
 
-  f = open_or_die(filename, "w+");
+  f = fopen_or_die(filename, "w+");
   matrix_fwrite(f, m1, coordinate);
   fclose(f);
 }

@@ -97,7 +97,7 @@ tensor_write(char const *filename, tensor_t const *t1, bool coordinate)
 {
   FILE *f;
 
-  f = open_or_die(filename, "w+");
+  f = fopen_or_die(filename, "w+");
   tensor_fwrite(f, t1, coordinate);
   fclose(f);
 }

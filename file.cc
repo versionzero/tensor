@@ -3,7 +3,7 @@
 #include "file.h"
 
 FILE*
-open_or_die(char const *filename, char const *mode)
+fopen_or_die(char const *filename, char const *mode)
 {
   FILE *file;
   

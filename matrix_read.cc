@@ -83,7 +83,7 @@ matrix_read(char const *filename)
   FILE     *f;
   matrix_t *t;
   
-  f = open_or_die(filename, "r");
+  f = fopen_or_die(filename, "r");
   t = matrix_fread(f);
   fclose(f);
 

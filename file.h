@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-FILE* open_or_die(char const *filename, char const *mode);
+FILE* fopen_or_die(char const *filename, char const *mode);
 
 #endif
 
