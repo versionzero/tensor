@@ -1,7 +1,7 @@
 
 #include "matrix.h"
+#include "memory.h"
 #include "utility.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>

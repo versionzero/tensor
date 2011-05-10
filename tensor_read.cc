@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if 0
 tensor_t*
 tensor_read_array(FILE *f)
 {
@@ -31,6 +32,7 @@ tensor_read_array(FILE *f)
 
   return mr;
 }
+#endif
 
 tensor_t*
 tensor_read_coordinate(FILE *f)
@@ -44,7 +46,7 @@ tensor_read_coordinate(FILE *f)
     die("Failed to read tensor size (%d).\n", result);
   }
   
-  tr = tensor_new(l, m, n);
+  tr = tensor_new(l, m, n, nnz, coordinate);
   tensor_clear(tr);
   
   while (nnz--) {

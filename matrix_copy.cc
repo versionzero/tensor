@@ -21,7 +21,7 @@ matrix_copy_shallow(matrix_t const *m1)
   matrix_t *mr;
   
   information("Matrix Copy (shallow)\n");
-  mr = matrix_new_or_die(m1->m, m1->n, viewer);
+  mr = matrix_new(m1->m, m1->n, viewer);
   matrix_copy_shallow_inplace(mr, m1);
 
   return mr;
@@ -63,7 +63,7 @@ matrix_copy(matrix_t const *m1)
   matrix_t *mr;
   
   information("Matrix Copy\n");  
-  mr = matrix_new_or_die(m1->m, m1->n);
+  mr = matrix_new(m1->m, m1->n);
   matrix_copy_inplace(mr, m1);
   
   return mr;

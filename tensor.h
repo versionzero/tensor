@@ -2,6 +2,7 @@
 #ifndef _TENSOR_H_
 #define _TENSOR_H_
 
+#include "storage.h"
 #include "types.h"
 #include <stdio.h>
 
@@ -23,19 +24,6 @@ typedef struct {
   storage_strategy_t strategy;
   tensor_storage_t   storage;
 } tensor_t;
-
-typedef struct {
-  uint   *I, *J, *K;
-  double *values;
-} coordinate_storage_t;
-
-typedef struct {
-  uint   *I, *J;
-  double *values;
-} ekmr_storage_t;
-
-#define COORIDINATE_STORAGE(x) ((coordinate_storage_t*)x->storage)
-#define EKMR_STORAGE(x) ((ekmr_storage_t*)x->storage)
 
 tensor_t *tensor_new(uint l, uint m, uint n, uint nnz = 0, storage_strategy_t strategy = coordinate);
 void tensor_delete(tensor_t *t);

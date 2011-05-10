@@ -10,9 +10,10 @@
 void*
 tensor_storage_coordinate_strategy_new(uint nnz)
 {
-  coordinate_storage_t *storage;
+  storage_coordinate_t *storage;
   
-  storage         = MALLOC(coordinate_storage_t);
+  storage         = MALLOC(storage_coordinate_t);
+  storage->nnz    = nnz;
   storage->values = MALLOC_N(double, nnz);
   storage->I      = MALLOC_N(uint, nnz);
   storage->J      = MALLOC_N(uint, nnz);
@@ -24,10 +25,10 @@ tensor_storage_coordinate_strategy_new(uint nnz)
 void*
 tensor_storage_ekmr_strategy_new(uint nnz)
 {
-  ekmr_storage_t *storage;
+  storage_ekmr_t *storage;
   
 #if 0
-  storage         = MALLOC(ekmr_storage_t);
+  storage         = MALLOC(storage_ekmr_t);
   storage->values = MALLOC_N(double, nnz);
   storage->I      = MALLOC_N(uint, nnz);
   storage->J      = MALLOC_N(uint, nnz);  
