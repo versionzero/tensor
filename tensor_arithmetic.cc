@@ -1,7 +1,7 @@
 
 #include "error.h"
 #include "tensor.h"
-
+#include "arithmetic.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -51,18 +51,6 @@ tensor_operation(tensor_t const *t1,
   { tensor_operation_inplace(t1, t2, name, #name);	}		\
   tensor_t* tensor_##name(tensor_t const *t1, tensor_t const *t2)	\
   { return tensor_operation(t1, t2, name, #name); }
-
-double
-add(double a, double b)
-{
-  return a+b;
-}
-
-double
-subtract(double a, double b)
-{
-  return a-b;
-}
 
 MTX_OP(add)
 MTX_OP(subtract)

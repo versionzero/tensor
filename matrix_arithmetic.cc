@@ -1,7 +1,7 @@
 
 #include "error.h"
 #include "matrix.h"
-
+#include "arithmetic.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -55,18 +55,6 @@ matrix_operation(matrix_t const *m1,
   { matrix_operation_inplace(m1, m2, name, #name);	}		\
   matrix_t* matrix_##name(matrix_t const *m1, matrix_t const *m2)	\
   { return matrix_operation(m1, m2, name, #name); }
-
-double
-add(double a, double b)
-{
-  return a+b;
-}
-
-double
-subtract(double a, double b)
-{
-  return a-b;
-}
 
 MTX_OP(add)
 MTX_OP(subtract)
