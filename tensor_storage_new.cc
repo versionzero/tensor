@@ -22,7 +22,7 @@ tensor_storage_coordinate_strategy_new(uint nnz)
 }
 
 void*
-tensor_storage_ekmr_strategy_new(uing nnz)
+tensor_storage_ekmr_strategy_new(uint nnz)
 {
   ekmr_storage_t *storage;
   
