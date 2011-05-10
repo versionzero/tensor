@@ -36,7 +36,7 @@ tensor_write_array(FILE *f, tensor_t const *t1)
   for (k = 0; k < t1->l; ++k) {
     for (i = 0; i < t1->m; ++i) {
       for (j = 0; j < t1->n; ++j) {
-	fprintf(f, "%10.32g\n", t1->data[k][i][j]);
+	//fprintf(f, "%10.32g\n", t1->data[k][i][j]);
       }
     }
   }
@@ -60,23 +60,27 @@ tensor_write_coordinate(FILE *f, tensor_t const *t1)
   for (k = 0; k < t1->l; ++k) {
     for (i = 0; i < t1->m; ++i) {
       for (j = 0; j < t1->n; ++j) {
+#if 0
 	if (0.0 != t1->data[k][i][j]) {
 	  nnz++;
 	}
+#endif
       }
     }
   }
   
-  if (0 != (result = mm_write_tensor_coordinate_size(f, t1->m, t1->n, nnz))) {
+  if (0 != (result = mm_write_tensor_coordinate_size(f, t1->l, t1->m, t1->n, nnz))) {
     die("Failed to write tensor coordinate size %d (%d).\n", nnz, result);
   }
 
   for (k = 0; k < t1->l; ++k) {
     for (i = 0; i < t1->m; ++i) {
       for (j = 0; j < t1->n; ++j) {
+#if 0
 	if (0.0 != t1->data[k][i][j]) {
 	  fprintf(f, "%d %d %d %10.32g\n", k+1, i+1, j+1, t1->data[i][j]);
 	}
+#endif
       }
     }
   }

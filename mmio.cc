@@ -122,10 +122,15 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
     if (strncmp(banner, MatrixMarketBanner, strlen(MatrixMarketBanner)) != 0)
         return MM_NO_HEADER;
 
-    /* first field should be "mtx" */
-    if (strcmp(mtx, MM_MTX_STR) != 0)
-        return  MM_UNSUPPORTED_TYPE;
-    mm_set_matrix(matcode);
+    /* first field describes the type of tensor data type ("matrix" or
+       "tensor") */
+    if (strcmp(mtx, MM_MTX_STR) == 0) {
+      mm_set_matrix(matcode);
+    } else if (strcmp(mtx, MM_TENSOR_STR) == 0) {
+      mm_set_tensor(matcode);
+    } else {
+      return  MM_UNSUPPORTED_TYPE;
+    }   
 
 
     /* second field describes whether this is a sparse matrix (in coordinate
@@ -186,6 +191,14 @@ int mm_write_matrix_coordinate_size(FILE *f, int M, int N, int nz)
     return 0;
 }
 
+int mm_write_tensor_coordinate_size(FILE *f, int L, int M, int N, int nz)
+{
+  if (fprintf(f, "%d %d %d %d\n", L, M, N, nz) < 4) {
+    return MM_COULD_NOT_WRITE_FILE;
+  }
+  return 0;
+}
+
 int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz )
 {
     char line[MM_MAX_LINE_LENGTH];
@@ -212,6 +225,36 @@ int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz )
         if (num_items_read == EOF) return MM_PREMATURE_EOF;
     }
     while (num_items_read != 3);
+
+    return 0;
+}
+
+int mm_read_tensor_coordinate_size(FILE *f, int *L, int *M, int *N, int *nz)
+{
+    char line[MM_MAX_LINE_LENGTH];
+    int num_items_read;
+
+    /* set return null parameter values, in case we exit with errors */
+    *L = *M = *N = *nz = 0;
+
+    /* now continue scanning until you reach the end-of-comments */
+    do {
+      if (NULL == fgets(line, MM_MAX_LINE_LENGTH, f)) {
+	return MM_PREMATURE_EOF;
+      }
+    } while ('%' ==line[0]);
+
+    /* line[] is either blank or has L,M,N, nz */
+    if (4 == sscanf(line, "%d %d %d %d", L, M, N, nz)) {
+        return 0;
+    } else {
+      do { 
+        num_items_read = fscanf(f, "%d %d %d %d", L, M, N, nz);
+        if (EOF == num_items_read) {
+	  return MM_PREMATURE_EOF;
+	}
+      } while (num_items_read != 4);
+    }
 
     return 0;
 }
@@ -246,12 +289,50 @@ int mm_read_matrix_array_size(FILE *f, int *M, int *N)
     return 0;
 }
 
+int mm_read_tensor_array_size(FILE *f, int *L, int *M, int *N)
+{
+    char line[MM_MAX_LINE_LENGTH];
+    int num_items_read;
+    
+    /* set return null parameter values, in case we exit with errors */
+    *L = *M = *N = 0;
+    
+    /* now continue scanning until you reach the end-of-comments */
+    do {
+      if (NULL == fgets(line, MM_MAX_LINE_LENGTH, f)) {
+	return MM_PREMATURE_EOF;
+      }
+    } while ('%' == line[0]);
+
+    /* line[] is either blank or has L,M,N, nz */
+    if (sscanf(line, "%d %d %d", L, M, N) == 3) {
+      return 0;
+    } else { /* we have a blank line */
+      do { 
+	num_items_read = fscanf(f, "%d %d %d", L, M, N); 
+	if (EOF == num_items_read) {
+	  return MM_PREMATURE_EOF;
+	}
+      } while (num_items_read != 3);
+    }
+
+    return 0;
+}
+
 int mm_write_matrix_array_size(FILE *f, int M, int N)
 {
     if (fprintf(f, "%d %d\n", M, N) <= 0)
         return MM_COULD_NOT_WRITE_FILE;
     else 
         return 0;
+}
+
+int mm_write_tensor_array_size(FILE *f, int L, int M, int N)
+{
+  if (fprintf(f, "%d %d %d\n", L, M, N) <= 0) {
+    return MM_COULD_NOT_WRITE_FILE;
+  }
+  return 0;
 }
 
 

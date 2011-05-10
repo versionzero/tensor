@@ -1,12 +1,7 @@
 
 #include "error.h"
 #include "matrix.h"
-
-bool
-is_power_of_two(unsigned int n)
-{
-  return (0 != n && (n & (n-1)));
-}
+#include "utility.h"
 
 void
 matrix_supported(matrix_t const *m1)
@@ -16,7 +11,7 @@ matrix_supported(matrix_t const *m1)
   }
 }
 
-void 
+void
 matrix_check_range(matrix_t const *m1, uint i, uint j, uint m, uint n)
 {
   if (i > m1->m || m > m1->m || j > m1->n || n > m1->n) {

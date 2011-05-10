@@ -6,20 +6,22 @@ CXXFLAGS= -c $(DEBUG)	\
 $(INCLUDES)
 LDFLAGS=-Wall $(DEBUG)
 
-HEADERS_GENERAL=error.h file.h memory.h random.h utility.h
+HEADERS_GENERAL=arithmetic.h error.h file.h memory.h random.h	\
+		utility.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=tensor.h
 HEADERS=$(HEADERS_GENERAL) $(HEADERS_MATRIX) $(HEADERS_TENSOR)
 
-SOURCES_GENERAL=error.cc file.cc memory.cc mmio.cc random.cc
+SOURCES_GENERAL=arithmetic.cc error.cc file.cc memory.cc mmio.cc	\
+	random.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc		\
 	matrix_compatible.cc matrix_copy.cc matrix_delete.cc	\
 	matrix_new.cc matrix_partition.cc matrix_supported.cc	\
 	matrix_read.cc matrix_write.cc
-SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc		\
-	tensor_compatible.cc tensor_copy.cc tensor_delete.cc	\
-	tensor_new.cc tensor_supported.cc tensor_storage_new.cc	\
-	tensor_read.cc tensor_write.cc
+SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc			\
+	tensor_compatible.cc tensor_delete.cc tensor_new.cc		\
+	tensor_supported.cc tensor_storage_new.cc tensor_read.cc	\
+	tensor_write.cc
 SOURCES=main.cc $(SOURCES_GENERAL) $(SOURCES_MATRIX) $(SOURCES_TENSOR)
 
 ASSEMBLER=$(SOURCES:.cc=.s)

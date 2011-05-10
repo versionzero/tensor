@@ -22,14 +22,14 @@ char *mm_typecode_to_str(MM_typecode matcode);
 
 int mm_read_banner(FILE *f, MM_typecode *matcode);
 int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz);
-int mm_read_matrix_coordinate_size(FILE *f, int *L, int *M, int *N, int *nz);
+int mm_read_tensor_coordinate_size(FILE *f, int *L, int *M, int *N, int *nz);
 int mm_read_matrix_array_size(FILE *f, int *M, int *N);
-int mm_read_matrix_array_size(FILE *f, int *L, int *M, int *N);
+int mm_read_tensor_array_size(FILE *f, int *L, int *M, int *N);
 
 int mm_write_banner(FILE *f, MM_typecode matcode);
 int mm_write_matrix_coordinate_size(FILE *f, int M, int N, int nz);
-int mm_write_matrix_array_size(FILE *f, int M, int N);
 int mm_write_tensor_coordinate_size(FILE *f, int L, int M, int N, int nz);
+int mm_write_matrix_array_size(FILE *f, int M, int N);
 int mm_write_tensor_array_size(FILE *f, int L, int M, int N);
 
 
@@ -111,7 +111,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 
  ***********************************************************************/
 
-#define MM_MTX_STR		"matrix"
+#define MM_MTX_STR		"mtx"
 #define MM_TENSOR_STR		"tensor"
 #define MM_ARRAY_STR	"array"
 #define MM_DENSE_STR	"array"

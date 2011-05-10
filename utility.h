@@ -17,8 +17,8 @@
 /* Count the number of elements in x[n] */
 #define COUNT_OF(x) (sizeof(x)/sizeof(x[0]))
 
-/* Free memory and set the pointer to zero */
-void safe_delete(void *p);
+/* Determine if a number is a power of 2 */
+bool is_power_of_two(uint n);
  
 #endif /* _UTILITY_H_ */
 

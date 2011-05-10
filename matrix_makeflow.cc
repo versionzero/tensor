@@ -1,5 +1,6 @@
 
 #include "error.h"
+#include "file.h"
 #include "matrix.h"
 #include "mmio.h"
 
@@ -121,10 +122,7 @@ makeflow_target_write(matrix_t const *m1,
 {
   FILE *f;
   
-  if (NULL == (f = fopen(script, "a+"))) {
-    error(D_ERROR|D_FATAL, "Failed to open '%s' for appending.\n", script);
-  }
-  
+  f = fopen_or_die(script, "a+");
   makeflow_target_fwrite(f, m1, m2);
   fclose(f);
 }
