@@ -11,11 +11,8 @@ matrix_new(uint m, uint n, ownership_t owner)
 {
   uint     i;
   matrix_t *mr;
-
-  if (NULL == (mr = (matrix_t*) malloc(sizeof(matrix_t)))) {
-    die("Failed to allocate tensor.\n");
-  }
   
+  mr        = MALLOC(matrix_t);
   mr->m     = m;
   mr->n     = n;
   mr->data  = NULL;
@@ -24,15 +21,10 @@ matrix_new(uint m, uint n, ownership_t owner)
   if (viewer == owner) {
     return mr;
   }
-
-  if (NULL == (mr->data = (double**) malloc(m*sizeof(double)))) {
-    die("Failed to allocate matrix array structure\n");
-  }
   
+  mr->data = MALLOC_N(double, m);
   for (i = 0; i < m; ++i) {
-    if (NULL == (mr->data[i] = (double*) malloc(n*sizeof(double)))) {
-      die("Failed to allocate matrix data\n");
-    }
+    mr->data[i] = MALLOC_N(double, n);
   }
   
   return mr;
