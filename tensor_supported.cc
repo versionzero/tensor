@@ -1,12 +1,7 @@
 
 #include "error.h"
 #include "tensor.h"
-
-bool
-is_power_of_two(unsigned int n)
-{
-  return (0 != n && (n & (n-1)));
-}
+#include "utility.h"
 
 void
 tensor_supported(tensor_t const *t1)

@@ -13,7 +13,7 @@ HEADERS_TENSOR=tensor.h
 HEADERS=$(HEADERS_GENERAL) $(HEADERS_MATRIX) $(HEADERS_TENSOR)
 
 SOURCES_GENERAL=arithmetic.cc error.cc file.cc memory.cc mmio.cc	\
-	random.cc
+	random.cc utility.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc		\
 	matrix_compatible.cc matrix_copy.cc matrix_delete.cc	\
 	matrix_new.cc matrix_partition.cc matrix_supported.cc	\

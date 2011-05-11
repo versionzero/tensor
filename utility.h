@@ -2,6 +2,7 @@
 #ifndef _UTILITY_H_
 #define _UTILITY_H_
 
+#include "types.h"
 #include <time.h>
 
 /* True and False for our purposes */
