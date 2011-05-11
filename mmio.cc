@@ -543,6 +543,8 @@ char  *mm_typecode_to_str(MM_typecode matcode)
     /* check for MTX type */
     if (mm_is_matrix(matcode)) 
         types[0] = MM_MTX_STR;
+    if (mm_is_tensor(matcode)) 
+        types[0] = MM_TENSOR_STR;
     else
         error=1;
 
@@ -589,4 +591,21 @@ char  *mm_typecode_to_str(MM_typecode matcode)
     sprintf(buffer,"%s %s %s %s", types[0], types[1], types[2], types[3]);
     return mm_strdup(buffer);
 
+}
+
+char const*
+mm_error_to_str(int errcode)
+{
+  /* known error codes; the first 10 not defined */
+  static char const *errors[] = {
+    "", "", "", "", "", "", "", "", "", "", "",
+    "MM_COULD_NOT_READ_FILE",
+    "MM_PREMATURE_EOF",
+    "MM_NOT_MTX",
+    "MM_NO_HEADER",
+    "MM_UNSUPPORTED_TYPE",
+    "MM_LINE_TOO_LONG",
+    "MM_COULD_NOT_WRITE_FILE"
+  };
+  return errors[errcode];
 }

@@ -1,6 +1,5 @@
 
 #include "error.h"
-#include "storage.h"
 #include "tensor.h"
 
 void

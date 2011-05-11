@@ -13,7 +13,7 @@ verror(unsigned int type, char const *format, va_list args)
 {
   bool show;
   
-  show = verbose || D_MESSAGE || (type & D_WARNING || type & D_ERROR);
+  show = verbose || (type & D_MESSAGE) || (type & D_WARNING || type & D_ERROR);
   if (show) {
     if (!(type & D_MESSAGE)) {
       fprintf(stderr, "%s: ", program_name);

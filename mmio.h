@@ -19,6 +19,7 @@
 typedef char MM_typecode[4];
 
 char *mm_typecode_to_str(MM_typecode matcode);
+char const *mm_error_to_str(int errcode);
 
 int mm_read_banner(FILE *f, MM_typecode *matcode);
 int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz);
@@ -93,7 +94,6 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define MM_UNSUPPORTED_TYPE		15
 #define MM_LINE_TOO_LONG		16
 #define MM_COULD_NOT_WRITE_FILE	17
-
 
 /******************** Matrix Market internal definitions ********************
 

@@ -8,6 +8,9 @@
 #define FALSE 0
 #define TRUE  1
 
+/* How close to zero is zero */
+#define EPSILON 1e-10
+
 /* Largest path for a file on disk (yes, I know this is evil...) */
 #define PATH_MAX 256
 

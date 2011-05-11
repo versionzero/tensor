@@ -1,11 +1,18 @@
 
 #include "error.h"
 #include "file.h"
+#include "math.h"
 #include "mmio.h"
 #include "tensor.h"
-
+#include "utility.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+bool
+might_as_well_be_zero(double d)
+{
+  return (fabs(d) < EPSILON);
+}
 
 void
 tensor_initialize_type(MM_typecode *type)
@@ -16,93 +23,66 @@ tensor_initialize_type(MM_typecode *type)
 }
 
 void
-tensor_write_array(FILE *f, tensor_t const *t1)
+tensor_write_coordinate(FILE *file, tensor_t const *tensor)
 {
-  uint        i, j, k;
-  int         result;
-  MM_typecode type;
+  uint                 i;
+  int                  nnz, result;
+  MM_typecode          type;
+  storage_coordinate_t *storage;
   
-  tensor_initialize_type(&type);
-  mm_set_array(&type);
-  
-  if (0 != (result = mm_write_banner(f, type))) {
-    die("Could not write Matrix Market banner (%d).\n", result);
-  }
-  
-  if (0 != (result = mm_write_tensor_array_size(f, t1->l, t1->m, t1->n))) {
-    die("Failed to write tensor array size (%d).\n", result);
-  }
-
-  for (k = 0; k < t1->l; ++k) {
-    for (i = 0; i < t1->m; ++i) {
-      for (j = 0; j < t1->n; ++j) {
-	//fprintf(f, "%10.32g\n", t1->data[k][i][j]);
-      }
-    }
-  }
-}
-
-void
-tensor_write_coordinate(FILE *f, tensor_t const *t1)
-{
-  uint        i, j, k;
-  int         nnz, result;
-  MM_typecode type;
+  information("tensor_write_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
   
   tensor_initialize_type(&type);
   mm_set_coordinate(&type);
   
-  if (0 != (result = mm_write_banner(f, type))) {
+  if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
-  nnz = 0;
-  for (k = 0; k < t1->l; ++k) {
-    for (i = 0; i < t1->m; ++i) {
-      for (j = 0; j < t1->n; ++j) {
-#if 0
-	if (0.0 != t1->data[k][i][j]) {
-	  nnz++;
-	}
-#endif
-      }
+  storage = STORAGE_COORIDINATE(tensor);
+  nnz     = 0;
+  
+  information("tensor_write_coordinate: counting non-zero values...\n");
+  
+  for (i = 0; i < storage->nnz; ++i) {
+    if (!might_as_well_be_zero(storage->values[i])) {
+      nnz++;
     }
   }
   
-  if (0 != (result = mm_write_tensor_coordinate_size(f, t1->l, t1->m, t1->n, nnz))) {
+  information("tensor_write_coordinate: implied=%d, actual=%d.\n", storage->nnz, nnz);
+  information("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+  
+  if (0 != (result = mm_write_tensor_coordinate_size(file, tensor->l, tensor->m, tensor->n, nnz))) {
     die("Failed to write tensor coordinate size %d (%d).\n", nnz, result);
   }
-
-  for (k = 0; k < t1->l; ++k) {
-    for (i = 0; i < t1->m; ++i) {
-      for (j = 0; j < t1->n; ++j) {
-#if 0
-	if (0.0 != t1->data[k][i][j]) {
-	  fprintf(f, "%d %d %d %10.32g\n", k+1, i+1, j+1, t1->data[i][j]);
-	}
-#endif
-      }
+  
+  for (i = 0; i < nnz; ++i) {
+    if (!might_as_well_be_zero(storage->values[i])) {
+      fprintf(file, "%d %d %d %10.32g\n", 
+	      storage->K[i]+1, storage->I[i]+1, storage->J[i]+1, 
+	      storage->values[i]);
     }
   }
 }
 
 void
-tensor_fwrite(FILE *f, tensor_t const *t1, bool coordinate)
+tensor_fwrite(FILE *file, tensor_t const *tensor)
 {
-  if (coordinate) {
-    tensor_write_coordinate(f, t1);
-  } else {
-    tensor_write_array(f, t1);
-  }
+  information("tensor_write(file=0x%x, tensor=0x%x)\n", file, tensor);
+  
+  tensor_write_coordinate(file, tensor);
 }
 
 void
-tensor_write(char const *filename, tensor_t const *t1, bool coordinate)
+tensor_write(char const *filename, tensor_t const *tensor)
 {
-  FILE *f;
-
-  f = fopen_or_die(filename, "w+");
-  tensor_fwrite(f, t1, coordinate);
-  fclose(f);
+  FILE *file;
+  
+  information("tensor_write(filename='%s', tensor=0x%x)\n", filename, tensor);
+  
+  file = fopen_or_die(filename, "w+");
+  tensor_fwrite(file, tensor);
+  fclose(file);
 }
 

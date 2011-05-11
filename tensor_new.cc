@@ -11,17 +11,22 @@ tensor_t*
 tensor_new(uint l, uint m, uint n, uint nnz, storage_strategy_t strategy)
 {
   uint     i, j, k;
-  tensor_t *tr;
+  tensor_t *tensor;
   void     *p;
   
-  if (NULL == (tr = (tensor_t*) malloc(sizeof(tensor_t)))) {
-    die("Failed to allocate tensor.\n");
-  }
+  information("tensor_new(l=%d, m=%d, n=%d, nnz=%d, strategy='%s')\n", 
+	      l, m, n, nnz, tensor_storage_name(strategy));
   
-  tr->strategy = strategy;
-  p            = NULL;
+  tensor           = MALLOC(tensor_t);
+  tensor->l        = l;
+  tensor->m        = m;
+  tensor->n        = n;
+  tensor->strategy = strategy;
+  p                = NULL;
   
-  if (0 == nnz ) {
+  information("tensor_new: tensor=0x%x\n", tensor);
+  
+  if (nnz > 0) {
     switch(strategy) {
     case coordinate:
       p = tensor_storage_coordinate_strategy_new(nnz);
@@ -31,8 +36,10 @@ tensor_new(uint l, uint m, uint n, uint nnz, storage_strategy_t strategy)
       break;
     }    
   }
-
-  tr->storage = p;
-
-  return tr;
+  
+  tensor->storage = p;
+  
+  information("tensor_new: tensor->storage=0x%x\n", tensor->storage);
+  
+  return tensor;
 }
