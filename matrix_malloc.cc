@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 matrix_t*
-matrix_new(uint m, uint n, ownership_t owner)
+matrix_malloc(uint m, uint n, ownership_t owner)
 {
   uint     i;
   matrix_t *mr;

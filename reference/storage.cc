@@ -29,7 +29,7 @@ extract_stategy(int code)
 /*--------------------------------------------------------------------*/
 
 char const*
-strategy_name(int code)
+strategy_to_string(int code)
 {
   static char const *names[] = {
     "Canonical",

@@ -29,7 +29,7 @@ matrix_partition(matrix_t const *m1, uint i, uint j, uint m, uint n)
   
   matrix_check_range(m1, i, j, m, n);
   
-  if (NULL == (mr = matrix_new(m-i, n-j))) {
+  if (NULL == (mr = matrix_malloc(m-i, n-j))) {
     die( "Failed to allocate output matrix.\n");
   }
   

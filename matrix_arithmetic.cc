@@ -40,7 +40,7 @@ matrix_operation(matrix_t const *m1,
   
   matrix_compatible(m1, m2);
 
-  if (NULL == (mr = matrix_new(m1->m, m1->n))) {
+  if (NULL == (mr = matrix_malloc(m1->m, m1->n))) {
     die( "Failed to allocate output matrix.\n");
   }
 
@@ -86,7 +86,7 @@ matrix_multiply(matrix_t const *m1, matrix_t const *m2)
   
   matrix_compatible(m1, m2);
   
-  if (NULL == (mr = matrix_new(m1->m, m1->n))) {
+  if (NULL == (mr = matrix_malloc(m1->m, m1->n))) {
     die( "Failed to allocate output matrix.\n");
   }
   

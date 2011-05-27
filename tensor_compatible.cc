@@ -3,12 +3,21 @@
 #include "tensor.h"
 
 void
-tensor_compatible(tensor_t const *t1, tensor_t const *t2)
+tensor_compatible(tensor_t const *lhs, tensor_t const *rhs)
 {
-  information("Checking tensor compatability\n");
+  debug("tensor_compatible(lhs=0x%x, rhs=0x%x)\n", lhs, rhs);
 
-  if (t1->l != t2->l || t1->m != t2->m || t1->n != t2->n) {
-    die( "Input tensors do not have same dimensions.\n");
+  if (lhs->nnz != rhs->nnz) {
+    die("Tensors do not have the same number non-zero entries.\n");
+  }
+  
+  if (lhs->l != rhs->l || lhs->m != rhs->m || lhs->n != rhs->n) {
+    die("Tensors do not have the same dimensions.\n");
+  }
+  
+  if (rhs->strategy != strategy::coordinate) {
+    die("Conversion from '%s' is not currently supported.\n",
+	strategy_to_string(rhs->strategy));
   }
 }
 

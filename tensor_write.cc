@@ -8,12 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-bool
-might_as_well_be_zero(double d)
-{
-  return (fabs(d) < EPSILON);
-}
-
 void
 tensor_initialize_type(MM_typecode *type)
 {
@@ -23,55 +17,167 @@ tensor_initialize_type(MM_typecode *type)
 }
 
 void
-tensor_write_coordinate(FILE *file, tensor_t const *tensor)
+tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 {
   uint                 i;
   int                  nnz, result;
   MM_typecode          type;
   storage_coordinate_t *storage;
+  coordinate_tuple_t   *tuples;
   
-  information("tensor_write_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_write_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
   
   tensor_initialize_type(&type);
-  mm_set_coordinate(&type);
+  strategy_to_typecode(&type, strategy::coordinate);
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
   storage = STORAGE_COORIDINATE(tensor);
+  tuples  = storage->tuples;
   nnz     = 0;
   
-  information("tensor_write_coordinate: counting non-zero values...\n");
-  
-  for (i = 0; i < storage->nnz; ++i) {
-    if (!might_as_well_be_zero(storage->values[i])) {
+  for (i = 0; i < tensor->nnz; ++i) {
+    if (!might_as_well_be_zero(tensor->values[i])) {
       nnz++;
     }
   }
   
-  information("tensor_write_coordinate: implied=%d, actual=%d.\n", storage->nnz, nnz);
-  information("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+  debug("tensor_write_coordinate: non-zero values: implied=%d, actual=%d.\n", tensor->nnz, nnz);
+  debug("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
   
   if (0 != (result = mm_write_tensor_coordinate_size(file, tensor->l, tensor->m, tensor->n, nnz))) {
-    die("Failed to write tensor coordinate size %d (%d).\n", nnz, result);
+    die("Failed to write coordinate tensor of size %d (%d).\n", nnz, result);
   }
   
   for (i = 0; i < nnz; ++i) {
-    if (!might_as_well_be_zero(storage->values[i])) {
+    if (!might_as_well_be_zero(tensor->values[i])) {
       fprintf(file, "%d %d %d %10.32g\n", 
-	      storage->K[i]+1, storage->I[i]+1, storage->J[i]+1, 
-	      storage->values[i]);
+	      tuples[i].k, tuples[i].i, tuples[i].j,
+	      tensor->values[tuples[i].index]);
     }
+  }
+}
+
+void
+tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
+{
+  uint                 i, l, m, n;
+  int                  nnz, size, result;
+  MM_typecode          type;
+  storage_compressed_t *storage;
+  char const           *name;
+  
+  debug("tensor_write_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
+  
+  tensor_initialize_type(&type);
+  strategy_to_typecode(&type, strategy::compressed);
+  
+  if (0 != (result = mm_write_banner(file, type))) {
+    die("Could not write Tensor Market banner (%d).\n", result);
+  }
+  
+  storage = STORAGE_COMPRESSED(tensor);
+  l       = tensor->l;
+  m       = tensor->m;
+  n       = tensor->n;
+  nnz     = tensor->nnz;
+  size    = storage->size;
+  name    = orientation_to_string(tensor->orientation);
+  
+  debug("tensor_write_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
+	l, m, n, nnz, name, size);
+  
+  /* Fixing zeros here may be tricky, so I'll leave it until it is
+     required.  The problem with zeros here is that if we find one, we
+     will need to update the offset indices in KO.  Addmitedly, this
+     should not be too difficult, but it may take some time to ensure
+     the re-indexing is correct. */
+  
+  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size))) {
+    die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
+  }
+  
+  for (i = 0; i < size; ++i) {
+    fprintf(file, "%d\n", storage->RO[i]);
+  }
+  
+  for (i = 0; i < nnz; ++i) {
+    fprintf(file, "%d %d %10.32g\n",
+	    storage->CO[i], storage->KO[i],
+	    tensor->values[i]);
+  }
+}
+
+void
+tensor_fwrite_ekmr(FILE *file, tensor_t const *tensor)
+{
+  uint           i, l, m, n;
+  int            nnz, size, result;
+  MM_typecode    type;
+  storage_ekmr_t *storage;
+  char const     *name;
+  
+  debug("tensor_write_ekmr(file=0x%x, tensor=0x%x)\n", file, tensor);
+  
+  tensor_initialize_type(&type);
+  strategy_to_typecode(&type, strategy::ekmr);
+  
+  if (0 != (result = mm_write_banner(file, type))) {
+    die("Could not write Tensor Market banner (%d).\n", result);
+  }
+  
+  storage = STORAGE_EKMR(tensor);
+  l       = tensor->l;
+  m       = tensor->m;
+  n       = tensor->n;
+  nnz     = tensor->nnz;
+  size    = storage->size;
+  name    = orientation_to_string(tensor->orientation);
+  
+  debug("tensor_write_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
+	l, m, n, nnz, name, size);
+  
+  /* Fixing zeros here may be tricky, so I'll leave it until it is
+     required.  The problem with zeros here is that if we find one, we
+     will need to update the offset indices in KO.  Addmitedly, this
+     should not be too difficult, but it may take some time to ensure
+     the re-indexing is correct. */
+  
+  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size))) {
+    die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
+  }
+  
+  for (i = 0; i < size; ++i) {
+    fprintf(file, "%d\n", storage->R[i]);
+  }
+  
+  for (i = 0; i < nnz; ++i) {
+    fprintf(file, "%d %10.32g\n",
+	    storage->CK[i], tensor->values[i]);
   }
 }
 
 void
 tensor_fwrite(FILE *file, tensor_t const *tensor)
 {
-  information("tensor_write(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_write(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_write_coordinate(file, tensor);
+  switch (tensor->strategy) {
+  case strategy::coordinate:
+    tensor_fwrite_coordinate(file, tensor);
+    break;
+  case strategy::compressed:
+    tensor_fwrite_compressed(file, tensor);
+    break;
+  case strategy::ekmr:
+    tensor_fwrite_ekmr(file, tensor);
+    break;
+  default:
+    die("Tensor storage strategy '%d' is not supported.\n", 
+	strategy_to_string(tensor->strategy));
+  }
 }
 
 void
@@ -79,7 +185,7 @@ tensor_write(char const *filename, tensor_t const *tensor)
 {
   FILE *file;
   
-  information("tensor_write(filename='%s', tensor=0x%x)\n", filename, tensor);
+  debug("tensor_write(filename='%s', tensor=0x%x)\n", filename, tensor);
   
   file = fopen_or_die(filename, "w+");
   tensor_fwrite(file, tensor);

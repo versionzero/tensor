@@ -1,11 +1,16 @@
 
-#ifndef _TENSOR_STORAGE_H_
-#define _TENSOR_STORAGE_H_
+#ifndef _STORAGE_H_
+#define _STORAGE_H_
 
-#include "types.h"
+#include "tensor.h"
 
-void *tensor_storage_coordinate_strategy_new(uint nnz);
-void *tensor_storage_ekmr_strategy_new(uint nnz);
+void* storage_malloc(tensor_t const *tensor, bool naive = false);
+storage_compressed_t* storage_malloc_compressed(tensor_t const *tensor, bool naive = false);
+storage_ekmr_t* storage_malloc_ekmr(tensor_t const *tensor, bool naive = false);
+
+void storage_convert_inplace(tensor_t *destination, tensor_t *source);
+void storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *source);
+void storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source);
 
 #endif
 

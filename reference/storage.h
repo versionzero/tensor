@@ -874,7 +874,7 @@ END_NAMESPACE(storage);
 
 void validate_strategy(int code);
 storage::strategy::type extract_stategy(int code);
-char const* strategy_name(int code);
+char const* strategy_to_string(int code);
 
 /*--------------------------------------------------------------------*/
 

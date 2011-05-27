@@ -5,10 +5,6 @@
 #include "types.h"
 #include <time.h>
 
-/* True and False for our purposes */
-#define FALSE 0
-#define TRUE  1
-
 /* How close to zero is zero */
 #define EPSILON 1e-10
 
@@ -23,6 +19,17 @@
 
 /* Determine if a number is a power of 2 */
 bool is_power_of_two(uint n);
+
+/* Determine if a number is as close to zero as we consider zero */
+bool might_as_well_be_zero(double d);
+
+/* Return a string version of a boolean type */
+const char* bool_to_string(bool b);
+
+/* Determine the appropriate name to base the output file names on.
+   Note that this command is destructive, so the input buffer *will*
+   be modified. */
+char* basename(char *name);
  
 #endif /* _UTILITY_H_ */
 

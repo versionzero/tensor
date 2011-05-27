@@ -54,7 +54,7 @@ class coordinate {
 public:
 
   std::istream&
-  read(std::istream& in, storage::tensor<T>& data)  {
+  read(std::istream& in, strategy::tensor<T>& data)  {
     
     T   v;
     int i, j, k;
@@ -78,7 +78,7 @@ public:
   }
 
   std::ostream&
-  write(std::ostream& out, storage::tensor<T> const &data) const {
+  write(std::ostream& out, strategy::tensor<T> const &data) const {
    
     T   v;
     int n, nnz;

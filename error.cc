@@ -9,17 +9,19 @@ extern char *program_name;
 extern bool verbose;
 
 void
-verror(unsigned int type, char const *format, va_list args)
+verror(uint type, char const *format, va_list args)
 {
   bool show;
   
-  show = verbose || (type & D_MESSAGE) || (type & D_WARNING || type & D_ERROR);
+  show = verbose || !(type & (D_INFORMATION | D_DEBUG));
   if (show) {
     if (!(type & D_MESSAGE)) {
       fprintf(stderr, "%s: ", program_name);
     }
     if (type & D_INFORMATION) {
       fprintf(stderr, "INFORMATION: ");
+    } else if (type & D_DEBUG) {
+      fprintf(stderr, "DEBUG: ");
     } else if (type & D_WARNING) {
       fprintf(stderr, "WARNING: ");
     } else if (type & D_ERROR) {
@@ -53,6 +55,16 @@ information(char const *format, ...)
 }
 
 void
+debug(char const *format, ...)
+{
+  va_list args;
+
+  va_start(args, format);
+  verror(D_DEBUG, format, args);
+  va_end(args);
+}
+
+void
 warning(char const *format, ...)
 {
   va_list args;
@@ -63,7 +75,7 @@ warning(char const *format, ...)
 }
 
 void
-error(unsigned int type, char const *format, ...)
+error(uint type, char const *format, ...)
 {
   va_list args;
   

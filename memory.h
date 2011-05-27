@@ -15,7 +15,7 @@
 void *malloc_or_die(size_t size, char const* file, uint const line);
 
 /* Free memory and set the pointer to null */
-void safe_delete(void *p);
+void safe_free(void *p);
 
 #endif
 

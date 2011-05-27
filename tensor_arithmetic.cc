@@ -15,7 +15,9 @@ tensor_operation_inplace(tensor_t       *t1,
 {
   uint i, j, k;
 
-  information("Operation '%s'\n", name);  
+  debug("tensor_operation_inplace(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
+	t1, t2, op, name);
+  
   tensor_compatible(t1, t2);
 
 #if 0
@@ -36,13 +38,17 @@ tensor_operation(tensor_t const *t1,
 		 char const     *name)
 {
   tensor_t *tr;
-
-  information("Operation '%s'\n", name);  
+  
+  debug("tensor_operation(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
+	t1, t2, op, name);
+  
   tensor_compatible(t1, t2);
-  tr = tensor_new(t1->l, t1->m, t1->n);
-  tensor_copy_inplace(tr, t1);
+  tr = tensor_malloc_from_template(t1);
+#if 0
+  tensor_convert_inplace(tr, t1);
   tensor_operation_inplace(tr, t2, op, name);
-
+#endif
+  
   return tr;
 }
 
@@ -60,9 +66,11 @@ tensor_multiply_inplace(tensor_t *tr, tensor_t const *t1, tensor_t const *t2)
 {
   uint i, j, k;
   
-  information("Operation 'Multiplication'\n");  
+  debug("tensor_multiply_inplace(tr=0x%x, t1=0x%x, t2=0x%x)\n", tr, t1, t2);
+  
   tensor_compatible(t1, t2);
-
+  tensor_compatible(tr, t1);
+  
 #if 0  
   for (i = 0; i < t1->m; ++i) {
     for (j = 0; j < t1->n; ++j) {
@@ -80,10 +88,12 @@ tensor_multiply(tensor_t const *t1, tensor_t const *t2)
 {
   tensor_t *tr;
   
+  debug("tensor_multiply_inplace(t1=0x%x, t2=0x%x)\n", t1, t2);
+  
   tensor_compatible(t1, t2);
-  tr = tensor_new(t1->l, t1->m, t1->n);
+  tr = tensor_malloc_from_template(t1);
   tensor_multiply_inplace(tr, t1, t2);
-
+  
   return tr;
 }
 

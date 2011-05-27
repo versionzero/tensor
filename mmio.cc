@@ -135,19 +135,19 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
 
     /* second field describes whether this is a sparse matrix (in coordinate
             storgae) or a dense array */
-
-
-    if (strcmp(crd, MM_SPARSE_STR) == 0)
-        mm_set_sparse(matcode);
-    else
-    if (strcmp(crd, MM_DENSE_STR) == 0)
-            mm_set_dense(matcode);
-    else
-        return MM_UNSUPPORTED_TYPE;
+    if (strcmp(crd, MM_SPARSE_STR) == 0) {
+      mm_set_sparse(matcode);
+    } else if (strcmp(crd, MM_DENSE_STR) == 0) {
+      mm_set_dense(matcode);
+    } else if (strcmp(crd, MM_COMPRESSED_STR) == 0) {
+      mm_set_compressed(matcode);
+    } else if (strcmp(crd, MM_EKMR_STR) == 0) {
+      mm_set_ekmr(matcode);
+    } else {
+      return MM_UNSUPPORTED_TYPE;
+    }
     
-
-    /* third field */
-
+    /* third field */    
     if (strcmp(data_type, MM_REAL_STR) == 0)
         mm_set_real(matcode);
     else
@@ -199,7 +199,15 @@ int mm_write_tensor_coordinate_size(FILE *f, int L, int M, int N, int nz)
   return 0;
 }
 
-int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz )
+int mm_write_tensor_compressed_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int size)
+{
+  if (fprintf(f, "%d %d %d %d %s %d\n", L, M, N, nz, orientation, size) < 4) {
+    return MM_COULD_NOT_WRITE_FILE;
+  }
+  return 0;
+}
+
+int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz)
 {
     char line[MM_MAX_LINE_LENGTH];
     int num_items_read;
@@ -231,34 +239,63 @@ int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz )
 
 int mm_read_tensor_coordinate_size(FILE *f, int *L, int *M, int *N, int *nz)
 {
-    char line[MM_MAX_LINE_LENGTH];
-    int num_items_read;
-
-    /* set return null parameter values, in case we exit with errors */
-    *L = *M = *N = *nz = 0;
-
-    /* now continue scanning until you reach the end-of-comments */
-    do {
-      if (NULL == fgets(line, MM_MAX_LINE_LENGTH, f)) {
-	return MM_PREMATURE_EOF;
-      }
-    } while ('%' ==line[0]);
-
-    /* line[] is either blank or has L,M,N, nz */
-    if (4 == sscanf(line, "%d %d %d %d", L, M, N, nz)) {
-        return 0;
-    } else {
-      do { 
-        num_items_read = fscanf(f, "%d %d %d %d", L, M, N, nz);
+  char line[MM_MAX_LINE_LENGTH];
+  int num_items_read;
+  
+  /* set return null parameter values, in case we exit with errors */
+  *L = *M = *N = *nz = 0;
+  
+  /* now continue scanning until you reach the end-of-comments */
+  do {
+    if (NULL == fgets(line, MM_MAX_LINE_LENGTH, f)) {
+      return MM_PREMATURE_EOF;
+    }
+  } while ('%' == line[0]);
+  
+  /* line[] is either blank or has L,M,N,nz */
+  if (4 == sscanf(line, "%d %d %d %d", L, M, N, nz)) {
+    return 0;
+  } else {
+    do { 
+      num_items_read = fscanf(f, "%d %d %d %d", L, M, N, nz);
         if (EOF == num_items_read) {
 	  return MM_PREMATURE_EOF;
 	}
-      } while (num_items_read != 4);
-    }
-
-    return 0;
+    } while (num_items_read != 4);
+  }
+  
+  return 0;
 }
 
+int mm_read_tensor_compressed_size(FILE *f, int *L, int *M, int *N, int *nz, char *orientation, int *size)
+{
+  char line[MM_MAX_LINE_LENGTH];
+  int num_items_read;
+  
+  /* set return null parameter values, in case we exit with errors */
+  *L = *M = *N = *nz = *orientation = *size = 0;
+  
+  /* now continue scanning until you reach the end-of-comments */
+  do {
+    if (NULL == fgets(line, MM_MAX_LINE_LENGTH, f)) {
+      return MM_PREMATURE_EOF;
+    }
+  } while ('%' == line[0]);
+  
+  /* line[] is either blank or has L,M,N,nz,orientation,size */
+  if (6 == sscanf(line, "%d %d %d %d %s %d", L, M, N, nz, orientation, size)) {
+    return 0;
+  } else {
+    do { 
+      num_items_read = fscanf(f, "%d %d %d %d %s %d", L, M, N, nz, orientation, size);
+        if (EOF == num_items_read) {
+	  return MM_PREMATURE_EOF;
+	}
+    } while (num_items_read != 6);
+  }
+  
+  return 0;
+}
 
 int mm_read_matrix_array_size(FILE *f, int *M, int *N)
 {
@@ -537,26 +574,30 @@ char  *mm_typecode_to_str(MM_typecode matcode)
 {
     char buffer[MM_MAX_LINE_LENGTH];
     char const *types[4];
-	char *mm_strdup(const char *);
-    int error =0;
-
+    char *mm_strdup(const char *);
+    
     /* check for MTX type */
-    if (mm_is_matrix(matcode)) 
-        types[0] = MM_MTX_STR;
-    if (mm_is_tensor(matcode)) 
-        types[0] = MM_TENSOR_STR;
-    else
-        error=1;
-
+    if (mm_is_matrix(matcode)) {
+      types[0] = MM_MTX_STR;
+    } else if (mm_is_tensor(matcode)) {
+      types[0] = MM_TENSOR_STR;
+    } else {
+      return NULL;
+    }
+    
     /* check for CRD or ARR matrix */
-    if (mm_is_sparse(matcode))
-        types[1] = MM_SPARSE_STR;
-    else
-    if (mm_is_dense(matcode))
-        types[1] = MM_DENSE_STR;
-    else
-        return NULL;
-
+    if (mm_is_sparse(matcode)) {
+      types[1] = MM_SPARSE_STR;
+    } else if (mm_is_dense(matcode)) {
+      types[1] = MM_DENSE_STR;
+    } else if (mm_is_compressed(matcode)) {
+      types[1] = MM_COMPRESSED_STR;
+    } else if (mm_is_ekmr(matcode)) {
+      types[1] = MM_EKMR_STR;
+    } else {
+      return NULL;
+    }
+    
     /* check for element data type */
     if (mm_is_real(matcode))
         types[2] = MM_REAL_STR;

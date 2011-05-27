@@ -156,7 +156,7 @@ main(int argc, char **argv)
   }
   
   /* --- read the tensor data --- */
-  cerr << "Using '" << strategy_name(strategy) 
+  cerr << "Using '" << strategy_to_string(strategy) 
        << "' representation." << endl;
   t1 = read_tensor(fn1_in, strategy);
   t2 = read_tensor(fn2_in, strategy);

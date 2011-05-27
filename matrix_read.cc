@@ -18,7 +18,7 @@ matrix_read_array(FILE *f)
     die("Failed to read matrix size (%d).\n", result);
   }
   
-  mr = matrix_new(m, n);
+  mr = matrix_malloc(m, n);
 
   for (i = 0; i < mr->m; ++i) {
     for (j = 0; j < mr->n; ++j) {
@@ -41,7 +41,7 @@ matrix_read_coordinate(FILE *f)
     die("Failed to read matrix size (%d).\n", result);
   }
   
-  mr = matrix_new(m, n);
+  mr = matrix_malloc(m, n);
   matrix_clear(mr);
   
   while (nnz--) {

@@ -11,8 +11,8 @@ typedef struct {
   double      **data;
 } matrix_t;
 
-matrix_t *matrix_new(uint m, uint n, ownership_t owner = creator);
-void matrix_delete(matrix_t *m);
+matrix_t *matrix_malloc(uint m, uint n, ownership_t owner = creator);
+void matrix_free(matrix_t *m);
 void matrix_clear(matrix_t *m1);
 matrix_t *matrix_copy_shallow(matrix_t const *m1);
 void matrix_copy_shallow_inplace(matrix_t *mr, matrix_t const *m1);

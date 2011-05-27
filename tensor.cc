@@ -1,7 +1,6 @@
 
 #include "error.h"
 #include "file.h"
-#include "matrix.h"
 #include "tensor.h"
 #include "utility.h"
 #include <assert.h>
@@ -9,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include <unistd.h>
 
 #define OPTION_MESSAGE(x,a,b)   (x ? a:b)
@@ -16,35 +16,16 @@
 
 #define DESCRIPTION "A tool for performing basic arithmetic on th-order tensors."
 #define VERSION     "Version 0.01 (" __DATE__ "), " \
-  "Copyright (C) 2011, and GNU GPL'd, by Ben Burnett\n" \
+  "Copyright (C) 2011, and GPLv3'd, by Ben Burnett\n" \
   "This is free software; see the source for copying conditions.  There is NO\n" \
   "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+
+#define DEFAULT_VERBOSITY false
 
 int  storage_strategy;
 int  operation_code;
 char *program_name;
 bool verbose;
-
-/* Determine the appropriate name to base the output file names on.
-   Note that this command is destructive, so the input buffer *will*
-   be modified. */
-char*
-basename(char *name)
-{
-  char *base, *dot;
-
-  base = strrchr(name, '/');
-  if (NULL != base && '/' == *base) {
-    base++;
-  } else {
-    base = name;
-  }
-  if (NULL != (dot = strrchr(name, '.'))) {
-    *dot = '\0';
-  }
-  
-  return base;
-}
 
 void
 usage() 
@@ -55,24 +36,9 @@ usage()
   message("\t%s [options] <input1> <input2> [output]\n\n",
 	  program_name);  
   message("Options:\n");
-#if 0
-  message("\t-s#\t\ttensor storage strategy (default: %d)\n",
-	  DEFAULT_TENSOR_STORAGE_STRATEGY);
-  message("\t-d\t\ttoggle image debugging (default: %s)\n", 
-	  DEFAULT_ON_OR_OFF(DEFAULT_IMAGE_DEBUGGING));
-  message("\t-g#\t\tnumber of generations (default: %s)\n", 
-	  DEFAULT_GENERATIONS);
-  message("\t-m#\t\tspecies mutation factor (default: %d)\n",
-	  DEFAULT_SPECIES_MUTATION_FACTOR);
-  message("\t-p#\t\tpopulation size (default: %d)\n",
-	  DEFAULT_POPULATION_SIZE);
-  message("\t-q#\t\tJPEG quality (default: %d)\n",
-	  DEFAULT_IMAGE_QUALITY);
-  message("\t-r<name>\tresult quantization matrix population (default: none)\n");
-  message("\t-s<name>\tseed   quantization matrix population (default: none)\n");  
-  message("\t-v\t\ttoggle verbosity (default: %s)\n", 
-	  DEFAULT_ON_OR_OFF(DEFAULT_IMAGE_DEBUGGING));
-#endif
+  message("\t-h\tthis screen\n");
+  message("\t-v\ttoggle verbosity (default: %s)\n", 
+	  DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
   exit(1);
 }
 
@@ -90,6 +56,22 @@ timed_tensor_read(char const *name)
   return tensor;
 }
 
+tensor_t*
+timed_tensor_convert(tensor_t *source, strategy::type_t strategy, orientation::type_t orientation)
+{
+  clock_t  t;
+  tensor_t *tensor;
+  
+  message("Converting from '%s' to '%s' ... ", 
+	  strategy_to_string(source->strategy), 
+	  strategy_to_string(strategy));
+  t = clock();
+  tensor = tensor_convert(source, strategy, orientation);
+  message("done [%lf]\n", SECONDS_SINCE(t));
+
+  return tensor;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -102,16 +84,33 @@ main(int argc, char *argv[])
   /* store the our name for future use */
   program_name = basename(argv[0]);
   
+  /* just to be safe, set the tensors to null */
+  t1 = t2 = tr = NULL;
+
+  /* set the program's defaults */
+  verbose = false;  
+  
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "c:dg:q:r:s:v"))) {
+  opterr = 0; /* we will privide our own error messages */
+  while (-1 != (c = getopt(argc, argv, "hv"))) {
     switch (c) {
+    case 'h':
+      usage();
+      break;
     case 'v':
       verbose = !verbose;
+      break;  
+    case '?':
+      if (isprint(optopt)) {
+	die("Unknown option `-%c'.\n", optopt);
+      } else {
+	die("Unknown option character `\\x%x'.\n", optopt);
+      }
       break;
     default:
-      die("Uknown option -%c.\n", c);
+      abort();
       break;
-    }
+    }    
   }
   
   /* count the number of remaining arguments */
@@ -120,15 +119,16 @@ main(int argc, char *argv[])
   }
   
   offset = optind;
+  name   = argv[offset++];
+  t1     = timed_tensor_read(name);  
+  debug("main: t1=0x%x\n", t1);
+  
   name = argv[offset++];
-  t1 = timed_tensor_read(name);
+  t2   = timed_tensor_read(name);  
+  debug("main: t2=0x%x\n", t2);
   
-  information("main: t1=0x%x\n", t1);
-  
-  name = argv[offset++];
-  t2 = timed_tensor_read(name);
-  
-  information("main: t2=0x%x\n", t2);
+  tr = timed_tensor_convert(t2, strategy::compressed, orientation::row);  
+  debug("main: tr=0x%x\n", tr);
   
   if (offset == argc) {
     file = stdout;
@@ -139,12 +139,12 @@ main(int argc, char *argv[])
     message("Writing %s ... ", name);
   }  
   t = clock();
-  tensor_fwrite(file, t1);
+  tensor_fwrite(file, tr);
   message("done [%lf]\n", SECONDS_SINCE(t));
   
-  tensor_delete(tr);
-  tensor_delete(t2);
-  tensor_delete(t1);
+  tensor_free(tr);
+  tensor_free(t2);
+  tensor_free(t1);
   
   return 0;
 }
