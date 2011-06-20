@@ -5,7 +5,7 @@
 void
 storage_clear_coordinate(tensor_t *tensor)
 {
-  int                  i;
+  uint i;
   storage_coordinate_t *storage;
   coordinate_tuple_t   *tuples;
   
@@ -25,7 +25,7 @@ storage_clear_coordinate(tensor_t *tensor)
 void
 storage_clear_compressed(tensor_t *tensor)
 {
-  int                  i;
+  uint i;
   storage_compressed_t *storage;
   
   debug("storage_clear_compressed(0x%x)\n", tensor);
@@ -45,15 +45,26 @@ storage_clear_compressed(tensor_t *tensor)
 void
 storage_clear_ekmr(tensor_t *tensor)
 {
-  int i;
+  uint i;
+  storage_ekmr_t *storage;
   
   debug("storage_clear_ekmr(0x%x)\n", tensor);
+  
+  storage = STORAGE_EKMR(tensor);
+  
+  for (i = 0; i < storage->size; ++i) {
+    storage->RO[i] = 0;
+  }
+  
+  for (i = 0; i < tensor->nnz; ++i) {
+    storage->CK[i] = 0;
+  }
 }
 
 void
 tensor_clear(tensor_t *tensor)
 {
-  int i;
+  uint i;
   
   debug("tensor_clear(0x%x)\n", tensor);
   tensor_validate(tensor);
@@ -69,11 +80,9 @@ tensor_clear(tensor_t *tensor)
   case strategy::compressed:
     storage_clear_compressed(tensor);
     break;
-#if 0
   case strategy::ekmr:
     storage_clear_ekmr(tensor);
     break;
-#endif
   default:
     die("Tensor storage strategy '%d' is not supported.\n", tensor->strategy);
   }

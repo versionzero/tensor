@@ -25,6 +25,7 @@ int mm_read_banner(FILE *f, MM_typecode *matcode);
 int mm_read_matrix_coordinate_size(FILE *f, int *M, int *N, int *nz);
 int mm_read_tensor_coordinate_size(FILE *f, int *L, int *M, int *N, int *nz);
 int mm_read_tensor_compressed_size(FILE *f, int *L, int *M, int *N, int *nz, char *orientation, int *size);
+int mm_read_vector_array_size(FILE *f, int *N);
 int mm_read_matrix_array_size(FILE *f, int *M, int *N);
 int mm_read_tensor_array_size(FILE *f, int *L, int *M, int *N);
 
@@ -32,12 +33,14 @@ int mm_write_banner(FILE *f, MM_typecode matcode);
 int mm_write_matrix_coordinate_size(FILE *f, int M, int N, int nz);
 int mm_write_tensor_coordinate_size(FILE *f, int L, int M, int N, int nz);
 int mm_write_tensor_compressed_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int size);
+int mm_write_vector_array_size(FILE *f, int N);
 int mm_write_matrix_array_size(FILE *f, int M, int N);
 int mm_write_tensor_array_size(FILE *f, int L, int M, int N);
 
 
 /********************* MM_typecode query fucntions ***************************/
 
+#define mm_is_vector(typecode)	   ((typecode)[0]=='V')
 #define mm_is_matrix(typecode)	   ((typecode)[0]=='M')
 #define mm_is_tensor(typecode)	   ((typecode)[0]=='T')
 
@@ -63,6 +66,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 
 /********************* MM_typecode modify fucntions ***************************/
 
+#define mm_set_vector(typecode)     ((*typecode)[0]='V')
 #define mm_set_matrix(typecode)     ((*typecode)[0]='M')
 #define mm_set_tensor(typecode)	    ((*typecode)[0]='T')
 
@@ -114,6 +118,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 
  ***********************************************************************/
 
+#define MM_VECTOR_STR		"vector"
 #define MM_MTX_STR		"mtx"
 #define MM_TENSOR_STR		"tensor"
 

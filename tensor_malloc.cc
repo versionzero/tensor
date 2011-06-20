@@ -9,15 +9,12 @@
 #include <stdlib.h>
 
 tensor_t*
-tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation, bool naive)
+tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation)
 {
   tensor_t *tensor;
   
-  debug("tensor_malloc(l=%d, m=%d, n=%d, nnz=%d, strategy='%s', orientation='%s', naive='%s')\n",
-	l, m, n, nnz,
-	strategy_to_string(strategy),
-	orientation_to_string(orientation),
-	bool_to_string(naive));
+  debug("tensor_malloc(l=%d, m=%d, n=%d, nnz=%d, strategy='%s', orientation='%s')\n",
+	l, m, n, nnz, strategy_to_string(strategy), orientation_to_string(orientation));
   
   tensor              = MALLOC(tensor_t);
   tensor->l           = l;
@@ -31,7 +28,7 @@ tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orien
   
   if (nnz > 0) {
     tensor->values  = MALLOC_N(double, nnz);
-    tensor->storage = storage_malloc(tensor, naive);
+    tensor->storage = storage_malloc(tensor);
   }
   
   debug("tensor_malloc: tensor->values=0x%x\n", tensor->values);

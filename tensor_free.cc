@@ -37,7 +37,7 @@ storage_free(storage_ekmr_t *storage)
 {
   debug("storage_free((storage_ekmr_t*)0x%x)\n", storage);
   
-  safe_free(storage->R);
+  safe_free(storage->RO);
   safe_free(storage->CK);
 }
 

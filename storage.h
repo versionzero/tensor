@@ -4,9 +4,9 @@
 
 #include "tensor.h"
 
-void* storage_malloc(tensor_t const *tensor, bool naive = false);
-storage_compressed_t* storage_malloc_compressed(tensor_t const *tensor, bool naive = false);
-storage_ekmr_t* storage_malloc_ekmr(tensor_t const *tensor, bool naive = false);
+void* storage_malloc(tensor_t const *tensor);
+storage_compressed_t* storage_malloc_compressed(tensor_t const *tensor);
+storage_ekmr_t* storage_malloc_ekmr(tensor_t const *tensor);
 
 void storage_convert_inplace(tensor_t *destination, tensor_t *source);
 void storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *source);

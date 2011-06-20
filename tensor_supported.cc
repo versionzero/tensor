@@ -14,7 +14,7 @@ tensor_supported(tensor_t const *t1)
 }
 
 void 
-tensor_check_range(tensor_t const *t1, uint i, uint j, uint k, uint m, uint n, int l)
+tensor_check_range(tensor_t const *t1, uint i, uint j, uint k, uint m, uint n, uint l)
 {
   if (i > t1->m || m > t1->m ||
       j > t1->n || n > t1->n ||

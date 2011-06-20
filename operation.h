@@ -1,42 +1,26 @@
 
-#pragma once
 #ifndef _OPERATION_H_
 #define _OPERATION_H_
 
-/*--------------------------------------------------------------------*/
+#include "matrix.h"
+#include "tensor.h"
+#include "vector.h"
 
-#include "utility.h"
+namespace operation {
+  typedef enum {
+    unknown,
+    n_mode_product
+  } type_t;
+}
 
-/*--------------------------------------------------------------------*/
+char const* operation_to_string(operation::type_t operation);
+char const* operation_to_description_string(operation::type_t operation);
+operation::type_t string_to_operation(char const *name);
 
-BEGIN_NAMESPACE(operations);
+void operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+matrix_t *operation_n_mode_product(vector_t const *vector, tensor_t const *tensor);
 
-/*--------------------------------------------------------------------*/
-
-BEGIN_NAMESPACE(arithmetic);
-
-typedef enum {
-  addition       = 0,
-  subtraction    = 1,
-  multiplication = 2,
-  max            = multiplication
-} type;
-
-END_NAMESPACE(arithmetic);
-
-/*--------------------------------------------------------------------*/
-
-END_NAMESPACE(operations);
-
-/*--------------------------------------------------------------------*/
-
-void validate_operation(int code);
-operations::arithmetic::type extract_operation(int code);
-char const* operation_name(int code);
-
-/*--------------------------------------------------------------------*/
-
-#endif /* _OPERATION_H_ */
+#endif
 
 /*
   Local Variables:

@@ -3,7 +3,7 @@
 #include "file.h"
 #include "matrix.h"
 #include "mmio.h"
-
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -55,26 +55,35 @@ matrix_read_coordinate(FILE *f)
 }
 
 matrix_t*
-matrix_fread(FILE *f)
+matrix_fread_data(FILE *file, MM_typecode type)
 {
-  MM_typecode type;
-  matrix_t    *mr;
+  matrix_t *mr;
   
-  if (0 != mm_read_banner(f, &type)) {
-    die("Could not process Matrix Market banner.\n");
-  }
+  debug("matrix_fread_data(file=0x%x, type='%s')\n", 
+	file, mm_typecode_to_str(type));
   
   if (!mm_is_matrix(type) || !mm_is_real(type)) {
     die("No support for matrix type: [%s]\n", mm_typecode_to_str(type));
   }
   
   if (mm_is_array(type)) {
-    mr = matrix_read_array(f);
+    mr = matrix_read_array(file);
   } else {
-    mr = matrix_read_coordinate(f);
+    mr = matrix_read_coordinate(file);
   }
   
   return mr;
+}
+
+matrix_t*
+matrix_fread(FILE *file)
+{
+  MM_typecode type;
+  
+  debug("matrix_fread(0x%x)\n", file);
+  
+  datatype_read_typecode(file, &type);
+  return matrix_fread_data(file, type);
 }
 
 matrix_t*

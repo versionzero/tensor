@@ -1,6 +1,8 @@
 
+#include "compatible.h"
 #include "error.h"
 #include "tensor.h"
+#include "operation.h"
 #include "arithmetic.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +20,7 @@ tensor_operation_inplace(tensor_t       *t1,
   debug("tensor_operation_inplace(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
 	t1, t2, op, name);
   
-  tensor_compatible(t1, t2);
+  compatible(t1, t2);
 
 #if 0
   for (k = 0; k < t1->l; ++k) {
@@ -42,7 +44,7 @@ tensor_operation(tensor_t const *t1,
   debug("tensor_operation(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
 	t1, t2, op, name);
   
-  tensor_compatible(t1, t2);
+  compatible(t1, t2);
   tr = tensor_malloc_from_template(t1);
 #if 0
   tensor_convert_inplace(tr, t1);
@@ -68,8 +70,8 @@ tensor_multiply_inplace(tensor_t *tr, tensor_t const *t1, tensor_t const *t2)
   
   debug("tensor_multiply_inplace(tr=0x%x, t1=0x%x, t2=0x%x)\n", tr, t1, t2);
   
-  tensor_compatible(t1, t2);
-  tensor_compatible(tr, t1);
+  compatible(t1, t2);
+  compatible(tr, t1);
   
 #if 0  
   for (i = 0; i < t1->m; ++i) {
@@ -90,10 +92,9 @@ tensor_multiply(tensor_t const *t1, tensor_t const *t2)
   
   debug("tensor_multiply_inplace(t1=0x%x, t2=0x%x)\n", t1, t2);
   
-  tensor_compatible(t1, t2);
+  compatible(t1, t2);
   tr = tensor_malloc_from_template(t1);
   tensor_multiply_inplace(tr, t1, t2);
   
   return tr;
 }
-

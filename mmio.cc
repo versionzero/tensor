@@ -128,10 +128,11 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
       mm_set_matrix(matcode);
     } else if (strcmp(mtx, MM_TENSOR_STR) == 0) {
       mm_set_tensor(matcode);
+    } else if (strcmp(mtx, MM_VECTOR_STR) == 0) {
+      mm_set_vector(matcode);
     } else {
-      return  MM_UNSUPPORTED_TYPE;
-    }   
-
+      return MM_UNSUPPORTED_TYPE;
+    }
 
     /* second field describes whether this is a sparse matrix (in coordinate
             storgae) or a dense array */
@@ -297,6 +298,33 @@ int mm_read_tensor_compressed_size(FILE *f, int *L, int *M, int *N, int *nz, cha
   return 0;
 }
 
+int mm_read_vector_array_size(FILE *f, int *N)
+{
+    char line[MM_MAX_LINE_LENGTH];
+    int num_items_read;
+    /* set return null parameter values, in case we exit with errors */
+    *N = 0;
+	
+    /* now continue scanning until you reach the end-of-comments */
+    do {
+      if (NULL == fgets(line,MM_MAX_LINE_LENGTH,f)) {
+	return MM_PREMATURE_EOF;
+      }
+    } while ('%' == line[0]);
+
+    /* line[] is either blank or has N */
+    if (1 == sscanf(line, "%d", N)) {
+      return 0;
+    } else { /* we have a blank line */
+      do { 
+	num_items_read = fscanf(f, "%d", N);
+	if (num_items_read == EOF) return MM_PREMATURE_EOF;
+      } while (num_items_read != 1);
+    }
+    
+    return 0;
+}
+
 int mm_read_matrix_array_size(FILE *f, int *M, int *N)
 {
     char line[MM_MAX_LINE_LENGTH];
@@ -354,6 +382,14 @@ int mm_read_tensor_array_size(FILE *f, int *L, int *M, int *N)
     }
 
     return 0;
+}
+
+int mm_write_vector_array_size(FILE *f, int N)
+{
+  if (fprintf(f, "%d\n", N) <= 0) {
+    return MM_COULD_NOT_WRITE_FILE;
+  }
+  return 0;
 }
 
 int mm_write_matrix_array_size(FILE *f, int M, int N)
@@ -581,6 +617,8 @@ char  *mm_typecode_to_str(MM_typecode matcode)
       types[0] = MM_MTX_STR;
     } else if (mm_is_tensor(matcode)) {
       types[0] = MM_TENSOR_STR;
+    } else if (mm_is_vector(matcode)) {
+      types[0] = MM_VECTOR_STR;
     } else {
       return NULL;
     }

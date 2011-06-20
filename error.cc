@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-extern char *program_name;
+extern char *tool_name;
 extern bool verbose;
 
 void
@@ -16,7 +16,7 @@ verror(uint type, char const *format, va_list args)
   show = verbose || !(type & (D_INFORMATION | D_DEBUG));
   if (show) {
     if (!(type & D_MESSAGE)) {
-      fprintf(stderr, "%s: ", program_name);
+      fprintf(stderr, "%s: ", tool_name);
     }
     if (type & D_INFORMATION) {
       fprintf(stderr, "INFORMATION: ");

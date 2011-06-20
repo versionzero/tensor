@@ -10,8 +10,8 @@
 tensor_t*
 tensor_fread_coordinate(FILE *file)
 {
-  uint                 i, j, k, q;
-  int                  l, m, n, nnz;
+  uint                 i, j, k;
+  int                  l, m, n, q, nnz;
   int                  result;
   double               d;
   tensor_t             *tensor;
@@ -45,15 +45,14 @@ tensor_fread_coordinate(FILE *file)
 tensor_t*
 tensor_fread_compressed(FILE *file)
 {
-  uint                 i, j, k;
-  int                  l, m, n, nnz, size;
+  uint                 j, k;
+  int                  i, l, m, n, nnz, size;
   int                  result;
   char                 name[20];
   double               d;
   tensor_t             *tensor;
   orientation::type_t  orientation;
   storage_compressed_t *storage;
-  uint                 *indices;
   
   debug("tensor_fread_compressed(0x%x)\n", file);
   
@@ -61,19 +60,19 @@ tensor_fread_compressed(FILE *file)
     die("Failed to read tensor dimensions (%d).\n", result);
   }
   
-  orientation = string_to_orientation(name);
-  tensor      = tensor_malloc(l, m, n, nnz, strategy::compressed, orientation);
-  storage     = STORAGE_COMPRESSED(tensor);
-  indices     = MALLOC_N(uint, size);
+  orientation    = string_to_orientation(name);
+  tensor         = tensor_malloc(l, m, n, nnz, strategy::compressed, orientation);
+  storage        = STORAGE_COMPRESSED(tensor);
+  storage->size  = size+1;
+  storage->RO    = MALLOC_N(uint, storage->size);
+  storage->RO[0] = 0;
   
-  for (i = 0; i < size; ++i) {
+  for (i = 1; i < storage->size; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
-    indices[i] = j;
+    storage->RO[i] = j;
   }
-  
-  storage->RO = indices;
   
   for (i = 0; i < nnz; ++i) {
     if (3 != (result = fscanf(file, "%u %u %lg\n", &j, &k, &d))) {
@@ -88,25 +87,63 @@ tensor_fread_compressed(FILE *file)
 }
 
 tensor_t*
-tensor_fread(FILE *file)
+tensor_fread_ekmr(FILE *file)
 {
-  MM_typecode      type;
+  uint                j;
+  int                 i, l, m, n, nnz, size;
+  int                 result;
+  char                name[20];
+  double              d;
+  tensor_t            *tensor;
+  orientation::type_t orientation;
+  storage_ekmr_t      *storage;
+  
+  debug("tensor_fread_compressed(0x%x)\n", file);
+  
+  if (0 != (result = mm_read_tensor_compressed_size(file, &l, &m, &n, &nnz, name, &size))) {
+    die("Failed to read tensor dimensions (%d).\n", result);
+  }
+  
+  orientation    = string_to_orientation(name);
+  tensor         = tensor_malloc(l, m, n, nnz, strategy::ekmr, orientation);
+  storage        = STORAGE_EKMR(tensor);
+  storage->size  = size+1;
+  storage->RO    = MALLOC_N(uint, storage->size);
+  storage->RO[0] = 0;
+  
+  for (i = 1; i < storage->size; ++i) {
+    if (1 != (result = fscanf(file, "%u\n", &j))) {
+      die("Failed to process line %d of the input stream (%d).\n", i, result);
+    }
+    storage->RO[i] = j;
+  }
+  
+  for (i = 0; i < nnz; ++i) {
+    if (2 != (result = fscanf(file, "%u %lg\n", &j, &d))) {
+      die("Failed to process line %d of the input stream (%d).\n", i, result);
+    }
+    tensor->values[i] = d;
+    storage->CK[i]    = j;
+  }
+  
+  return tensor;
+}
+
+tensor_t*
+tensor_fread_data(FILE *file, MM_typecode type)
+{
   tensor_t         *tensor;
-  int              result;
   strategy::type_t strategy;
   
-  debug("tensor_fread(0x%x)\n", file);
-  
-  if (0 != (result = mm_read_banner(file, &type))) {
-    die("Could not process Matrix Market banner: %s.\n", 
-	mm_error_to_str(result));
-  }
+  debug("tensor_fread_data(file=0x%x, type='%s')\n", 
+	file, mm_typecode_to_str(type));
   
   if (!mm_is_tensor(type)) {
     die("The file does not define a tensor.\n");
   }
   
   strategy = typecode_to_strategy(type);
+  tensor   = NULL;
   
   switch (strategy) {
   case strategy::coordinate:
@@ -115,6 +152,9 @@ tensor_fread(FILE *file)
   case strategy::compressed:
     tensor = tensor_fread_compressed(file);
     break;
+  case strategy::ekmr:
+    tensor = tensor_fread_ekmr(file);
+    break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", strategy);
   }
@@ -122,6 +162,17 @@ tensor_fread(FILE *file)
   debug("tensor_fread: tensor=0x%x\n", tensor);
   
   return tensor;
+}
+
+tensor_t*
+tensor_fread(FILE *file)
+{
+  MM_typecode type;
+  
+  debug("tensor_fread(0x%x)\n", file);
+  
+  datatype_read_typecode(file, &type);
+  return tensor_fread_data(file, type);
 }
 
 tensor_t*

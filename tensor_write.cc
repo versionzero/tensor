@@ -12,15 +12,15 @@ void
 tensor_initialize_type(MM_typecode *type)
 {
   mm_initialize_typecode(type);
-  mm_set_tensor(type);
+  datatype_to_typecode(type, datatype::tensor);
   mm_set_real(type);
 }
 
 void
 tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 {
-  uint                 i;
-  int                  nnz, result;
+  uint                 i, nnz;
+  int                  result;
   MM_typecode          type;
   storage_coordinate_t *storage;
   coordinate_tuple_t   *tuples;
@@ -63,8 +63,8 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 void
 tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
 {
-  uint                 i, l, m, n;
-  int                  nnz, size, result;
+  uint                 l, m, n;
+  int                  i, nnz, size, result;
   MM_typecode          type;
   storage_compressed_t *storage;
   char const           *name;
@@ -95,11 +95,12 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
      should not be too difficult, but it may take some time to ensure
      the re-indexing is correct. */
   
-  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size))) {
+  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size-1))) {
     die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
   }
   
-  for (i = 0; i < size; ++i) {
+  /* we don't write out the 0th entry-- it is a constant: 0 */
+  for (i = 1; i < size; ++i) {
     fprintf(file, "%d\n", storage->RO[i]);
   }
   
@@ -113,8 +114,8 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
 void
 tensor_fwrite_ekmr(FILE *file, tensor_t const *tensor)
 {
-  uint           i, l, m, n;
-  int            nnz, size, result;
+  uint           l, m, n;
+  int            i, nnz, size, result;
   MM_typecode    type;
   storage_ekmr_t *storage;
   char const     *name;
@@ -145,12 +146,13 @@ tensor_fwrite_ekmr(FILE *file, tensor_t const *tensor)
      should not be too difficult, but it may take some time to ensure
      the re-indexing is correct. */
   
-  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size))) {
+  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size-1))) {
     die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
   }
   
-  for (i = 0; i < size; ++i) {
-    fprintf(file, "%d\n", storage->R[i]);
+  /* we don't write out the 0th entry-- it is a constant: 0 */
+  for (i = 1; i < size; ++i) {
+    fprintf(file, "%d\n", storage->RO[i]);
   }
   
   for (i = 0; i < nnz; ++i) {

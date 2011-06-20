@@ -2,7 +2,6 @@
 #include "error.h"
 #include "matrix.h"
 #include "mmio.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,7 +10,7 @@ matrix_copy_shallow_inplace(matrix_t *mr, matrix_t const *m1)
 {
   information("Matrix Copy (inplace, shallow)\n");
   
-  mr->owner = viewer;
+  mr->owner = ownership::viewer;
   mr->data  = m1->data;
 }
 
@@ -21,7 +20,7 @@ matrix_copy_shallow(matrix_t const *m1)
   matrix_t *mr;
   
   information("Matrix Copy (shallow)\n");
-  mr = matrix_malloc(m1->m, m1->n, viewer);
+  mr = matrix_malloc(m1->m, m1->n, ownership::viewer);
   matrix_copy_shallow_inplace(mr, m1);
 
   return mr;

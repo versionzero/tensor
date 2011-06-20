@@ -8,14 +8,14 @@
 #include <stdlib.h>
 
 int 
-storage_index_compare_for_compressed_row(const void *a, const void *b)
+storage_index_compare_for_compressed_row(void const *a, void const *b)
 {
-  int                result;
-  coordinate_tuple_t *ta;
-  coordinate_tuple_t *tb;
+  int result;
+  coordinate_tuple_t const *ta;
+  coordinate_tuple_t const *tb;
   
-  ta = (coordinate_tuple_t*) a;
-  tb = (coordinate_tuple_t*) b;
+  ta = (coordinate_tuple_t const*) a;
+  tb = (coordinate_tuple_t const*) b;
   
   if (0 == (result = ta->i - tb->i)) {
     if (0 == (result = ta->k - tb->k)) {
@@ -27,14 +27,14 @@ storage_index_compare_for_compressed_row(const void *a, const void *b)
 }
 
 int 
-storage_index_compare_for_compressed_column(const void *a, const void *b)
+storage_index_compare_for_compressed_column(void const *a, void const *b)
 {
-  int                result;
-  coordinate_tuple_t *ta;
-  coordinate_tuple_t *tb;
+  int result;
+  coordinate_tuple_t const *ta;
+  coordinate_tuple_t const *tb;
   
-  ta = (coordinate_tuple_t*) a;
-  tb = (coordinate_tuple_t*) b;
+  ta = (coordinate_tuple_t const*) a;
+  tb = (coordinate_tuple_t const*) b;
   
   if (0 == (result = ta->j - tb->j)) {
     if (0 == (result = ta->k - tb->k)) {
@@ -46,14 +46,14 @@ storage_index_compare_for_compressed_column(const void *a, const void *b)
 }
 
 int 
-storage_index_compare_for_compressed_tube(const void *a, const void *b)
+storage_index_compare_for_compressed_tube(void const *a, void const *b)
 {
-  int                result;
-  coordinate_tuple_t *ta;
-  coordinate_tuple_t *tb;
+  int result;
+  coordinate_tuple_t const *ta;
+  coordinate_tuple_t const *tb;
   
-  ta = (coordinate_tuple_t*) a;
-  tb = (coordinate_tuple_t*) b;
+  ta = (coordinate_tuple_t const*) a;
+  tb = (coordinate_tuple_t const*) b;
     
   if (0 == (result = ta->k - tb->k)) {
     if (0 == (result = ta->j - tb->j)) {
@@ -64,18 +64,19 @@ storage_index_compare_for_compressed_tube(const void *a, const void *b)
   return result;
 }
 
-int 
+void 
 storage_index_encode_for_compressed_row(uint *indices, void const *p, uint nnz)
 {
   uint size, index, current, previous;
-  coordinate_tuple_t *tuple;
+  coordinate_tuple_t const *tuple;
   
-  tuple      = (coordinate_tuple_t*) p;
+  tuple      = (coordinate_tuple_t const*) p;
   size       = 0;
-  previous   = -1;
+  previous   = 0;
   
   debug("storage_index_encode_for_compressed_row(indices=0x%x, tuple=0x%x)\n", indices, tuple);
   
+  indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
     index = tuple[current].i;
     if (previous != index) {
@@ -84,11 +85,9 @@ storage_index_encode_for_compressed_row(uint *indices, void const *p, uint nnz)
     }
   }
   indices[size++] = nnz;
-  
-  return size;
 }
 
-int 
+void 
 storage_index_encode_for_compressed_column(uint *indices, void const *p, uint nnz)
 {
   uint size, index, current, previous;
@@ -96,10 +95,11 @@ storage_index_encode_for_compressed_column(uint *indices, void const *p, uint nn
   
   tuple      = (coordinate_tuple_t const*) p;
   size       = 0;
-  previous   = -1;
+  previous   = 0;
   
   debug("storage_index_encode_for_compressed_column(indices=0x%x, tuple=0x%x)\n", indices, tuple);
   
+  indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
     index = tuple[current].j;
     if (previous != index) {
@@ -108,22 +108,21 @@ storage_index_encode_for_compressed_column(uint *indices, void const *p, uint nn
     }
   }
   indices[size++] = nnz;
-  
-  return size;
 }
 
-int 
+void 
 storage_index_encode_for_compressed_tube(uint *indices, void const *p, uint nnz)
 {
   uint size, index, current, previous;
   coordinate_tuple_t const *tuple; 
   
-  tuple      = (coordinate_tuple_t*) p;
+  tuple      = (coordinate_tuple_t const*) p;
   size       = 0;
-  previous   = -1;
+  previous   = 0;
   
   debug("storage_index_encode_for_compressed_tube(indices=0x%x, tuple=0x%x)\n", indices, tuple);
   
+  indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
     index = tuple[current].k;
     if (previous != index) {
@@ -132,19 +131,17 @@ storage_index_encode_for_compressed_tube(uint *indices, void const *p, uint nnz)
     }
   }
   indices[size++] = nnz;
-  
-  return size;
 }
 
 void
 storage_index_copy_for_compressed_row(void *destination, void const *source, uint nnz)
 {
-  int i;
-  storage_coordinate_t *s;
-  storage_compressed_t const *d;
+  uint i;
+  storage_coordinate_t const *s;
+  storage_compressed_t *d;
   
-  s = (storage_coordinate_t*) source;
-  d = (storage_compressed_t const*) destination;
+  s = (storage_coordinate_t const*) source;
+  d = (storage_compressed_t*) destination;
   
   debug("storage_index_copy_for_compressed_row(destination=0x%x, source=0x%x)\n", d, s);
   
@@ -157,12 +154,12 @@ storage_index_copy_for_compressed_row(void *destination, void const *source, uin
 void
 storage_index_copy_for_compressed_column(void *destination, void const *source, uint nnz)
 {
-  int i;
-  storage_coordinate_t *s;
-  storage_compressed_t const *d;
+  uint i;
+  storage_coordinate_t const *s;
+  storage_compressed_t *d;
   
-  s = (storage_coordinate_t*) source;
-  d = (storage_compressed_t const*) destination;
+  s = (storage_coordinate_t const*) source;
+  d = (storage_compressed_t*) destination;
   
   debug("storage_index_copy_for_compressed_column(destination=0x%x, source=0x%x)\n", d, s);
   
@@ -175,12 +172,12 @@ storage_index_copy_for_compressed_column(void *destination, void const *source, 
 void
 storage_index_copy_for_compressed_tube(void *destination, void const *source, uint nnz)
 {
-  int i;
-  storage_coordinate_t *s;
-  storage_compressed_t const *d;
+  uint i;
+  storage_coordinate_t const *s;
+  storage_compressed_t *d;
   
-  s = (storage_coordinate_t*) source;
-  d = (storage_compressed_t const*) destination;
+  s = (storage_coordinate_t const*) source;
+  d = (storage_compressed_t*) destination;
   
   debug("storage_index_copy_for_compressed_tube(destination=0x%x, source=0x%x)\n", d, s);
   
@@ -193,8 +190,7 @@ storage_index_copy_for_compressed_tube(void *destination, void const *source, ui
 void
 storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *source)
 {
-  int                  i, m, nnz;
-  uint                 *indices;
+  int                  i, nnz;
   storage_base_t       *base;
   storage_compressed_t *d;
   storage_coordinate_t *s;
@@ -211,20 +207,7 @@ storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, ten
   base   = (storage_base_t*) d;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  
-  indices = MALLOC_N(uint, nnz);
-  m       = (*base->callbacks->index_encode)(indices, tuples, nnz);
-  
-  debug("storage_convert_from_coordinate_to_compressed_inplace: compression=%d/%d\n", m, nnz);
-  
-  d->RO   = MALLOC_N(uint, m);
-  d->size = m;
-  
-  for (i = 0; i < m; ++i) {
-    d->RO[i] = indices[i];
-  }
-  
-  safe_free(indices);
+  (*base->callbacks->index_encode)(d->RO, tuples, nnz);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
@@ -233,14 +216,13 @@ storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, ten
 }
 
 storage_compressed_t*
-storage_malloc_compressed(tensor_t const *tensor, bool naive)
+storage_malloc_compressed(tensor_t const *tensor)
 {
   storage_base_t         *base;
   storage_compressed_t   *storage;
   conversion_callbacks_t *callbacks;
   
-  debug("storage_malloc_compressed(tensor=0x%x, naive='%s')\n", 
-	tensor, bool_to_string(naive));
+  debug("storage_malloc_compressed(tensor=0x%x)\n", tensor);
   
   storage       = MALLOC(storage_compressed_t);
   storage->CO   = MALLOC_N(uint, tensor->nnz);
@@ -248,31 +230,34 @@ storage_malloc_compressed(tensor_t const *tensor, bool naive)
   storage->size = 0;
   storage->RO   = NULL;
   
-  if (naive) {
-    storage->size = tensor->nnz;
-    storage->RO   = MALLOC_N(uint, tensor->nnz);
-  }
-  
   callbacks = MALLOC(conversion_callbacks_t);
   
   switch (tensor->orientation) {
   case orientation::row:
+    storage->size            = tensor->m;
     callbacks->index_compare = &storage_index_compare_for_compressed_row;
     callbacks->index_encode  = &storage_index_encode_for_compressed_row;
     callbacks->index_copy    = &storage_index_copy_for_compressed_row;
     break;
   case orientation::column:
+    storage->size            = tensor->n;
     callbacks->index_compare = &storage_index_compare_for_compressed_column;
     callbacks->index_encode  = &storage_index_encode_for_compressed_column;
     callbacks->index_copy    = &storage_index_copy_for_compressed_column;
     break;
   case orientation::tube:
+    storage->size            = tensor->l;
     callbacks->index_compare = &storage_index_compare_for_compressed_tube;
     callbacks->index_encode  = &storage_index_encode_for_compressed_tube;
     callbacks->index_copy    = &storage_index_copy_for_compressed_tube;
     break;
+  default:
+    die("Unknown or unsupported orientation %d.\n", tensor->orientation);
+    break;
   }
   
+  storage->size  += 1;
+  storage->RO     = MALLOC_N(uint, storage->size);
   base            = (storage_base_t*) storage;
   base->callbacks = callbacks;
   

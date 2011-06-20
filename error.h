@@ -12,6 +12,12 @@
 #define D_ERROR      16
 #define D_FATAL      32
 
+#if !defined (NODEBUG)
+#define DEBUG(...) message(__VA_ARGS__)
+#else
+#define DEBUG(...)
+#endif 
+
 void message(char const *format, ...);
 void information(char const *format, ...);
 void debug(char const *format, ...);

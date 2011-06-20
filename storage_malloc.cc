@@ -28,19 +28,20 @@ storage_malloc_coordinate(tensor_t const *tensor)
 }
 
 void*
-storage_malloc(tensor_t const *tensor, bool naive)
+storage_malloc(tensor_t const *tensor)
 {
   void *storage;
   
-  debug("storage_malloc(tensor=0x%x, naive='%s')\n",
-	tensor, bool_to_string(naive));
+  debug("storage_malloc(tensor=0x%x)\n", tensor);
+  
+  storage = NULL;
   
   switch (tensor->strategy) {
   case strategy::coordinate:
     storage = storage_malloc_coordinate(tensor);
     break;
   case strategy::compressed:
-    storage = storage_malloc_compressed(tensor, naive);
+    storage = storage_malloc_compressed(tensor);
     break;
   case strategy::ekmr:
     storage = storage_malloc_ekmr(tensor);

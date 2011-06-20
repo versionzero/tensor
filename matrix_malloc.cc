@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 matrix_t*
-matrix_malloc(uint m, uint n, ownership_t owner)
+matrix_malloc(uint m, uint n, ownership::type_t owner)
 {
   uint     i;
   matrix_t *mr;
@@ -18,7 +18,7 @@ matrix_malloc(uint m, uint n, ownership_t owner)
   mr->data  = NULL;
   mr->owner = owner;
   
-  if (viewer == owner) {
+  if (ownership::viewer == owner) {
     return mr;
   }
   

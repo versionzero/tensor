@@ -14,7 +14,7 @@ static char const *map_strategy_to_string[] = {
 strategy::type_t
 string_to_strategy(char const *name)
 {
-  int i;
+  uint i;
   
   for (i = 0; i < COUNT_OF(map_strategy_to_string); ++i) {
     if (0 == strcmp(name, map_strategy_to_string[i])) {
@@ -34,7 +34,7 @@ strategy_to_string(strategy::type_t strategy)
 void
 print_strategies(char const *format)
 {
-  int i;
+  uint i;
   
   for (i = 1; i < COUNT_OF(map_strategy_to_string); ++i) {
     message(format, map_strategy_to_string[i]);
@@ -57,7 +57,7 @@ orientation_to_string(orientation::type_t orientation)
 orientation::type_t
 string_to_orientation(char const *name)
 {
-  int i;
+  uint i;
   
   for (i = 0; i < COUNT_OF(map_orientation_to_string); ++i) {
     if (0 == strcmp(name, map_orientation_to_string[i])) {
@@ -71,7 +71,7 @@ string_to_orientation(char const *name)
 void
 print_orientations(char const *format)
 {
-  int i;
+  uint i;
   
   for (i = 1; i < COUNT_OF(map_orientation_to_string); ++i) {
     message(format, map_orientation_to_string[i]);
