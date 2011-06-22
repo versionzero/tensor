@@ -82,7 +82,7 @@ storage_index_encode_for_ekmr_column(uint *indices, void const *p, uint nnz)
   size       = 0;
   previous   = 0;
   
-  debug("storage_index_encode_for_ekmr_row(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
+  debug("storage_index_encode_for_ekmr_column(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
@@ -100,10 +100,10 @@ storage_index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
 {
   uint i;
   storage_coordinate_t const *s;
-  storage_ekmr_t             *d;
+  storage_extended_t         *d;
   
   s = (storage_coordinate_t const*) source;
-  d = (storage_ekmr_t*) destination;
+  d = (storage_extended_t*) destination;
   
   debug("storage_index_copy_for_ekmr_row(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
   
@@ -117,12 +117,12 @@ storage_index_copy_for_ekmr_column(void *destination, void const *source, uint n
 {
   uint i;
   storage_coordinate_t const *s;
-  storage_ekmr_t             *d;
+  storage_extended_t         *d;
   
   s = (storage_coordinate_t const*) source;
-  d = (storage_ekmr_t*) destination;
+  d = (storage_extended_t*) destination;
   
-  debug("storage_index_copy_for_ekmr_row(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
+  debug("storage_index_copy_for_ekmr_column(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
     d->CK[i] = s->tuples[i].i;
@@ -134,13 +134,13 @@ storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t 
 {
   int                  i, nnz;
   storage_base_t       *base;
-  storage_ekmr_t       *d;
+  storage_extended_t   *d;
   storage_coordinate_t *s;
   coordinate_tuple_t   *tuples;
   double               *values;
   
   s = STORAGE_COORIDINATE(source);
-  d = STORAGE_EKMR(destination);
+  d = STORAGE_EXTENDED(destination);
   
   debug("storage_convert_from_coordinate_to_ekmr_inplace(destination=0x%x, source=0x%x)\n", d, s);
   
@@ -159,16 +159,16 @@ storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t 
   }
 }
 
-storage_ekmr_t*
+storage_extended_t*
 storage_malloc_ekmr(tensor_t const *tensor)
 {
   storage_base_t         *base;
-  storage_ekmr_t         *storage;
+  storage_extended_t     *storage;
   conversion_callbacks_t *callbacks;
   
   debug("storage_malloc_ekmr(tensor=0x%x)\n", tensor);
   
-  storage                  = MALLOC(storage_ekmr_t);
+  storage                  = MALLOC(storage_extended_t);
   storage->CK              = MALLOC_N(uint, tensor->nnz);
   storage->RO              = NULL;
   storage->size            = 0;

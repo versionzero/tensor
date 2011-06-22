@@ -11,7 +11,9 @@ namespace strategy {
     unknown,
     coordinate,
     compressed,
-    ekmr
+    ekmr,
+    pkmr,
+    zzpkmr
   } type_t;
 }
 
@@ -66,12 +68,24 @@ typedef struct {
   storage_base_t base;
   uint           size, r;
   uint           *RO, *CK;
+} storage_extended_t;
+
+typedef struct {
+  storage_extended_t dummy;
 } storage_ekmr_t;
+
+typedef struct {
+  storage_extended_t dummy;
+} storage_pkmr_t;
+
+typedef struct {
+  storage_extended_t dummy;
+} storage_zzpkmr_t;
 
 #define STORAGE_BASE(x) ((storage_base_t*)x->storage)
 #define STORAGE_COORIDINATE(x) ((storage_coordinate_t*)x->storage)
 #define STORAGE_COMPRESSED(x) ((storage_compressed_t*)x->storage)
-#define STORAGE_EKMR(x) ((storage_ekmr_t*)x->storage)
+#define STORAGE_EXTENDED(x) ((storage_extended_t*)x->storage)
 
 tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
 tensor_t* tensor_malloc_from_template(tensor_t const *tensor);

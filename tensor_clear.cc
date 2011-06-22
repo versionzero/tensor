@@ -43,14 +43,14 @@ storage_clear_compressed(tensor_t *tensor)
 }
 
 void
-storage_clear_ekmr(tensor_t *tensor)
+storage_clear_extended(tensor_t *tensor)
 {
   uint i;
-  storage_ekmr_t *storage;
+  storage_extended_t *storage;
   
   debug("storage_clear_ekmr(0x%x)\n", tensor);
   
-  storage = STORAGE_EKMR(tensor);
+  storage = STORAGE_EXTENDED(tensor);
   
   for (i = 0; i < storage->size; ++i) {
     storage->RO[i] = 0;
@@ -81,7 +81,9 @@ tensor_clear(tensor_t *tensor)
     storage_clear_compressed(tensor);
     break;
   case strategy::ekmr:
-    storage_clear_ekmr(tensor);
+  case strategy::pkmr:
+  case strategy::zzpkmr:
+    storage_clear_extended(tensor);
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", tensor->strategy);

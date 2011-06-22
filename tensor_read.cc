@@ -87,7 +87,7 @@ tensor_fread_compressed(FILE *file)
 }
 
 tensor_t*
-tensor_fread_ekmr(FILE *file)
+tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
 {
   uint                j;
   int                 i, l, m, n, nnz, size;
@@ -96,7 +96,7 @@ tensor_fread_ekmr(FILE *file)
   double              d;
   tensor_t            *tensor;
   orientation::type_t orientation;
-  storage_ekmr_t      *storage;
+  storage_extended_t      *storage;
   
   debug("tensor_fread_compressed(0x%x)\n", file);
   
@@ -105,8 +105,8 @@ tensor_fread_ekmr(FILE *file)
   }
   
   orientation    = string_to_orientation(name);
-  tensor         = tensor_malloc(l, m, n, nnz, strategy::ekmr, orientation);
-  storage        = STORAGE_EKMR(tensor);
+  tensor         = tensor_malloc(l, m, n, nnz, strategy, orientation);
+  storage        = STORAGE_EXTENDED(tensor);
   storage->size  = size+1;
   storage->RO    = MALLOC_N(uint, storage->size);
   storage->RO[0] = 0;
@@ -153,7 +153,9 @@ tensor_fread_data(FILE *file, MM_typecode type)
     tensor = tensor_fread_compressed(file);
     break;
   case strategy::ekmr:
-    tensor = tensor_fread_ekmr(file);
+  case strategy::pkmr:
+  case strategy::zzpkmr:
+    tensor = tensor_fread_extended_compressed(file, strategy);
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", strategy);

@@ -9,10 +9,11 @@
 #include <stdlib.h>
 
 void
-tensor_initialize_type(MM_typecode *type)
+tensor_initialize_typecode(MM_typecode *type, strategy::type_t strategy)
 {
   mm_initialize_typecode(type);
   datatype_to_typecode(type, datatype::tensor);
+  strategy_to_typecode(type, strategy);
   mm_set_real(type);
 }
 
@@ -27,8 +28,7 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
   
   debug("tensor_write_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_initialize_type(&type);
-  strategy_to_typecode(&type, strategy::coordinate);
+  tensor_initialize_typecode(&type, strategy::coordinate);
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
@@ -71,8 +71,7 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
   
   debug("tensor_write_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_initialize_type(&type);
-  strategy_to_typecode(&type, strategy::compressed);
+  tensor_initialize_typecode(&type, strategy::compressed);
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
@@ -99,7 +98,7 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
     die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
   }
   
-  /* we don't write out the 0th entry-- it is a constant: 0 */
+  /* we don't write out the 0th entry-- it is a constant, namely 0 */
   for (i = 1; i < size; ++i) {
     fprintf(file, "%d\n", storage->RO[i]);
   }
@@ -112,24 +111,26 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
 }
 
 void
-tensor_fwrite_ekmr(FILE *file, tensor_t const *tensor)
+tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor, strategy::type_t strategy)
 {
-  uint           l, m, n;
-  int            i, nnz, size, result;
-  MM_typecode    type;
-  storage_ekmr_t *storage;
-  char const     *name;
+  uint               l, m, n;
+  int                i, nnz, size, result;
+  MM_typecode        type;
+  storage_extended_t *storage;
+  char const         *name;
   
-  debug("tensor_write_ekmr(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_fwrite_extended_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_initialize_type(&type);
-  strategy_to_typecode(&type, strategy::ekmr);
+  tensor_initialize_typecode(&type, strategy);
+  
+  debug("tensor_fwrite_extended_compressed: strategy='%s'.\n", 
+	strategy_to_string(strategy));
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
-  storage = STORAGE_EKMR(tensor);
+  storage = STORAGE_EXTENDED(tensor);
   l       = tensor->l;
   m       = tensor->m;
   n       = tensor->n;
@@ -137,7 +138,7 @@ tensor_fwrite_ekmr(FILE *file, tensor_t const *tensor)
   size    = storage->size;
   name    = orientation_to_string(tensor->orientation);
   
-  debug("tensor_write_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
+  debug("tensor_fwrite_extended_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
 	l, m, n, nnz, name, size);
   
   /* Fixing zeros here may be tricky, so I'll leave it until it is
@@ -150,7 +151,7 @@ tensor_fwrite_ekmr(FILE *file, tensor_t const *tensor)
     die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
   }
   
-  /* we don't write out the 0th entry-- it is a constant: 0 */
+  /* we don't write out the 0th entry-- it is a constant, namely 0 */
   for (i = 1; i < size; ++i) {
     fprintf(file, "%d\n", storage->RO[i]);
   }
@@ -174,7 +175,9 @@ tensor_fwrite(FILE *file, tensor_t const *tensor)
     tensor_fwrite_compressed(file, tensor);
     break;
   case strategy::ekmr:
-    tensor_fwrite_ekmr(file, tensor);
+  case strategy::pkmr:
+  case strategy::zzpkmr:
+    tensor_fwrite_extended_compressed(file, tensor, tensor->strategy);
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", 

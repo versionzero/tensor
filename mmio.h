@@ -50,6 +50,8 @@ int mm_write_tensor_array_size(FILE *f, int L, int M, int N);
 #define mm_is_array(typecode)	   ((typecode)[1]=='A')
 #define mm_is_compressed(typecode) ((typecode)[1]=='O')
 #define mm_is_ekmr(typecode)       ((typecode)[1]=='K')
+#define mm_is_pkmr(typecode)       ((typecode)[1]=='P')
+#define mm_is_zzpkmr(typecode)     ((typecode)[1]=='Z')
 
 #define mm_is_complex(typecode)	   ((typecode)[2]=='C')
 #define mm_is_real(typecode)	   ((typecode)[2]=='R')
@@ -76,6 +78,8 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define mm_set_sparse(typecode)	    mm_set_coordinate(typecode)
 #define mm_set_compressed(typecode) ((*typecode)[1]='O')
 #define mm_set_ekmr(typecode)       ((*typecode)[1]='K')
+#define mm_set_pkmr(typecode)       ((*typecode)[1]='P')
+#define mm_set_zzpkmr(typecode)     ((*typecode)[1]='Z')
 
 #define mm_set_complex(typecode)    ((*typecode)[2]='C')
 #define mm_set_real(typecode)	    ((*typecode)[2]='R')
@@ -128,6 +132,8 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define MM_SPARSE_STR	        "coordinate"
 #define MM_COMPRESSED_STR	"compressed"
 #define MM_EKMR_STR	        "ekmr"
+#define MM_PKMR_STR	        "pkmr"
+#define MM_ZZPKMR_STR	        "zzpkmr"
 
 #define MM_COMPLEX_STR	        "complex"
 #define MM_REAL_STR		"real"

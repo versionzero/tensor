@@ -33,9 +33,9 @@ storage_free(storage_compressed_t *storage)
 }
 
 void
-storage_free(storage_ekmr_t *storage)
+storage_free(storage_extended_t *storage)
 {
-  debug("storage_free((storage_ekmr_t*)0x%x)\n", storage);
+  debug("storage_free((storage_extended_t*)0x%x)\n", storage);
   
   safe_free(storage->RO);
   safe_free(storage->CK);
@@ -60,7 +60,9 @@ storage_free(tensor_t *tensor)
     storage_free(STORAGE_COMPRESSED(tensor));
     break;
   case strategy::ekmr:
-    storage_free(STORAGE_EKMR(tensor));
+  case strategy::pkmr:
+  case strategy::zzpkmr:
+    storage_free(STORAGE_EXTENDED(tensor));
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", 

@@ -15,7 +15,7 @@ tensor_operation_inplace(tensor_t       *t1,
 			 operation_t    op,
 			 char const     *name)
 {
-  uint i, j, k;
+  //uint i, j, k;
 
   debug("tensor_operation_inplace(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
 	t1, t2, op, name);
@@ -66,7 +66,7 @@ MTX_OP(subtract)
 void
 tensor_multiply_inplace(tensor_t *tr, tensor_t const *t1, tensor_t const *t2)
 {
-  uint i, j, k;
+  //uint i, j, k;
   
   debug("tensor_multiply_inplace(tr=0x%x, t1=0x%x, t2=0x%x)\n", tr, t1, t2);
   
