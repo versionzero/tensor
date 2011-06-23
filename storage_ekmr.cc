@@ -14,8 +14,7 @@ storage_index_compare_for_ekmr_row(void const *a, void const *b)
 {
   uint                     ja, jb;
   int                      result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
@@ -34,8 +33,7 @@ storage_index_compare_for_ekmr_column(void const *a, void const *b)
 {
   uint                     ja, jb;
   int                      result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
@@ -180,7 +178,7 @@ storage_malloc_ekmr(tensor_t const *tensor)
   
   switch (tensor->orientation) {
   case orientation::row:
-    storage->r               = tensor->m-1;
+    storage->r               = tensor->m;
     storage->size            = tensor->m;
     callbacks->index_compare = &storage_index_compare_for_ekmr_row;
     callbacks->index_encode  = &storage_index_encode_for_ekmr_row;
