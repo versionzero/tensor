@@ -166,6 +166,7 @@ void
 tensor_fwrite(FILE *file, tensor_t const *tensor)
 {
   debug("tensor_write(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_write: strategy='%s'\n", strategy_to_string(tensor->strategy));
   
   switch (tensor->strategy) {
   case strategy::coordinate:
