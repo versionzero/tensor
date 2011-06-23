@@ -329,7 +329,13 @@ convert_tool_main(int argc, char *argv[])
   tensor = timed_tensor_read(name);  
   debug("main: tensor=0x%x\n", tensor);
   
-  result = timed_tensor_convert(tensor, strategy, orientation);
+  if (strategy == tensor->strategy) {
+    /* we'll deal with differing orientation when it comes up */
+    result = tensor;
+    tensor = NULL;
+  } else {
+    result = timed_tensor_convert(tensor, strategy, orientation);
+  }
   debug("main: result=0x%x\n", result);
   
   if (offset == argc) {
