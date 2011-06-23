@@ -173,7 +173,7 @@ operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tenso
     break;
   case strategy::zzekmr:
     /* NOTE: the encoding may differ, but the way we calculate
-       products remains the same */
+       products remains the same.  How is that for simplicity? */
     ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
     break;
   default:
