@@ -14,7 +14,7 @@ storage_malloc_coordinate(tensor_t const *tensor)
   storage_base_t       *base;
   storage_coordinate_t *storage;
   
-  debug("storage_malloc_coordinate(nnz='%d')\n");
+  debug("storage_malloc_coordinate(tensor=0x%x, nnz=%d)\n", tensor, tensor->nnz);
   
   storage         = MALLOC(storage_coordinate_t);
   storage->tuples = MALLOC_N(coordinate_tuple_t, tensor->nnz);
@@ -32,7 +32,8 @@ storage_malloc(tensor_t const *tensor)
 {
   void *storage;
   
-  debug("storage_malloc(tensor=0x%x)\n", tensor);
+  debug("storage_malloc(tensor=0x%x [strategy='%s'])\n", 
+	tensor, strategy_to_string(tensor->strategy));
   
   storage = NULL;
   
