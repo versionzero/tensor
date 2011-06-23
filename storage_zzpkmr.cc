@@ -12,15 +12,14 @@ static uint g_r;
 int 
 storage_index_compare_for_zzpkmr_row(void const *a, void const *b)
 {
-  uint                     jka, jkb;
+  uint                     ja, jb;
   int                      result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  coordinate_tuple_t const *ta, *tb;
   
-  ta  = (coordinate_tuple_t const*) a;
-  tb  = (coordinate_tuple_t const*) b;  
-  jka = ta->j * g_r + ta->k;
-  jkb = tb->j * g_r + tb->k;
+  ta = (coordinate_tuple_t const*) a;
+  tb = (coordinate_tuple_t const*) b;
+  ja = ta->j * g_r + ta->k;
+  jb = tb->j * g_r + tb->k;
   
   /* We are doing just about exacly what the EKMR encoding does,
      except we reverse the order of every other row (we assume, for
@@ -34,11 +33,12 @@ storage_index_compare_for_zzpkmr_row(void const *a, void const *b)
      likely already have the matching vector elements in the
      cache. Thus, in general, we may not nessearily invalidate the
      existing cache lines. */
+  
   if (0 == (result = ta->i - tb->i)) {
     if (ta->i % 2) { /* odd */
-      result = jkb - jka;
+      result = jb - ja;
     } else {         /* even */
-      result = jka - jkb;
+      result = ja - jb;
     }
   }
   
@@ -48,42 +48,21 @@ storage_index_compare_for_zzpkmr_row(void const *a, void const *b)
 int 
 storage_index_compare_for_zzpkmr_column(void const *a, void const *b)
 {
-  uint                     ika, ikb;
+  uint                     ja, jb;
   int                      result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
-  
-  ta  = (coordinate_tuple_t const*) a;
-  tb  = (coordinate_tuple_t const*) b;
-  ika = ta->i * g_r + ta->k;
-  ikb = tb->i * g_r + tb->k;
-  
-  if (0 == (result = ta->j - tb->j)) {
-    if (ta->j % 2) { /* odd */
-      result = ikb - ika;
-    } else {         /* even */
-      result = ika - ikb;
-    }
-  }
-  
-  return result;
-}
-
-int 
-storage_index_compare_for_zzpkmr_tube(void const *a, void const *b)
-{
-  uint                     ija, ijb;
-  int                      result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
-  ija = ta->i * g_r + ta->j;
-  ijb = tb->i * g_r + tb->j;
+  ja = ta->j * g_r + ta->k;
+  jb = tb->j * g_r + tb->k;
   
-  if (0 == (result = ta->k - tb->k)) {
-    result = ija - ijb;
+  if (0 == (result = ja - jb)) {
+    if (ta->i % 2) { /* odd */
+      result = tb->i - ta->i;
+    } else {         /* even */
+      result = ta->i - tb->i;
+    }
   }
   
   return result;
@@ -126,30 +105,7 @@ storage_index_encode_for_zzpkmr_column(uint *indices, void const *p, uint nnz)
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].j;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
-}
-
-void
-storage_index_encode_for_zzpkmr_tube(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple;
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("storage_index_encode_for_zzpkmr_column(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].k;
+    index = tuple[current].j * g_r + tuple[current].k;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
@@ -188,24 +144,7 @@ storage_index_copy_for_zzpkmr_column(void *destination, void const *source, uint
   debug("storage_index_copy_for_zzpkmr_column(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
-    d->CK[i] = s->tuples[i].i * g_r + s->tuples[i].k;
-  }
-}
-
-void
-storage_index_copy_for_zzpkmr_tube(void *destination, void const *source, uint nnz)
-{
-  uint i;
-  storage_coordinate_t const *s;
-  storage_extended_t         *d;
-  
-  s = (storage_coordinate_t const*) source;
-  d = (storage_extended_t*) destination;
-  
-  debug("storage_index_copy_for_zzpkmr_tube(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
-  
-  for (i = 0; i < nnz; ++i) {
-    d->CK[i] = s->tuples[i].i * g_r + s->tuples[i].j;
+    d->CK[i] = s->tuples[i].i;
   }
 }
 
@@ -224,11 +163,11 @@ storage_convert_from_coordinate_to_zzpkmr_inplace(tensor_t *destination, tensor_
   
   debug("storage_convert_from_coordinate_to_zzpkmr_inplace(destination=0x%x, source=0x%x)\n", d, s);
   
-  base          = STORAGE_BASE(destination);
-  nnz           = source->nnz;
-  values        = source->values;
-  g_r           = d->r;
-  tuples        = s->tuples;
+  base   = STORAGE_BASE(destination);
+  nnz    = source->nnz;
+  values = source->values;
+  g_r    = d->r;
+  tuples = s->tuples;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
   (*base->callbacks->index_encode)(d->RO, tuples, nnz);
@@ -260,29 +199,30 @@ storage_malloc_zzpkmr(tensor_t const *tensor)
   
   switch (tensor->orientation) {
   case orientation::row:
-    storage->r               = tensor->m-1;
+    storage->r               = tensor->m;
     storage->size            = tensor->m;
     callbacks->index_compare = &storage_index_compare_for_zzpkmr_row;
     callbacks->index_encode  = &storage_index_encode_for_zzpkmr_row;
     callbacks->index_copy    = &storage_index_copy_for_zzpkmr_row;
     break;
+  default:
+    die("Tensor orientation '%s' not yet supported.\n", orientation_to_string(tensor->orientation));
+    break;
+#if 0
   case orientation::column:
     storage->r               = tensor->m-1;
-    storage->size            = tensor->n;
+    storage->size            = tensor->n*tensor->l;
     callbacks->index_compare = &storage_index_compare_for_zzpkmr_column;
     callbacks->index_encode  = &storage_index_encode_for_zzpkmr_column;
     callbacks->index_copy    = &storage_index_copy_for_zzpkmr_column;
     break;
   case orientation::tube:
-    storage->r               = tensor->n-1;
-    storage->size            = tensor->l;
+    storage->r               = ?;
     callbacks->index_compare = &storage_index_compare_for_zzpkmr_tube;
     callbacks->index_encode  = &storage_index_encode_for_zzpkmr_tube;
     callbacks->index_copy    = &storage_index_copy_for_zzpkmr_tube;
     break;
-  default:
-    die("Tensor orientation '%s' not yet supported.\n", orientation_to_string(tensor->orientation));
-    break;
+#endif
   }
   
   storage->size  += 1;
