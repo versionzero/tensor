@@ -60,7 +60,7 @@ storage_free(tensor_t *tensor)
     storage_free(STORAGE_COMPRESSED(tensor));
     break;
   case strategy::ekmr:
-  case strategy::zzpkmr:
+  case strategy::zzekmr:
     storage_free(STORAGE_EXTENDED(tensor));
     break;
   default:

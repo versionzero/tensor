@@ -13,7 +13,7 @@ namespace strategy {
     coordinate,
     compressed,
     ekmr,
-    zzpkmr
+    zzekmr
   } type_t;
 }
 
@@ -76,7 +76,7 @@ typedef struct {
 
 typedef struct {
   storage_extended_t dummy;
-} storage_zzpkmr_t;
+} storage_zzekmr_t;
 
 #define STORAGE_BASE(x) ((storage_base_t*)x->storage)
 #define STORAGE_COORIDINATE(x) ((storage_coordinate_t*)x->storage)

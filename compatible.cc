@@ -32,7 +32,7 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
   switch (rhs->strategy) {
   case strategy::compressed:
   case strategy::ekmr:
-  case strategy::zzpkmr:
+  case strategy::zzekmr:
     supported = true;
     break;
   default:

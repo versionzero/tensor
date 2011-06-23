@@ -47,8 +47,8 @@ storage_malloc(tensor_t const *tensor)
   case strategy::ekmr:
     storage = storage_malloc_ekmr(tensor);
     break;
-  case strategy::zzpkmr:
-    storage = storage_malloc_zzpkmr(tensor);
+  case strategy::zzekmr:
+    storage = storage_malloc_zzekmr(tensor);
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", tensor->strategy);

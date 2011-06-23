@@ -145,7 +145,7 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
     } else if (strcmp(crd, MM_EKMR_STR) == 0) {
       mm_set_ekmr(matcode);
     } else if (strcmp(crd, MM_ZZPKMR_STR) == 0) {
-      mm_set_zzpkmr(matcode);
+      mm_set_zzekmr(matcode);
     } else {
       return MM_UNSUPPORTED_TYPE;
     }
@@ -634,7 +634,7 @@ char  *mm_typecode_to_str(MM_typecode matcode)
       types[1] = MM_COMPRESSED_STR;
     } else if (mm_is_ekmr(matcode)) {
       types[1] = MM_EKMR_STR;
-    } else if (mm_is_zzpkmr(matcode)) {
+    } else if (mm_is_zzekmr(matcode)) {
       types[1] = MM_ZZPKMR_STR;
     } else {
       return NULL;

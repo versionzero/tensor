@@ -171,7 +171,7 @@ operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tenso
   case strategy::ekmr:
     ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
     break;
-  case strategy::zzpkmr:
+  case strategy::zzekmr:
     /* NOTE: the encoding may differ, but the way we calculate
        products remains the same */
     ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
