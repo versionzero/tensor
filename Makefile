@@ -1,9 +1,9 @@
-CXX=clang
+CXX=g++
 INCLUDES=-I.
-DEBUG=-g #-DNODEBUG
+DEBUG=-g
 STRICT=-pedantic -Wall -Wno-variadic-macros
-CXXFLAGS=-c $(DEBUG) $(STRICT) $(INCLUDES)
-LDFLAGS=-Wall $(DEBUG)
+EXTRA_CXXFLAGS=-c $(DEBUG) $(STRICT) $(INCLUDES)
+EXTRA_LDFLAGS=-Wall $(DEBUG)
 
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h memory.h	\
 		operation.h random.h tool.h utility.h compatible.h
@@ -37,6 +37,16 @@ EXECUTABLE=tensor
 UTILITIES=convert effectuate
 
 all: $(HEADERS) $(SOURCES) $(EXECUTABLE) utilities
+	if [ -e debug ]; then\
+		echo "WARNING: The previous build used Debug info; run 'make clean' clean it up";\
+	fi;\
+
+debug:
+	if [ ! -e debug ]; then\
+		make clean;\
+	fi;\
+	touch debug;
+	CXXFLAGS="-DNODEBUG" make all
 
 asm: $(HEADERS) $(ASSEMBLER) $(OBJECTS)
 	dsymutil $(EXECUTABLE)
@@ -48,7 +58,7 @@ analysis:
 	done;
 
 $(EXECUTABLE): $(HEADERS) $(OBJECTS)
-	$(CXX) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CXX) $(EXTRA_LDFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
 	dsymutil $@
 
 utilities:
@@ -58,7 +68,7 @@ utilities:
 	done;
 
 .cc.o: $(HEADERS)
-	$(CXX) $(CXXFLAGS) $< -o $@
+	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) $< -o $@
 
 .cc.s: $(HEADERS)
 	$(CXX) $(CXXFLAGS) -S $<
@@ -68,7 +78,8 @@ rebuild: clean all
 
 clean:
 	rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
-		$(EXECUTABLE) *.o annotate.*.h cache.*.dat a.out *.plist; \
+		$(EXECUTABLE) *.o annotate.*.h cache.*.dat a.out	\
+		*.plist debug;\
 	for UTILITY in $(UTILITIES); do \
 		rm -fv $${UTILITY}; \
 		rm -fv $${UTILITY}.dSYM; \
