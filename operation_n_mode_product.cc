@@ -128,69 +128,8 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
     DEBUG("start=%d, end=%d\n", start, end);
     
     for (k = start; k < end; ++k) {
-      c = CK[k] / n;
-      j = CK[k] % n;
-      
-      DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k]);
-      
-      M[i][j] += p[c] * V[k];
-      
-      DEBUG("%2.0f\t", M[i][j]);
-      DEBUG("CK[k=%2d]=%2d => c=%d, i=%d, j=%d\n", k, CK[k], c, i, j);
-    }
-  }
-}
-
-void
-ekmr_column_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
-{
-  uint                 i, j, k;
-  uint                 size, nnz, offset;
-  uint                 start, end;
-  uint                 c, q, r;
-  double               **M;
-  double const         *p, *V;
-  uint const           *R, *CK;
-  storage_extended_t const *storage;
-  
-  debug("ekmr_column_operation_n_mode_product(matrix=0x%s, vector=0x%x, tensor=0%x, l=%d, m=%d, n=%d)\n", matrix, vector, tensor, m, n);
-  
-  matrix_clear(matrix);
-  
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  
-  storage = STORAGE_EXTENDED(tensor);
-  size    = storage->size;
-  offset  = storage->r;
-  R       = storage->RO;
-  CK      = storage->CK;
-  
-  /* 
-     Using \emph{extended compressed column storage} ($\ECCS$), this
-     tensor can be represented as:
-     
-                                  0    1    2    3    4
-           $k$   0   1    2   3   4    5    6    7    8   9   10   11
-     $\colccs$ & 0 & 1 &  3 & 5 & 6 &  8 & 10 & 11 & 12
-      $\rtccs$ & 1 & 0 &  2 & 0 & 2 &  1 &  1 &  2 &  0 & 1 &  0 &  2
-     $\valccs$ & 3 & 7 & 11 & 1 & 5 &  9 &  4 &  6 &  8 & 10 & 2 & 12
-  */
-  
-  DEBUG("\n");
-  
-  for (q = 0, r = 1; r < size; ++r, ++q) {
-    i     = q / n;
-    j     = q % n;
-    start = R[q];
-    end   = R[r];
-    
-    DEBUG("start=%d, end=%d\n", start, end);
-    
-    for (k = start; k < end; ++k) {
-      c = CK[k];
+      c = CK[k] / offset;
+      j = CK[k] % offset;
       
       DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k]);
       
@@ -211,94 +150,6 @@ ekmr_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t
   case orientation::row:
     ekmr_row_operation_n_mode_product(matrix, vector, tensor, m, n);
     break;
-  case orientation::column:
-    ekmr_column_operation_n_mode_product(matrix, vector, tensor, m, n);
-    break;
-  default:
-    die("Tensor product for '%s' orientation is not currently supported.\n",
-	orientation_to_string(tensor->orientation));
-    break;
-  }
-}
-
-void
-pkmr_column_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
-{
-  uint                 i, j, k;
-  uint                 size, nnz, offset;
-  uint                 start, end;
-  uint                 c, r;
-  double               **M;
-  double const         *p, *V;
-  uint const           *R, *CK;
-  storage_extended_t const *storage;
-  
-  debug("pkmr_column_operation_n_mode_product(matrix=0x%s, vector=0x%x, tensor=0%x, l=%d, m=%d, n=%d)\n", matrix, vector, tensor, m, n);
-  
-  matrix_clear(matrix);
-  
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  
-  storage = STORAGE_EXTENDED(tensor);
-  size    = storage->size;
-  offset  = storage->r;
-  R       = storage->RO;
-  CK      = storage->CK;
-  
-  /* 
-     Now, using \emph{permuted compressed column storage} ($\PCCS$), the
-     original tensor can be represented as:
-     
-            $k$   0   1    2    3    4    5   6    7    8    9   10   11
-     $\colpcrs$ & 0 & 3 &  6 & 10 & 12
-       $\rtccs$ & 1 & 5 & 11 &  0 &  6 & 10 & 1 &  5 &  6 & 10 &  0 & 11
-      $\valccs$ & 7 & 3 & 11 &	1 &  9 &  5 & 8 &  4 & 10 &  6 &  2 & 12
-  */
-  
-  DEBUG("\n");
-  
-  for (i = 0, r = 1; r < size; ++r, ++i) {
-    start = R[i];
-    end   = R[r];
-    
-    DEBUG("start=%d, end=%d\n", start, end);
-    
-    for (k = start; k < end; ++k) {
-      c = CK[k] / n;
-      j = CK[k] % n;
-      
-      DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k]);
-      
-      M[i][j] += p[c] * V[k];
-      
-      DEBUG("%2.0f\t", M[i][j]);
-      DEBUG("CK[k=%2d]=%2d => c=%d, i=%d, j=%d\n", k, CK[k], c, i, j);
-    }
-  }
-}
-
-void
-pkmr_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
-{
-  debug("pkmr_operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x, l=%d, m=%d, n=%d)\n", matrix, vector, tensor, m, n);
-  
-  switch (tensor->orientation) {
-  case orientation::row:
-    /* NOTE: we delegate the work to the EKMR procedure, as it will do
-       the exact same work */
-    ekmr_row_operation_n_mode_product(matrix, vector, tensor, m, n);
-    break;
-  case orientation::column:
-    pkmr_column_operation_n_mode_product(matrix, vector, tensor, m, n);
-    break;
-#if 0
-  case orientation::tube:
-    pkmr_tube_operation_n_mode_product(matrix, vector, tensor, m, n);
-    break;
-#endif
   default:
     die("Tensor product for '%s' orientation is not currently supported.\n",
 	orientation_to_string(tensor->orientation));
@@ -320,9 +171,10 @@ operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tenso
   case strategy::ekmr:
     ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
     break;
-  case strategy::pkmr:
   case strategy::zzpkmr:
-    pkmr_operation_n_mode_product(matrix, vector, tensor, m, n);
+    /* NOTE: the encoding may differ, but the way we calculate
+       products remains the same */
+    ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
     break;
   default:
     die("Tensor product for '%s' strategy is not currently supported.\n",

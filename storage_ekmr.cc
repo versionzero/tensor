@@ -28,25 +28,6 @@ storage_index_compare_for_ekmr_row(void const *a, void const *b)
   return result;
 }
 
-int 
-storage_index_compare_for_ekmr_column(void const *a, void const *b)
-{
-  uint                     ja, jb;
-  int                      result;
-  coordinate_tuple_t const *ta, *tb;
-  
-  ta = (coordinate_tuple_t const*) a;
-  tb = (coordinate_tuple_t const*) b;
-  ja = ta->j * g_r + ta->k;
-  jb = tb->j * g_r + tb->k;
-  
-  if (0 == (result = ja - jb)) {
-    result = ta->i - tb->i;
-  }
-  
-  return result;
-}
-
 void 
 storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
 {
@@ -71,29 +52,6 @@ storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
 }
 
 void
-storage_index_encode_for_ekmr_column(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple;
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("storage_index_encode_for_ekmr_column(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].j * g_r + tuple[current].k;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
-}
-
-void
 storage_index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
 {
   uint i;
@@ -107,23 +65,6 @@ storage_index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
   
   for (i = 0; i < nnz; ++i) {
     d->CK[i] = s->tuples[i].j * g_r + s->tuples[i].k;
-  }
-}
-
-void
-storage_index_copy_for_ekmr_column(void *destination, void const *source, uint nnz)
-{
-  uint i;
-  storage_coordinate_t const *s;
-  storage_extended_t         *d;
-  
-  s = (storage_coordinate_t const*) source;
-  d = (storage_extended_t*) destination;
-  
-  debug("storage_index_copy_for_ekmr_column(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
-  
-  for (i = 0; i < nnz; ++i) {
-    d->CK[i] = s->tuples[i].i;
   }
 }
 
@@ -178,12 +119,16 @@ storage_malloc_ekmr(tensor_t const *tensor)
   
   switch (tensor->orientation) {
   case orientation::row:
-    storage->r               = tensor->m;
+    storage->r               = tensor->n;
     storage->size            = tensor->m;
     callbacks->index_compare = &storage_index_compare_for_ekmr_row;
     callbacks->index_encode  = &storage_index_encode_for_ekmr_row;
     callbacks->index_copy    = &storage_index_copy_for_ekmr_row;
     break;
+  default:
+    die("Tensor orientation '%s' not yet supported.\n", orientation_to_string(tensor->orientation));
+    break;
+#if 0
   case orientation::column:
     storage->r               = tensor->m-1;
     storage->size            = tensor->n*tensor->l;
@@ -191,10 +136,6 @@ storage_malloc_ekmr(tensor_t const *tensor)
     callbacks->index_encode  = &storage_index_encode_for_ekmr_column;
     callbacks->index_copy    = &storage_index_copy_for_ekmr_column;
     break;
-  default:
-    die("Tensor orientation '%s' not yet supported.\n", orientation_to_string(tensor->orientation));
-    break;
-#if 0
   case orientation::tube:
     storage->r               = ?;
     callbacks->index_compare = &storage_index_compare_for_ekmr_tube;

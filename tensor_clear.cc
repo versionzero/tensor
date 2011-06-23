@@ -81,7 +81,6 @@ tensor_clear(tensor_t *tensor)
     storage_clear_compressed(tensor);
     break;
   case strategy::ekmr:
-  case strategy::pkmr:
   case strategy::zzpkmr:
     storage_clear_extended(tensor);
     break;

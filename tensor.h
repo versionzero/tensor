@@ -13,7 +13,6 @@ namespace strategy {
     coordinate,
     compressed,
     ekmr,
-    pkmr,
     zzpkmr
   } type_t;
 }
@@ -74,10 +73,6 @@ typedef struct {
 typedef struct {
   storage_extended_t dummy;
 } storage_ekmr_t;
-
-typedef struct {
-  storage_extended_t dummy;
-} storage_pkmr_t;
 
 typedef struct {
   storage_extended_t dummy;

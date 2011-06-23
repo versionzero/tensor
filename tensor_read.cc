@@ -200,7 +200,6 @@ tensor_fread_data(FILE *file, MM_typecode type)
     tensor = tensor_fread_compressed(file);
     break;
   case strategy::ekmr:
-  case strategy::pkmr:
   case strategy::zzpkmr:
     tensor = tensor_fread_extended_compressed(file, strategy);
     break;

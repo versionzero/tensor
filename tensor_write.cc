@@ -176,7 +176,6 @@ tensor_fwrite(FILE *file, tensor_t const *tensor)
     tensor_fwrite_compressed(file, tensor);
     break;
   case strategy::ekmr:
-  case strategy::pkmr:
   case strategy::zzpkmr:
     tensor_fwrite_extended_compressed(file, tensor, tensor->strategy);
     break;

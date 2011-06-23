@@ -10,7 +10,6 @@ static char const *map_strategy_to_string[] = {
   "coordinate",
   "compressed",
   "ekmr",
-  "pkmr",
   "zzpkmr"
 };
 
@@ -92,8 +91,6 @@ typecode_to_strategy(MM_typecode type)
     return strategy::compressed;
   } else if (mm_is_ekmr(type)) {
     return strategy::ekmr;
-  } else if (mm_is_pkmr(type)) {
-    return strategy::pkmr;
   } else if (mm_is_zzpkmr(type)) {
     return strategy::zzpkmr;
   }
@@ -116,9 +113,6 @@ strategy_to_typecode(MM_typecode *type, strategy::type_t strategy)
     break;
   case strategy::ekmr:
     mm_set_ekmr(type);
-    break;
-  case strategy::pkmr:
-    mm_set_pkmr(type);
     break;
   case strategy::zzpkmr:
     mm_set_zzpkmr(type);
