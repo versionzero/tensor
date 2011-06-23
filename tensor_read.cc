@@ -10,7 +10,7 @@
 tensor_t*
 tensor_fread_array(FILE *file)
 {
-  uint                 i, j, k, v;
+  int                  i, j, k, v;
   int                  l, m, n, nnz;
   int                  result;
   double               d;
@@ -111,7 +111,7 @@ tensor_fread_compressed(FILE *file)
   storage->RO    = MALLOC_N(uint, storage->size);
   storage->RO[0] = 0;
   
-  for (i = 1; i < storage->size; ++i) {
+  for (i = 1; i <= size; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
@@ -140,7 +140,7 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
   double              d;
   tensor_t            *tensor;
   orientation::type_t orientation;
-  storage_extended_t      *storage;
+  storage_extended_t  *storage;
   
   debug("tensor_fread_compressed(0x%x)\n", file);
   
@@ -155,7 +155,7 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
   storage->RO    = MALLOC_N(uint, storage->size);
   storage->RO[0] = 0;
   
-  for (i = 1; i < storage->size; ++i) {
+  for (i = 1; i <= size; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
