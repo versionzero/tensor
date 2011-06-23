@@ -6,6 +6,7 @@
 
 static char const *map_strategy_to_string[] = {
   "unknown",
+  "array",
   "coordinate",
   "compressed",
   "ekmr",
@@ -83,7 +84,9 @@ print_orientations(char const *format)
 strategy::type_t
 typecode_to_strategy(MM_typecode type)
 {
-  if (mm_is_coordinate(type)) {
+  if (mm_is_array(type)) {
+    return strategy::array;
+  } else if (mm_is_coordinate(type)) {
     return strategy::coordinate;
   } else if (mm_is_compressed(type)) {
     return strategy::compressed;
@@ -102,6 +105,9 @@ void
 strategy_to_typecode(MM_typecode *type, strategy::type_t strategy)
 {
   switch (strategy) {
+  case strategy::array:
+    mm_set_array(type);
+    break;
   case strategy::coordinate:
     mm_set_coordinate(type);
     break;

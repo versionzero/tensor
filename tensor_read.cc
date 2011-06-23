@@ -8,6 +8,50 @@
 #include <stdlib.h>
 
 tensor_t*
+tensor_fread_array(FILE *file)
+{
+  uint                 i, j, k, v;
+  int                  l, m, n, nnz;
+  int                  result;
+  double               d;
+  tensor_t             *tensor;
+  storage_coordinate_t *storage;
+  coordinate_tuple_t   *tuples;
+  
+  debug("tensor_fread_array(0x%x)\n", file);
+  
+  if (0 != (result = mm_read_tensor_array_size(file, &l, &m, &n))) {
+    die("Failed to read tensor dimensions (%d).\n", result);
+  }
+  
+  debug("tensor_fread_array: l=%d, m=%d, n=%d\n", l, m, n);
+  
+  nnz     = l*m*n;
+  tensor  = tensor_malloc(l, m, n, nnz, strategy::coordinate);
+  storage = STORAGE_COORIDINATE(tensor);
+  tuples  = storage->tuples;
+  v       = 0;
+  
+  for (k = 0; k < l; ++k) {
+    for (i = 0; i < m; ++i) {
+      for (j = 0; j < n; ++j) {
+	if (1 != (result = fscanf(file, "%lg\n", &d))) {
+	  die("Failed to process line %d of the input stream (%d).\n", v, result);
+	}
+	tensor->values[v] = d;
+	tuples[v].i       = i;
+	tuples[v].j       = j;
+	tuples[v].k       = k;
+	tuples[v].index   = v;
+	v++;
+      }
+    }
+  }
+  
+  return tensor;
+}
+
+tensor_t*
 tensor_fread_coordinate(FILE *file)
 {
   uint                 i, j, k;
@@ -146,6 +190,9 @@ tensor_fread_data(FILE *file, MM_typecode type)
   tensor   = NULL;
   
   switch (strategy) {
+  case strategy::array:
+    tensor = tensor_fread_array(file);
+    break;
   case strategy::coordinate:
     tensor = tensor_fread_coordinate(file);
     break;

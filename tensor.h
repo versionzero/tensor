@@ -9,6 +9,7 @@
 namespace strategy {
   typedef enum {
     unknown,
+    array,
     coordinate,
     compressed,
     ekmr,
