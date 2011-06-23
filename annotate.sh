@@ -1,4 +1,6 @@
-#!/bin/sh
-for x in {0..2} ; do 
-    cg_annotate cache.${x}.dat --threshold=100 --auto=yes >| annotate.${x}.h
+#!/bin/sh -x
+
+declare -a strategies=('compressed' 'ekmr' 'zzekmr')
+for strategy in ${strategies[@]}; do
+    cg_annotate --threshold=100 --auto=yes cache.${strategy}.dat >| annotate.${strategy}.h
 done

@@ -37,15 +37,15 @@ EXECUTABLE=tensor
 UTILITIES=convert effectuate
 
 all: $(HEADERS) $(SOURCES) $(EXECUTABLE) utilities
-	if [ -e debug ]; then\
-		echo "WARNING: The previous build used Debug info; run 'make clean' clean it up";\
+	if [ -e release ]; then\
+		echo "WARNING: The previous build used Release info; run 'make clean' clean it up";\
 	fi;\
 
-debug:
-	if [ ! -e debug ]; then\
+release:
+	if [ ! -e release ]; then\
 		make clean;\
 	fi;\
-	touch debug;
+	touch release;
 	CXXFLAGS="-DNODEBUG" make all
 
 asm: $(HEADERS) $(ASSEMBLER) $(OBJECTS)
@@ -79,7 +79,7 @@ rebuild: clean all
 clean:
 	rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
 		$(EXECUTABLE) *.o annotate.*.h cache.*.dat a.out	\
-		*.plist debug;\
+		*.plist release;\
 	for UTILITY in $(UTILITIES); do \
 		rm -fv $${UTILITY}; \
 		rm -fv $${UTILITY}.dSYM; \
