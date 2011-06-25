@@ -428,7 +428,7 @@ main(int argc, char *argv[])
     if (0 == argc) {
       usage();
     }
-    tool_name = basename(argv[1]);
+    tool_name = mybasename(argv[1]);
     tool_type = tool_from_string(tool_name);
     argv++;
   }
