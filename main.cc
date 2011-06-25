@@ -1,4 +1,5 @@
 
+#include "compatible.h"
 #include "error.h"
 #include "file.h"
 #include "matrix.h"
@@ -18,40 +19,34 @@
 #define OPTION_MESSAGE(x,a,b)    (x ? a:b)
 #define DEFAULT_ON_OR_OFF(x)     OPTION_MESSAGE(x, "on", "off")
 
-#define CONVERT_DESCRIPTION "A tool for converting between th-order tensor storage strategies."
-#define EFFECTUATE_DESCRIPTION "A tool for performing computations on th-order tensors."
-#define VERSION     "Version 0.01 (" __DATE__ "), " \
-  "Copyright (C) 2011, and GPLv3'd, by Ben Burnett\n" \
-  "This is free software; see the source for copying conditions.  There is NO\n" \
-  "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+#define DEFAULT_ITERATIONS    10
+#define DEFAULT_OPERATION     operation::n_mode_product
+#define DEFAULT_ORIENTATION   orientation::row
+#define DEFAULT_STRATEGY      strategy::compressed
+#define DEFAULT_VERBOSITY     false
+#define DEFAULT_WRITE_RESULTS false
 
-#define DEFAULT_VERBOSITY   false
-#define DEFAULT_ORIENTATION orientation::row
-#define DEFAULT_STRATEGY    strategy::compressed
-#define DEFAULT_OPERATION   operation::n_mode_product
-
-int  storage_strategy;
-int  operation_code;
-char *tool_name;
-bool verbose;
+uint         iterations;
+char         *tool_name;
+tool::type_t tool_type;
+bool         verbose;
+bool         write_results;
 
 void
 effectuate_tool_usage() 
 {
-  message("%s: %s\n\n", tool_name, EFFECTUATE_DESCRIPTION);
-  message("%s\n", VERSION);
+  print_tool_banner();
   message("\nUsage:\n");
-  message("\t%s [options] <input1> <intput2> ... [output]\n",
-	  tool_name);  
+  message("\t%s [options] <input1> <intput2> ... [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
-  message("\t-o\toperation (default: %s)\n", 
-	  operation_to_string(DEFAULT_OPERATION));
+  message("\t-n\tthis screen (default: %s)\n", DEFAULT_ITERATIONS);
+  message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
-  message("\t-v\ttoggle verbosity (default: %s)\n", 
-	  DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
+  message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
+  message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
-  message("\t$ ./%s -o pt -o vector.in tensor.in matrix.out\n", tool_name);
+  message("\t$ ./tensor %s -o n-mode vector.in tensor.in matrix.out\n", tool_name);
   message("\tReading vector.in ... done [0.000305]\n");
   message("\tReading tensor.in ... done [0.000235]\n");
   message("\tConverting from 'coordinate' to 'compressed-column' ... done [0.000010]\n");
@@ -112,23 +107,49 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
   }
 }
 
-matrix_t*
-timed_operation_n_mode_product(vector_t *vector, tensor_t *tensor)
+void
+timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
 {
   clock_t  t;
-  matrix_t *matrix;
   
   message("Performing operation '%s' ... ", operation_to_description_string(operation::n_mode_product));
   t = clock();
-  matrix = operation_n_mode_product(vector, tensor);
+  operation_n_mode_product_inplace(matrix, vector, tensor);
   message("done [%lf]\n", SECONDS_SINCE(t));
-  
-  return matrix;
+}
+
+/* adapted from: operation_n_mode_product.cc */
+void
+calculate_matrix_dimentions(tensor_t const *tensor, uint *m, uint *n)
+{
+  *m = 0;
+  *n = 0;
+  switch (tensor->orientation) {
+  case orientation::row:
+    /* rows * tubes */
+    *m = tensor->m;
+    *n = tensor->l;
+    break;
+  case orientation::column:
+    /* columns * tubes */
+    *m = tensor->n;
+    *n = tensor->l;
+    break;
+  case orientation::tube:
+    /* rows * columns */
+    *m = tensor->m;
+    *n = tensor->n;
+    break;
+  default:
+    die("calculate_matrix_dimentions: unknown or unsupported orientation %d \n", tensor->orientation);
+    break;
+  }
 }
 
 void
-operation_n_mode_product(int argc, char *argv[])
+timed_operation_n_mode_product(int argc, char *argv[])
 {
+  uint     i, m, n;
   int      offset;
   char     *name;
   vector_t *vector;
@@ -138,16 +159,26 @@ operation_n_mode_product(int argc, char *argv[])
   offset = optind;
   name   = argv[offset++];
   vector = timed_vector_read(name);
-  debug("operation_n_mode_product: vector=0x%x\n", vector);
+  debug("timed_operation_n_mode_product: vector=0x%x\n", vector);
   
   name   = argv[offset++];
   tensor = timed_tensor_read(name);
-  debug("operation_n_mode_product: tensor=0x%x\n", tensor);
+  debug("timed_operation_n_mode_product: tensor=0x%x\n", tensor);
   
-  matrix = timed_operation_n_mode_product(vector, tensor);
-  debug("operation_n_mode_product: matrix=0x%x\n", matrix);
+  compatible(vector, tensor);
   
-  timed_matrix_write(argc, argv, offset, matrix);
+  calculate_matrix_dimentions(tensor, &m, &n);
+  matrix = matrix_malloc(m, n);
+  
+  for (i = 0; i < iterations; ++i) {
+    matrix_clear(matrix);
+    timed_operation_n_mode_product(matrix, vector, tensor);
+  }
+  debug("timed_operation_n_mode_product: matrix=0x%x\n", matrix);
+  
+  if (write_results) {
+    timed_matrix_write(argc, argv, offset, matrix);
+  }
   
   vector_free(vector);
   matrix_free(matrix);
@@ -159,7 +190,7 @@ timed_operation(operation::type_t operation, int argc, char *argv[])
 {
   switch (operation) {
   case operation::n_mode_product:
-    operation_n_mode_product(argc, argv);
+    timed_operation_n_mode_product(argc, argv);
     break;
   default:
     die("Operation '%d' not currently supported.\n", operation);
@@ -171,17 +202,19 @@ void
 effectuate_tool_main(int argc, char *argv[])
 {
   int               c;
-  operation::type_t operation;  
+  operation::type_t operation;
     
   /* set the program's defaults */
-  verbose   = false;
-  operation = DEFAULT_OPERATION;
+  iterations    = DEFAULT_ITERATIONS;
+  operation     = DEFAULT_OPERATION;
+  verbose       = DEFAULT_VERBOSITY;
+  write_results = DEFAULT_WRITE_RESULTS;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "ho:v"))) {
+  while (-1 != (c = getopt(argc, argv, "hn:o:wv"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
@@ -193,9 +226,17 @@ effectuate_tool_main(int argc, char *argv[])
 	operation = string_to_operation(optarg);
       }
       break;
+    case 'n':
+      iterations = atoi(optarg);
+      if (0 == iterations) {
+	iterations = DEFAULT_ITERATIONS;
+      }
+      break;
     case 'v': 
       verbose = !verbose;
       break;
+    case 'w':
+      write_results = !write_results;
     case '?':
       if (isprint(optopt)) {
 	die("Unknown option `-%c'.\n", optopt);
@@ -221,23 +262,18 @@ effectuate_tool_main(int argc, char *argv[])
 void
 convert_tool_usage() 
 {
-  message("%s: %s\n\n", tool_name, CONVERT_DESCRIPTION);
-  message("%s\n", VERSION);
+  print_tool_banner();
   message("\nUsage:\n");
-  message("\t%s [options] <input> [output]\n",
-	  tool_name);  
+  message("\t%s [options] <input> [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
-  message("\t-s\tstrategy (default: %s)\n", 
-	  strategy_to_string(DEFAULT_STRATEGY));
+  message("\t-s\tstrategy (default: %s)\n", strategy_to_string(DEFAULT_STRATEGY));
   print_strategies("\t\t- %s\n");
-  message("\t-o\torientation (default: %s)\n", 
-	  orientation_to_string(DEFAULT_ORIENTATION));
+  message("\t-o\torientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
   print_orientations("\t\t- %s\n");
-  message("\t-v\ttoggle verbosity (default: %s)\n", 
-	  DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
+  message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
   message("\nExample:\n\n");
-  message("\t$ ./%s -s compressed -o column ieee-fig4.in tensor.out\n", tool_name);
+  message("\t$ ./tensor %s -s compressed -o column ieee-fig4.in tensor.out\n", tool_name);
   message("\tReading ieee-fig4.in ... done [0.000305]\n");
   message("\tConverting from 'coordinate' to 'compressed-column' ... done [0.000010]\n");
   message("\tWriting tensor.out ... done [0.000031]\n");
@@ -276,9 +312,9 @@ convert_tool_main(int argc, char *argv[])
   tensor = result = NULL;
   
   /* set the program's defaults */
-  verbose     = false;
   orientation = DEFAULT_ORIENTATION;
   strategy    = DEFAULT_STRATEGY;
+  verbose     = DEFAULT_VERBOSITY;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -354,13 +390,24 @@ convert_tool_main(int argc, char *argv[])
   tensor_free(tensor);
 }
 
+void
+usage()
+{
+  print_tool_banner();
+  message("\nUsage:\n");
+  message("\t%s <tool_name> [options] ...\n", tool_name);
+  message("\nTools:\n");
+  print_tools_with_descriptions("\t* %s\n");
+  exit(1);
+}
+
 int
 main(int argc, char *argv[])
 {
-  tool::type_t tool;
   struct {
     void (*main)(int argc, char *argv[]);
   } entrypoints[] = {
+    { NULL },
     { NULL },
     { &convert_tool_main },
     { &effectuate_tool_main },
@@ -371,14 +418,34 @@ main(int argc, char *argv[])
   tool_name = mybasename(argv[0]);
   
   /* figure out which tool the user is invoking */
-  tool = tool_from_string(tool_name);
+  tool_type = tool_from_string(tool_name);
   
-  if (tool::unknown == tool) {
+  /* if the binary has not been renamed, then the tool name is the
+     first parameter in the list.  We handle this very simply: we skip
+     over the first element in the argument list and decrement the
+     argument count. */
+  if (tool::tensor == tool_type) {
+    argc--;
+    if (0 == argc) {
+      usage();
+    }
+    tool_name = basename(argv[1]);
+    tool_type = tool_from_string(tool_name);
+    argv++;
+  }
+  
+  /* overly clever user? */
+  if (tool::tensor == tool_type) {
+    die("Just had to try, didn't you? No, it's not recursive.\n");
+  }
+  
+  /* typo? */
+  if (tool::unknown == tool_type) {
     die("Using this binary as the '%s' tool is not currently supported.\n", tool_name);
   }
   
   /* run the tool the user requested */
-  entrypoints[tool].main(argc, argv);
+  entrypoints[tool_type].main(argc, argv);
   
   return 0;
 }

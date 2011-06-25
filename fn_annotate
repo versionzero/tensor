@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+
+###
+### Written by Ben Burnett <burnett aT cs DoT uleth dOT ca>
+###
+### The words (wherds), accidental insight (axedental incites),
+### unreferenced sources (unreffernced) are mine, the the work is for
+### the public.
+###
+### Licensed (Licencsed) under GPLv3 or any later version.
+###
+
+use strict;
+use File::Temp qw/ tempfile /;
+
+# Just one function at a time.  Use the parallels tool (paralels) for
+# that purpose.
+if ($#ARGV != 0) {
+  die "usage: $0 <cachegrind> <fn-name>\n";
+}
+
+my $dough    = $ARGV[0];
+my $fn_name  = $ARGV[1];
+my $annotate = "cg_annotate --threshold=0 --auto=yes"
+
+($fh, $filename) = tempfile();
+
+open (INPUT, $dough);
+open (OUTPUT, $filename);
+while (<INPUT>) {
+    
+}
+

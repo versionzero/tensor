@@ -7,6 +7,7 @@
 namespace tool {
   typedef enum {
     unknown,
+    tensor,
     convert,
     effectuate
   } type_t;
@@ -15,6 +16,8 @@ namespace tool {
 tool::type_t tool_from_string(char const *s);
 char const* string_from_tool(tool::type_t tool);
 
+void print_tool_banner();
+void print_tools_with_descriptions(char const *format);
  
 #endif /* _UTILITY_H_ */
 

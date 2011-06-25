@@ -23,7 +23,7 @@
 */
 
 void
-compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
+compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
   uint                       size, nnz;
@@ -83,7 +83,7 @@ compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, te
 }
 
 void
-ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
+ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                 i, j, k;
   uint                 size, nnz, offset;
@@ -94,7 +94,7 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
   uint const           *R, *CK;
   storage_extended_t const *storage;
   
-  debug("ekmr_row_operation_n_mode_product(matrix=0x%s, vector=0x%x, tensor=0%x, l=%d, m=%d, n=%d)\n", matrix, vector, tensor, m, n);
+  debug("ekmr_row_operation_n_mode_product(matrix=0x%s, vector=0x%x, tensor=0%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -142,13 +142,13 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
 }
 
 void
-ekmr_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
+ekmr_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  debug("ekmr_operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x, l=%d, m=%d, n=%d)\n", matrix, vector, tensor, m, n);
+  debug("ekmr_operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   switch (tensor->orientation) {
   case orientation::row:
-    ekmr_row_operation_n_mode_product(matrix, vector, tensor, m, n);
+    ekmr_row_operation_n_mode_product(matrix, vector, tensor);
     break;
   default:
     die("Tensor product for '%s' orientation is not currently supported.\n",
@@ -158,23 +158,23 @@ ekmr_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t
 }
 
 void
-operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, uint m, uint n)
+operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  debug("operation_n_mode_product_inplace(matrix=0x%x, vector=0x%x, tensor=0x%x, l=%d, m=%d, n=%d)\n", matrix, vector, tensor, m, n);
+  debug("operation_n_mode_product_inplace(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   compatible(vector, tensor);
   
   switch (tensor->strategy) {
   case strategy::compressed:
-    compressed_operation_n_mode_product(matrix, vector, tensor, m, n);
+    compressed_operation_n_mode_product(matrix, vector, tensor);
     break;
   case strategy::ekmr:
-    ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
+    ekmr_operation_n_mode_product(matrix, vector, tensor);
     break;
   case strategy::zzekmr:
     /* NOTE: the encoding may differ, but the way we calculate
        products remains the same.  How is that for simplicity? */
-    ekmr_operation_n_mode_product(matrix, vector, tensor, m, n);
+    ekmr_operation_n_mode_product(matrix, vector, tensor);
     break;
   default:
     die("Tensor product for '%s' strategy is not currently supported.\n",
@@ -212,11 +212,11 @@ operation_n_mode_product(vector_t const *vector, tensor_t const *tensor)
     break;
   }
   
-  debug("operation_n_mode_product: m=%d, n=%d\n", m, n);
+  debug("operation_n_mode_product: m=%d, n=%d\n");
   
   compatible(vector, tensor);
   matrix = matrix_malloc(m, n);
-  operation_n_mode_product_inplace(matrix, vector, tensor, m, n);
+  operation_n_mode_product_inplace(matrix, vector, tensor);
   
   return matrix;
 }

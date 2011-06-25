@@ -10,6 +10,7 @@ N=$1
 echo "%%MatrixMarket vector array real    general            "
 echo $N
 
-for i in `seq 1 $N`; do
+#for i in `seq 1 $N`; do
+for i in {1..200}; do
     echo $i
 done

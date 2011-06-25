@@ -1,9 +1,9 @@
 CXX=g++
 INCLUDES=-I.
-DEBUG=-g
 STRICT=-pedantic -Wall -Wno-variadic-macros
-EXTRA_CXXFLAGS=-c $(DEBUG) $(STRICT) $(INCLUDES)
-EXTRA_LDFLAGS=-Wall $(DEBUG)
+EXTRA_DEBUG=-g -DNODEBUG
+EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(DEBUG) $(STRICT) $(INCLUDES)
+EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG) $(DEBUG)
 
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h memory.h	\
 		operation.h random.h tool.h utility.h compatible.h
@@ -34,19 +34,8 @@ SOURCES=$(SOURCES_GENERAL) $(SOURCES_MATRIX) $(SOURCES_STORAGE)	\
 ASSEMBLER=$(SOURCES:.cc=.s)
 OBJECTS=$(ASSEMBLER:.s=.o)
 EXECUTABLE=tensor
-UTILITIES=convert effectuate
 
-all: $(HEADERS) $(SOURCES) $(EXECUTABLE) utilities
-	if [ -e release ]; then\
-		echo "WARNING: The previous build used Release info; run 'make clean' clean it up";\
-	fi;\
-
-release:
-	if [ ! -e release ]; then\
-		make clean;\
-	fi;\
-	touch release;
-	CXXFLAGS="-DNODEBUG" make all
+all: $(HEADERS) $(SOURCES) $(EXECUTABLE)
 
 asm: $(HEADERS) $(ASSEMBLER) $(OBJECTS)
 	dsymutil $(EXECUTABLE)
@@ -61,12 +50,6 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 	$(CXX) $(EXTRA_LDFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
 	dsymutil $@
 
-utilities:
-	for UTILITY in $(UTILITIES); do \
-		\ln -fsv $(EXECUTABLE) $${UTILITY}; \
-		\ln -fsv $(EXECUTABLE).dSYM $${UTILITY}.dSYM; \
-	done;
-
 .cc.o: $(HEADERS)
 	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) $< -o $@
 
@@ -79,11 +62,7 @@ rebuild: clean all
 clean:
 	rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
 		$(EXECUTABLE) *.o annotate.*.h cache.*.dat a.out	\
-		*.plist release;\
-	for UTILITY in $(UTILITIES); do \
-		rm -fv $${UTILITY}; \
-		rm -fv $${UTILITY}.dSYM; \
-	done;
+		*.plist release;
 
 ##
 # Local Variables:
