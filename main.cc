@@ -368,7 +368,7 @@ main(int argc, char *argv[])
   };
     
   /* store the our name for future use */
-  tool_name = basename(argv[0]);
+  tool_name = mybasename(argv[0]);
   
   /* figure out which tool the user is invoking */
   tool = tool_from_string(tool_name);

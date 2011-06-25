@@ -27,7 +27,7 @@ bool_to_string(bool b)
    Note that this command is destructive, so the input buffer *will*
    be modified. */
 char*
-basename(char *name)
+mybasename(char *name)
 {
   char *base, *dot;
 
