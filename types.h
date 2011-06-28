@@ -8,6 +8,7 @@
    the full name */
 typedef unsigned char uchar;
 typedef unsigned int  uint;
+typedef unsigned long ulong;
 
 /* Define if the data is owned by the structure, or if it is just a
    view of the data.  We may extend this in the future to include
