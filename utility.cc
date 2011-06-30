@@ -1,12 +1,12 @@
 
-#include "utility.h"
 #include "string.h"
+#include "utility.h"
 #include <math.h>
 
 bool
 is_power_of_two(uint n)
 {
-  return (0 != n && (n & (n-1)));
+  return (0 != n && 0 == (n & (n-1)));
 }
 
 bool
