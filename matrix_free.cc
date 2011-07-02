@@ -13,7 +13,7 @@ matrix_free(matrix_t *t)
 {
   uint i;
   
-  debug("matrix_free(matrix_t=0x%x)\n", t);
+  debug("matrix_free(matrix=0x%x)\n", t);
   assert(NULL != t);
   
   if (ownership::creator == t->owner) {    
