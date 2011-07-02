@@ -2,40 +2,62 @@
 #ifndef _CACHE_H_
 #define _CACHE_H_
 
-namespace policy {
-  typedef enum {
-    lru
-  } type_t;
-}
+#include "hash.h"
+#include "types.h"
+#include <time.h>
 
-namespace access {
+namespace cache_operation {
   typedef enum {
     read,
     write
   } type_t;
 }
 
-typedef struct {
-  ulong         tag;
-  char          valid, dirty;  
-  cache_block_t *next, *previous;
-} cache_block_t;
+namespace miss {
+  typedef enum {
+    pure,
+    compulsory,
+    conflict
+  } type_t;
+}
+
+typedef struct cache_node_tag {
+  void           *key;
+  cache_node_tag *next, *older, *newer;
+} cache_node_t;
 
 typedef struct {
-  cache_blk_t *head, *tail;
-} cache_set_t;
+  ulong read_hits;
+  ulong read_misses;
+  ulong compulsory_read_misses;
+  ulong conflict_read_misses;
+  ulong write_hits;
+  ulong write_misses;
+  ulong compulsory_write_misses;
+  ulong conflict_write_misses;
+  ulong replacements;
+} cache_statistics_t;
 
 typedef struct {
-  int            sets, block_size, associativity;
-  policy::type_t policy;  
-  ulong          accesses, hits, misses, replacements, writebacks;
-  cache_set_t    *sets;
+  size_t               size, max_size;
+  cache_node_t         **nodes, *mru, *lru;
+  cache_statistics_t   statistics;
+  hash_table_t         *addresses;
+  hash_function_t      hasher;
+  compare_function_t   comparator;
+  duplicate_function_t duplicator;
+  free_function_t      freer;
 } cache_t;
 
-void cache_create(int A, int B, int C, policy::type_t policy = policy::lru);
-int  cache_access(cache_t *cache, ulong address, access::type_t access);
+cache_t* cache_malloc(size_t max_size, size_t nnz);
+void cache_free(cache_t *table);
+void cache_supported(cache_t *cache);
+void cache_access(cache_t *cache, void const *key, cache_operation::type_t access);
+char const* cache_operation_to_string(cache_operation::type_t access);
+void cache_print_statistics(cache_t *table);
+void cache_debug(cache_t *cache);
 
-#endif
+#endif /* _CACHE_H_ */
 
 /*
   Local Variables:

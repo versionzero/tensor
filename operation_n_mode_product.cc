@@ -1,4 +1,5 @@
 
+#include "cache.h"
 #include "compatible.h"
 #include "error.h"
 #include "matrix.h"
@@ -22,6 +23,8 @@
   end for
 */
 
+extern cache_t *cache;
+
 void
 compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
@@ -34,7 +37,7 @@ compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, te
   uint const                 *R, *C, *T;
   storage_compressed_t const *storage;
   
-  debug("compressed_row_operation_product(matrix=0x%s, vector=0x%x, tensor=0%x", matrix, vector, tensor);
+  debug("compressed_row_operation_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -66,15 +69,28 @@ compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, te
     start = R[i];
     end   = R[r];
     
+    cache_access(cache, &R[i], cache_operation::read);
+    cache_access(cache, &R[r], cache_operation::read);
+    
     DEBUG("start=%d, end=%d\n", start, end);
     
     for (k = start; k < end; ++k) {
       c = C[k];
       j = T[k];
       
+      cache_access(cache, &C[k], cache_operation::read);
+      cache_access(cache, &T[k], cache_operation::read);
+      
       DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k]);
       
       M[i][j] += p[c] * V[k];
+      
+      cache_access(cache, &V[k],    cache_operation::read);
+      cache_access(cache, &p[c],    cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::write);
+      
+      cache_debug(cache);
       
       DEBUG("%2.0f\t", M[i][j]);
       DEBUG("C[k=%2d]=%2d, T[k]=%d => c=%d, i=%d, j=%d\n", k, C[k], T[k], c, i, j);
@@ -94,7 +110,7 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
   uint const           *R, *CK;
   storage_extended_t const *storage;
   
-  debug("ekmr_row_operation_n_mode_product(matrix=0x%s, vector=0x%x, tensor=0%x)\n", matrix, vector, tensor);
+  debug("ekmr_row_operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -125,15 +141,28 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
     start = R[i];
     end   = R[r];
     
+    cache_access(cache, &R[i], cache_operation::read);
+    cache_access(cache, &R[r], cache_operation::read);
+    
     DEBUG("start=%d, end=%d\n", start, end);
     
     for (k = start; k < end; ++k) {
       c = CK[k] / offset;
       j = CK[k] % offset;
       
+      cache_access(cache, &CK[k], cache_operation::read);
+      cache_access(cache, &CK[k], cache_operation::read);
+      
       DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k]);
       
       M[i][j] += p[c] * V[k];
+      
+      cache_access(cache, &V[k],    cache_operation::read);
+      cache_access(cache, &p[c],    cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::write);
+      
+      cache_debug(cache);
       
       DEBUG("%2.0f\t", M[i][j]);
       DEBUG("CK[k=%2d]=%2d => c=%d, i=%d, j=%d\n", k, CK[k], c, i, j);

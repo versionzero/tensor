@@ -5,14 +5,16 @@ EXTRA_DEBUG=-g -DNODEBUG
 EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(DEBUG) $(STRICT) $(INCLUDES)
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG) $(DEBUG)
 
+HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h memory.h	\
 		operation.h random.h tool.h utility.h compatible.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=storage.h tensor.h
 HEADERS_VECTOR=vector.h
-HEADERS=$(HEADERS_GENERAL) $(HEADERS_MATRIX) $(HEADERS_TENSOR)	\
-	$(HEADERS_VECTOR)
+HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_MATRIX)	\
+	$(HEADERS_TENSOR) $(HEADERS_VECTOR)
 
+SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
 	information.cc memory.cc mmio.cc operation_n_mode_product.cc	\
 	operation_utility.cc random.cc tool.cc types.cc utility.cc
@@ -28,8 +30,9 @@ SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
 	tensor_validate.cc
 SOURCES_VECTOR=vector_clear.cc vector_free.cc vector_malloc.cc	\
 	vector_read.cc vector_write.cc
-SOURCES=$(SOURCES_GENERAL) $(SOURCES_MATRIX) $(SOURCES_STORAGE)	\
-	$(SOURCES_TENSOR) $(SOURCES_VECTOR) main.cc
+SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_MATRIX)	\
+	$(SOURCES_STORAGE) $(SOURCES_TENSOR) $(SOURCES_VECTOR)	\
+	main.cc
 
 ASSEMBLER=$(SOURCES:.cc=.s)
 OBJECTS=$(ASSEMBLER:.s=.o)
