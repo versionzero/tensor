@@ -24,7 +24,7 @@ bool is_power_of_two(uint n);
 bool might_as_well_be_zero(double d);
 
 /* Return a string version of a boolean type */
-const char* bool_to_string(bool b);
+char const* bool_to_string(bool b);
 
 /* Determine the appropriate name to base the output file names on.
    Note that this command is destructive, so the input buffer *will*
