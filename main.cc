@@ -1,4 +1,5 @@
 
+#include "cache.h"
 #include "compatible.h"
 #include "error.h"
 #include "file.h"
@@ -19,16 +20,26 @@
 #define OPTION_MESSAGE(x,a,b)    (x ? a:b)
 #define DEFAULT_ON_OR_OFF(x)     OPTION_MESSAGE(x, "on", "off")
 
-#define DEFAULT_ITERATIONS    10
-#define DEFAULT_OPERATION     operation::n_mode_product
-#define DEFAULT_ORIENTATION   orientation::row
-#define DEFAULT_STRATEGY      strategy::compressed
-#define DEFAULT_VERBOSITY     false
-#define DEFAULT_WRITE_RESULTS false
+#define DEFAULT_ITERATIONS       1
+#define DEFAULT_OPERATION        operation::n_mode_product
+#define DEFAULT_ORIENTATION      orientation::row
+#define DEFAULT_SIMULATE         false
+#define DEFAULT_STRATEGY         strategy::compressed
+#define DEFAULT_VERBOSITY        false
+#define DEFAULT_WRITE_RESULTS    false
 
+#define DEFAULT_WORD_SIZE        32
+#define DEFAULT_WORD_SIZE_OFFSET 2
+#define DEFAULT_CACHE_SIZE       (2*1024)
+#define DEFAULT_CACHE_LINE_SIZE  32
+
+cache_t      *cache;
+uint         cache_size;
+uint         cache_line_size;
 uint         iterations;
 char         *tool_name;
 tool::type_t tool_type;
+bool         simulate;
 bool         verbose;
 bool         write_results;
 
@@ -40,9 +51,11 @@ effectuate_tool_usage()
   message("\t%s [options] <input1> <intput2> ... [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
-  message("\t-n\tthis screen (default: %s)\n", DEFAULT_ITERATIONS);
+  message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
+  message("\t-m\tcache size (default: %d)\n", DEFAULT_CACHE_SIZE);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
+  message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
@@ -170,6 +183,12 @@ timed_operation_n_mode_product(int argc, char *argv[])
   calculate_matrix_dimentions(tensor, &m, &n);
   matrix = matrix_malloc(m, n);
   
+  cache = NULL;
+  if (simulate) {
+    cache = cache_malloc(cache_size, tensor->nnz*5);
+    cache_supported(cache);
+  }
+  
   for (i = 0; i < iterations; ++i) {
     timed_operation_n_mode_product(matrix, vector, tensor);
   }
@@ -177,6 +196,11 @@ timed_operation_n_mode_product(int argc, char *argv[])
   
   if (write_results) {
     timed_matrix_write(argc, argv, offset, matrix);
+  }
+  
+  if (simulate) {
+    cache_print_statistics(cache);
+    cache_free(cache);
   }
   
   vector_free(vector);
@@ -202,10 +226,12 @@ effectuate_tool_main(int argc, char *argv[])
 {
   int               c;
   operation::type_t operation;
-    
+  
   /* set the program's defaults */
+  cache_size    = DEFAULT_CACHE_SIZE;
   iterations    = DEFAULT_ITERATIONS;
   operation     = DEFAULT_OPERATION;
+  simulate      = DEFAULT_SIMULATE;
   verbose       = DEFAULT_VERBOSITY;
   write_results = DEFAULT_WRITE_RESULTS;
   
@@ -213,10 +239,24 @@ effectuate_tool_main(int argc, char *argv[])
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "hn:o:wv"))) {
+  while (-1 != (c = getopt(argc, argv, "hm:n:o:svw"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
+      break;
+    case 'm':
+      cache_size = atoi(optarg);
+      if (0 == cache_size) {
+	cache_size = DEFAULT_CACHE_SIZE;
+      }
+      debug("effectuate: cache_size=%d\n", cache_size);
+      break;
+    case 'n':
+      iterations = atoi(optarg);
+      if (0 == iterations) {
+	iterations = DEFAULT_ITERATIONS;
+      }
+      debug("effectuate: iterations=%d\n", iterations);
       break;
     case 'o': 
       if (isdigit(optarg[0])) {
@@ -224,18 +264,20 @@ effectuate_tool_main(int argc, char *argv[])
       } else {
 	operation = string_to_operation(optarg);
       }
+      debug("effectuate: operation='%s'\n", operation_to_string(operation));
       break;
-    case 'n':
-      iterations = atoi(optarg);
-      if (0 == iterations) {
-	iterations = DEFAULT_ITERATIONS;
-      }
+    case 's':
+      simulate = !simulate;
+      debug("effectuate: simulate='%s'\n", bool_to_string(simulate));
       break;
     case 'v': 
       verbose = !verbose;
+      debug("effectuate: verbose='%s'\n", bool_to_string(verbose));
       break;
     case 'w':
       write_results = !write_results;
+      debug("effectuate: write_results='%s'\n", bool_to_string(write_results));
+      break;
     case '?':
       if (isprint(optopt)) {
 	die("Unknown option `-%c'.\n", optopt);
@@ -252,6 +294,12 @@ effectuate_tool_main(int argc, char *argv[])
   /* count the number of remaining arguments */
   if (argc-optind < 2) {
     effectuate_tool_usage();
+  }
+  
+  /* if we are just running a simulation, then we only do one
+     iteration; otherwise, it would be really slow */
+  if (simulate) {
+    iterations = 1;
   }
   
   /* pass control over to some naive timing procedures */
