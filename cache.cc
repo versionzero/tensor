@@ -401,16 +401,19 @@ void
 cache_print_statistics(cache_t *cache)
 {
   ulong              accesses, compulsory, conflict, hits, misses;
+  ulong              ideal_accesses, ideal_misses;
   cache_statistics_t *statistics;
   
   debug("cache_print_statistics(cache=0x%x)\n", cache);
   
-  statistics = &cache->statistics;
-  hits       = statistics->read_hits + statistics->write_hits;
-  compulsory = statistics->compulsory_read_misses + statistics->compulsory_write_misses;
-  conflict   = statistics->conflict_read_misses + statistics->conflict_write_misses;
-  misses     = statistics->read_misses + statistics->write_misses + compulsory + conflict;
-  accesses   = hits + misses;
+  statistics     = &cache->statistics;
+  hits           = statistics->read_hits + statistics->write_hits;
+  compulsory     = statistics->compulsory_read_misses + statistics->compulsory_write_misses;
+  conflict       = statistics->conflict_read_misses + statistics->conflict_write_misses;
+  misses         = statistics->read_misses + statistics->write_misses + compulsory + conflict;
+  accesses       = hits + misses;
+  ideal_accesses = accesses - compulsory;
+  ideal_misses   = misses - compulsory;
   
   message("Cache Profile:\n");
   message("accesses:                %d\n", accesses);
@@ -426,14 +429,11 @@ cache_print_statistics(cache_t *cache)
   message("conflict write misses:   %d\n", statistics->conflict_write_misses);
   message("total conflict misses:   %d\n", conflict);
   message("total misses:            %d\n", misses);
+  message("ideal misses:            %d\n", ideal_misses);
   message("hit rate:                %2.4f\n", 1.0 - (double) misses / (double) accesses);
   message("miss rate:               %2.4f\n", (double) misses / (double) accesses);
-  
-  accesses -= compulsory;
-  misses   -= compulsory;
-  
-  message("ideal hit rate:          %2.4f\n", 1.0 - (double) misses / (double) accesses);
-  message("ideal miss rate:         %2.4f\n", (double) misses / (double) accesses);
+  message("ideal hit rate:          %2.4f\n", 1.0 - (double) ideal_misses / (double) ideal_accesses);
+  message("ideal miss rate:         %2.4f\n", (double) ideal_misses / (double) ideal_accesses);
   
 #if 0
   message("replace:   %d\n", replacements);
