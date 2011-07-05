@@ -40,6 +40,12 @@
 
 extern bool verbose;
 
+size_t cache_memory_address_hash(void const *address);
+size_t cache_memory_address_tag(void const *address);
+size_t cache_memory_address_compare(void const *a, void const *b);
+void*  cache_memory_address_duplicate(void const *address);
+void   cache_memory_address_free(void *address);
+
 /* Ok, so the whole idea is to try and simulate an "ideal" cache here.
    We use a least-recently-used (LRU) eviction policy, as it has been
    shown to perform closest to the clairvoyant replacement policy
@@ -49,28 +55,30 @@ extern bool verbose;
    allows for fast lookups.  The linked list maintains the access
    order. This was probably overkill for what we are doing, but
    because we will be running 100s, even 1000s, of iterations, it has
-   the nice effect of not destroying my machine and patience. 
-*/
+   the nice effect of not destroying my machine and exhausting
+   patience. */
 
 
 cache_t*
-cache_malloc(size_t max_size, size_t nnz)
+cache_malloc(size_t max_size, size_t line_size)
 {
   cache_t *cache;
   
-  debug("cache_malloc(max_size=%d, nnz=%d)\n", max_size, nnz);
+  debug("cache_malloc(max_size=%d, line_size=%d)\n", max_size, line_size);
   
   cache             = MALLOC(cache_t);
   cache->nodes      = MALLOC_N(cache_node_t*, max_size);
-  cache->addresses  = hash_table_malloc(nnz);
+  cache->addresses  = hash_table_malloc(max_size);
   cache->max_size   = max_size;
+  cache->line_size  = line_size;
   cache->size       = 0;
   cache->mru        = NULL;
   cache->lru        = NULL;
-  cache->hasher     = &memory_address_hash;
-  cache->comparator = &memory_address_compare;
-  cache->duplicator = &memory_address_duplicate;
-  cache->freer      = &memory_address_free;
+  cache->hasher     = &cache_memory_address_hash;
+  cache->tagger     = &cache_memory_address_tag;
+  cache->comparator = &cache_memory_address_compare;
+  cache->duplicator = &cache_memory_address_duplicate;
+  cache->freer      = &cache_memory_address_free;
   
   memset(cache->nodes, 0, max_size*sizeof(cache_node_t*));
   
@@ -366,16 +374,16 @@ cache_supported(cache_t *cache)
   if (!is_power_of_two(cache->max_size)) {
     die("Cache size is not a power of two (size=%d).\n", cache->max_size);
   }
-#if 0  
-  if (!is_power_of_two(cache->size/cache->line_size)) {
-    die("Cache set is not a power of two.\n");
+
+  if (!is_power_of_two(cache->max_size/cache->line_size)) {
+    die("Cache set is not a power of two (%d).\n", cache->size/cache->line_size);
   }
   
   if (!is_power_of_two(cache->line_size)) {
     die("Cache line size is not a power of two.\n");
   }
   
-  if (0 != (cache->size % cache->line_size)) {
+  if (0 != (cache->max_size % cache->line_size)) {
     die("Cache size is not evenly divisible by line size.\n");
   }
   
@@ -383,10 +391,9 @@ cache_supported(cache_t *cache)
     die("Cache line size is too small.\n");
   }
   
-  if (cache->size <= cache->line_size) {
+  if (cache->max_size <= cache->line_size) {
     die("Cache size is less than or equal to line size.\n");
   }
-#endif
 }
 
 char const*

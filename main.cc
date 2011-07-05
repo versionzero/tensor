@@ -28,14 +28,12 @@
 #define DEFAULT_VERBOSITY        false
 #define DEFAULT_WRITE_RESULTS    false
 
-#define DEFAULT_WORD_SIZE        32
-#define DEFAULT_WORD_SIZE_OFFSET 2
 #define DEFAULT_CACHE_SIZE       (2*1024)
-#define DEFAULT_CACHE_LINE_SIZE  32
+#define DEFAULT_CACHE_LINE_SIZE  MINIMUM_CACHE_LINE_SIZE
 
 cache_t      *cache;
 uint         cache_size;
-uint         cache_line_size;
+uint         line_size;
 uint         iterations;
 char         *tool_name;
 tool::type_t tool_type;
@@ -51,8 +49,9 @@ effectuate_tool_usage()
   message("\t%s [options] <input1> <intput2> ... [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
-  message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
+  message("\t-l\tcache line size (default: %d)\n", DEFAULT_CACHE_LINE_SIZE);
   message("\t-m\tcache size (default: %d)\n", DEFAULT_CACHE_SIZE);
+  message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
@@ -185,7 +184,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   
   cache = NULL;
   if (simulate) {
-    cache = cache_malloc(cache_size, tensor->nnz*5);
+    cache = cache_malloc(cache_size, line_size);
     cache_supported(cache);
   }
   
@@ -229,6 +228,7 @@ effectuate_tool_main(int argc, char *argv[])
   
   /* set the program's defaults */
   cache_size    = DEFAULT_CACHE_SIZE;
+  line_size     = DEFAULT_CACHE_LINE_SIZE;
   iterations    = DEFAULT_ITERATIONS;
   operation     = DEFAULT_OPERATION;
   simulate      = DEFAULT_SIMULATE;
@@ -244,19 +244,26 @@ effectuate_tool_main(int argc, char *argv[])
     case 'h': 
       effectuate_tool_usage();
       break;
+    case 'l':
+      line_size = atoi(optarg);
+      if (0 == line_size) {
+	line_size = DEFAULT_CACHE_LINE_SIZE;
+      }
+      debug("line_size=%d\n", line_size);
+      break;
     case 'm':
       cache_size = atoi(optarg);
       if (0 == cache_size) {
 	cache_size = DEFAULT_CACHE_SIZE;
       }
-      debug("effectuate: cache_size=%d\n", cache_size);
+      debug("cache_size=%d\n", cache_size);
       break;
     case 'n':
       iterations = atoi(optarg);
       if (0 == iterations) {
 	iterations = DEFAULT_ITERATIONS;
       }
-      debug("effectuate: iterations=%d\n", iterations);
+      debug("iterations=%d\n", iterations);
       break;
     case 'o': 
       if (isdigit(optarg[0])) {
@@ -264,19 +271,19 @@ effectuate_tool_main(int argc, char *argv[])
       } else {
 	operation = string_to_operation(optarg);
       }
-      debug("effectuate: operation='%s'\n", operation_to_string(operation));
+      debug("operation='%s'\n", operation_to_string(operation));
       break;
     case 's':
       simulate = !simulate;
-      debug("effectuate: simulate='%s'\n", bool_to_string(simulate));
+      debug("simulate='%s'\n", bool_to_string(simulate));
       break;
     case 'v': 
       verbose = !verbose;
-      debug("effectuate: verbose='%s'\n", bool_to_string(verbose));
+      debug("verbose='%s'\n", bool_to_string(verbose));
       break;
     case 'w':
       write_results = !write_results;
-      debug("effectuate: write_results='%s'\n", bool_to_string(write_results));
+      debug("write_results='%s'\n", bool_to_string(write_results));
       break;
     case '?':
       if (isprint(optopt)) {
