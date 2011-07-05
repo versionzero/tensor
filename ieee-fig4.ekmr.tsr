@@ -1,0 +1,17 @@
+%%MatrixMarket tensor ekmr real general
+2 3 4 12 row 3
+4
+8
+12
+1          7
+4          1
+9          8
+12          2
+0          3
+5          9
+8          4
+9         10
+1         11
+4          5
+8          6
+13         12
