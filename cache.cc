@@ -39,12 +39,15 @@
 #include <string.h>
 
 extern bool verbose;
-
-size_t cache_memory_address_hash(void const *address);
-size_t cache_memory_address_tag(void const *address);
-size_t cache_memory_address_compare(void const *a, void const *b);
-void*  cache_memory_address_duplicate(void const *address);
-void   cache_memory_address_free(void *address);
+extern uint cache_size;
+extern uint cache_line_size;
+size_t      hash_shift, tag_shift;
+  
+size_t cache_key_hash(void const *address);
+size_t cache_key_tag(void const *address);
+size_t cache_key_compare(void const *a, void const *b);
+void*  cache_key_duplicate(void const *address);
+void   cache_key_free(void *address);
 
 /* Ok, so the whole idea is to try and simulate an "ideal" cache here.
    We use a least-recently-used (LRU) eviction policy, as it has been
@@ -58,29 +61,33 @@ void   cache_memory_address_free(void *address);
    the nice effect of not destroying my machine and exhausting
    patience. */
 
-
 cache_t*
 cache_malloc(size_t max_size, size_t line_size)
 {
+  uint    i, buckets;
   cache_t *cache;
   
   debug("cache_malloc(max_size=%d, line_size=%d)\n", max_size, line_size);
   
+  buckets    = max_size/line_size;
+  hash_shift = log2(line_size);
+  tag_shift  = log2(line_size) + log2(max_size);
+  
+  debug("cache_malloc: buckets=%d, hash_shift=%d, tag_shift=%d\n", buckets, hash_shift, tag_shift);
+  
   cache             = MALLOC(cache_t);
-  cache->nodes      = MALLOC_N(cache_node_t*, max_size);
+  cache->nodes      = MALLOC_N(cache_node_t*, buckets);
   cache->addresses  = hash_table_malloc(max_size);
   cache->max_size   = max_size;
   cache->line_size  = line_size;
+  cache->buckets    = buckets;
   cache->size       = 0;
   cache->mru        = NULL;
   cache->lru        = NULL;
-  cache->hasher     = &cache_memory_address_hash;
-  cache->tagger     = &cache_memory_address_tag;
-  cache->comparator = &cache_memory_address_compare;
-  cache->duplicator = &cache_memory_address_duplicate;
-  cache->freer      = &cache_memory_address_free;
   
-  memset(cache->nodes, 0, max_size*sizeof(cache_node_t*));
+  for (i = 0; i < buckets; ++i) {
+    cache->nodes[i] = NULL;
+  }
   
   cache->statistics.read_hits               = 0;
   cache->statistics.read_misses             = 0;
@@ -103,10 +110,10 @@ cache_free(cache_t *cache)
   
   debug("cache_free(cache=0x%x)\n", cache);
   
-  for (i = 0; i < cache->max_size; ++i) {
+  for (i = 0; i < cache->buckets; ++i) {
     for (node = cache->nodes[i]; node; node = next) {
 	next = node->next;
-	cache->freer(node->key);
+	cache_key_free(node->key);
 	safe_free(node);
     }
   }
@@ -119,7 +126,7 @@ cache_free(cache_t *cache)
 size_t
 cache_bucket(cache_t *cache, void const *key)
 {
-  return cache->hasher(key) % cache->max_size;
+  return cache_key_hash(key) % cache->buckets;
 }
 
 size_t
@@ -129,7 +136,6 @@ cache_bucket_size(cache_t *cache, size_t hash)
   cache_node_t *node;
   
   size = 0;
-  
   for (node = cache->nodes[hash]; node; node = node->next) {
     size++;
   }
@@ -152,7 +158,7 @@ cache_remove(cache_t *cache, void const *key)
   debug("cache_remove: hash=%d ~> root-node=0x%x\n", hash, node);
   
   while (node) {
-    if (0 == cache->comparator(node->key, key)) {
+    if (0 == cache_key_compare(node->key, key)) {
       /* found */
       debug("cache_remove: hash=%d => node=0x%x\n", hash, node);
       if (previous) {
@@ -164,7 +170,7 @@ cache_remove(cache_t *cache, void const *key)
       } else {
 	cache->nodes[hash] = node->next;
       }
-      cache->freer(node->key);
+      cache_key_free(node->key);
       safe_free(node);
       cache->size--;
       return;
@@ -231,7 +237,7 @@ cache_insert_impl(cache_t *cache, void const *key)
   
   /* search within the bucket */
   while (node) {
-    if (0 == cache->comparator(node->key, key)) {
+    if (0 == cache_key_compare(node->key, key)) {
       /* found */
       debug("cache_insert_impl: hash=%d => node=0x%x\n", hash, node);
       return;
@@ -241,7 +247,7 @@ cache_insert_impl(cache_t *cache, void const *key)
   
   /* create new data node */
   node        = MALLOC(cache_node_t);
-  node->key   = cache->duplicator(key);
+  node->key   = cache_key_duplicate(key);
   node->next  = cache->nodes[hash];
   node->older = NULL;
   node->newer = NULL;
@@ -282,7 +288,7 @@ cache_find(cache_t *cache, void const *key)
   
   while (node) {
     debug("cache_find: comparing node->key=0x%x to key=0x%x\n", node->key, key);
-    if (0 == cache->comparator(node->key, key)) {
+    if (0 == cache_key_compare(node->key, key)) {
       /* found */
       debug("cache_find: hash=%d => node=0x%x, found!\n", hash, node);
       return node;
@@ -375,8 +381,8 @@ cache_supported(cache_t *cache)
     die("Cache size is not a power of two (size=%d).\n", cache->max_size);
   }
 
-  if (!is_power_of_two(cache->max_size/cache->line_size)) {
-    die("Cache set is not a power of two (%d).\n", cache->size/cache->line_size);
+  if (!is_power_of_two(cache->buckets)) {
+    die("Cache set is not a power of two (%d).\n", cache->buckets);
   }
   
   if (!is_power_of_two(cache->line_size)) {
@@ -461,7 +467,7 @@ cache_debug(cache_t *cache)
   
   if (verbose) {
     message("Cache Contents (%d/%d):\n", cache->size, cache->max_size);
-    for (i = 0; i < cache->max_size; ++i) {
+    for (i = 0; i < cache->buckets; ++i) {
       node = cache->nodes[i];
       if (node) {
 	message("%4d: ", i);
@@ -473,4 +479,45 @@ cache_debug(cache_t *cache)
       }
     }
   }
+}
+
+size_t
+cache_key_hash(void const *address)
+{
+  register size_t key;
+  
+  key = (size_t) address;
+  return (key >> hash_shift);
+}
+
+size_t
+cache_key_tag(void const *address)
+{
+  register size_t key;
+  
+  key = (size_t) address;
+  return (key >> tag_shift);
+}
+
+size_t
+cache_key_compare(void const *a, void const *b)
+{
+  if (a < b) {
+    return -1;
+  } else if (a > b) {
+    return 1;
+  }
+  return 0;
+}
+
+void*
+cache_key_duplicate(void const *address)
+{
+  return (void*) address;
+}
+
+void
+cache_key_free(void *address)
+{
+  /* no-op */
 }

@@ -31,6 +31,7 @@
 #include "error.h"
 #include "memory.h"
 #include "utility.h"
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -39,6 +40,7 @@ extern bool verbose;
 hash_table_t*
 hash_table_malloc(size_t max_size)
 {
+  uint         i;
   hash_table_t *table;
   
   debug("hash_table_malloc(max_size=%d)\n", max_size);
@@ -52,9 +54,15 @@ hash_table_malloc(size_t max_size)
   table->duplicator = &memory_address_duplicate;
   table->freer      = &memory_address_free;
   
-  memset(table->nodes, 0, max_size*sizeof(hash_table_node_t*));
+  for (i = 0; i < table->max_size; ++i) {
+    table->nodes[i] = NULL;
+  }
   
-  debug("hash_table_malloc: table=0x%x\n", table);
+  debug("hash_table_malloc: hasher=0x%x\n",     table->hasher);
+  debug("hash_table_malloc: comparator=0x%x\n", table->comparator);
+  debug("hash_table_malloc: duplicator=0x%x\n", table->duplicator);
+  debug("hash_table_malloc: freer=0x%x\n",      table->freer);
+  debug("hash_table_malloc: table=0x%x\n",      table);
   
   return table;
 }
@@ -82,6 +90,8 @@ hash_table_free(hash_table_t *table)
 size_t
 hash_table_bucket(hash_table_t *table, void const *key)
 {
+  assert(NULL != table->hasher);
+  
   return table->hasher(key) % table->max_size;
 }
 

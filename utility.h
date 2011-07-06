@@ -30,6 +30,9 @@ char const* bool_to_string(bool b);
    Note that this command is destructive, so the input buffer *will*
    be modified. */
 char* mybasename(char *name);
+
+/* ln(x), or log base 2 of x */
+long double log2(long double x);
  
 #endif /* _UTILITY_H_ */
 

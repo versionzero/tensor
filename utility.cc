@@ -43,3 +43,9 @@ mybasename(char *name)
   
   return base;
 }
+
+long double
+log2(long double x)
+{
+  return log(x)/log(2);
+}

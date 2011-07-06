@@ -6,7 +6,7 @@
 #include "types.h"
 #include <time.h>
 
-#define MINIMUM_CACHE_LINE_SIZE 16
+#define MINIMUM_CACHE_LINE_SIZE 2
 
 namespace cache_operation {
   typedef enum {
@@ -41,18 +41,11 @@ typedef struct {
   ulong replacements;
 } cache_statistics_t;
 
-typedef size_t (*tag_function_t)(void const*);
-
 typedef struct {
-  size_t               size, max_size, line_size;
-  cache_node_t         **nodes, *mru, *lru;
-  cache_statistics_t   statistics;
-  hash_table_t         *addresses;
-  hash_function_t      hasher;
-  tag_function_t       tagger;
-  compare_function_t   comparator;
-  duplicate_function_t duplicator;
-  free_function_t      freer;
+  size_t             size, max_size, line_size, buckets;
+  cache_node_t       **nodes, *mru, *lru;
+  cache_statistics_t statistics;
+  hash_table_t       *addresses;
 } cache_t;
 
 cache_t* cache_malloc(size_t max_size, size_t line_size);
