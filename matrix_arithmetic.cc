@@ -15,7 +15,7 @@ matrix_operation_inplace(matrix_t       *m1,
 {
   uint i, j;
 
-  error(D_INFORMATION, "Operation '%s' (%d, %d) => (%d, %d)\n",
+  information("Operation '%s' (%d, %d) => (%d, %d)\n",
 	name, m1->m, m1->n, m2->m, m2->n);
   
   matrix_compatible(m1, m2);
@@ -35,13 +35,13 @@ matrix_operation(matrix_t const *m1,
 {
   matrix_t *mr;
 
-  error(D_INFORMATION, "Operation '%s' (%d, %d) => (%d, %d)\n",
+  information("Operation '%s' (%d, %d) => (%d, %d)\n",
 	name, m1->m, m1->n, m2->m, m2->n);
   
   matrix_compatible(m1, m2);
 
   if (NULL == (mr = matrix_malloc(m1->m, m1->n))) {
-    die( "Failed to allocate output matrix.\n");
+    die("Failed to allocate output matrix.\n");
   }
 
   matrix_copy_inplace(mr, m1);
@@ -64,7 +64,7 @@ matrix_multiply_inplace(matrix_t *mr, matrix_t const *m1, matrix_t const *m2)
 {
   uint i, j, k;
   
-  error(D_INFORMATION, "Operation 'Multiplication' (%d, %d) => (%d, %d)\n",
+  information("Operation 'Multiplication' (%d, %d) => (%d, %d)\n",
 	m1->m, m1->n, m2->m, m2->n);
   
   matrix_compatible(m1, m2);
@@ -87,7 +87,7 @@ matrix_multiply(matrix_t const *m1, matrix_t const *m2)
   matrix_compatible(m1, m2);
   
   if (NULL == (mr = matrix_malloc(m1->m, m1->n))) {
-    die( "Failed to allocate output matrix.\n");
+    die("Failed to allocate output matrix.\n");
   }
   
   matrix_multiply_inplace(mr, m1, m2);
