@@ -35,7 +35,7 @@ compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, te
   double                     **M;
   double const               *p, *V;
   uint const                 *R, *C, *T;
-  storage_compressed_t const *storage;
+  tensor_storage_compressed_t const *storage;
   
   debug("compressed_row_operation_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
@@ -108,7 +108,7 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
   double               **M;
   double const         *p, *V;
   uint const           *R, *CK;
-  storage_extended_t const *storage;
+  tensor_storage_extended_t const *storage;
   
   debug("ekmr_row_operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   

@@ -15,7 +15,7 @@ tensor_convert_inplace(tensor_t *destination, tensor_t *source)
   debug("tensor_convert_inplace(destination=0x%x, source=0x%x)\n", destination, source);
   
   compatible(destination, source);
-  storage_convert_inplace(destination, source);
+  tensor_storage_convert_inplace(destination, source);
 }
 
 tensor_t*

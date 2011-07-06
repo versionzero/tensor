@@ -10,7 +10,7 @@
 static uint g_r;
 
 int 
-storage_index_compare_for_ekmr_row(void const *a, void const *b)
+tensor_storage_index_compare_for_ekmr_row(void const *a, void const *b)
 {
   uint                     ja, jb;
   int                      result;
@@ -29,7 +29,7 @@ storage_index_compare_for_ekmr_row(void const *a, void const *b)
 }
 
 void 
-storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
+tensor_storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
 {
   uint size, index, current, previous;
   coordinate_tuple_t const *tuple;
@@ -38,7 +38,7 @@ storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
   size       = 0;
   previous   = 0;
   
-  debug("storage_index_encode_for_ekmr_row(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
+  debug("tensor_storage_index_encode_for_ekmr_row(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
@@ -52,16 +52,16 @@ storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
 }
 
 void
-storage_index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
+tensor_storage_index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
 {
   uint i;
-  storage_coordinate_t const *s;
-  storage_extended_t         *d;
+  tensor_storage_coordinate_t const *s;
+  tensor_storage_extended_t         *d;
   
-  s = (storage_coordinate_t const*) source;
-  d = (storage_extended_t*) destination;
+  s = (tensor_storage_coordinate_t const*) source;
+  d = (tensor_storage_extended_t*) destination;
   
-  debug("storage_index_copy_for_ekmr_row(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
+  debug("tensor_storage_index_copy_for_ekmr_row(destination=0x%x, source=0x%x, nnz=%d)\n", d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
     d->CK[i] = s->tuples[i].j * g_r + s->tuples[i].k;
@@ -69,19 +69,19 @@ storage_index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
 }
 
 void
-storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source)
 {
   int                  i, nnz;
-  storage_base_t       *base;
-  storage_extended_t   *d;
-  storage_coordinate_t *s;
+  tensor_storage_base_t       *base;
+  tensor_storage_extended_t   *d;
+  tensor_storage_coordinate_t *s;
   coordinate_tuple_t   *tuples;
   double               *values;
   
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_EXTENDED(destination);
   
-  debug("storage_convert_from_coordinate_to_ekmr_inplace(destination=0x%x, source=0x%x)\n", d, s);
+  debug("tensor_storage_convert_from_coordinate_to_ekmr_inplace(destination=0x%x, source=0x%x)\n", d, s);
   
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
@@ -98,16 +98,16 @@ storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t 
   }
 }
 
-storage_extended_t*
-storage_malloc_ekmr(tensor_t const *tensor)
+tensor_storage_extended_t*
+tensor_storage_malloc_ekmr(tensor_t const *tensor)
 {
-  storage_base_t         *base;
-  storage_extended_t     *storage;
+  tensor_storage_base_t         *base;
+  tensor_storage_extended_t     *storage;
   conversion_callbacks_t *callbacks;
   
-  debug("storage_malloc_ekmr(tensor=0x%x)\n", tensor);
+  debug("tensor_storage_malloc_ekmr(tensor=0x%x)\n", tensor);
   
-  storage                  = MALLOC(storage_extended_t);
+  storage                  = MALLOC(tensor_storage_extended_t);
   storage->CK              = MALLOC_N(uint, tensor->nnz);
   storage->RO              = NULL;
   storage->size            = 0;
@@ -121,9 +121,9 @@ storage_malloc_ekmr(tensor_t const *tensor)
   case orientation::row:
     storage->r               = tensor->n;
     storage->size            = tensor->m;
-    callbacks->index_compare = &storage_index_compare_for_ekmr_row;
-    callbacks->index_encode  = &storage_index_encode_for_ekmr_row;
-    callbacks->index_copy    = &storage_index_copy_for_ekmr_row;
+    callbacks->index_compare = &tensor_storage_index_compare_for_ekmr_row;
+    callbacks->index_encode  = &tensor_storage_index_encode_for_ekmr_row;
+    callbacks->index_copy    = &tensor_storage_index_copy_for_ekmr_row;
     break;
   default:
     die("Tensor orientation '%s' not yet supported.\n", orientation_to_string(tensor->orientation));
@@ -132,29 +132,29 @@ storage_malloc_ekmr(tensor_t const *tensor)
   case orientation::column:
     storage->r               = tensor->m-1;
     storage->size            = tensor->n*tensor->l;
-    callbacks->index_compare = &storage_index_compare_for_ekmr_column;
-    callbacks->index_encode  = &storage_index_encode_for_ekmr_column;
-    callbacks->index_copy    = &storage_index_copy_for_ekmr_column;
+    callbacks->index_compare = &tensor_storage_index_compare_for_ekmr_column;
+    callbacks->index_encode  = &tensor_storage_index_encode_for_ekmr_column;
+    callbacks->index_copy    = &tensor_storage_index_copy_for_ekmr_column;
     break;
   case orientation::tube:
     storage->r               = ?;
-    callbacks->index_compare = &storage_index_compare_for_ekmr_tube;
-    callbacks->index_encode  = &storage_index_encode_for_ekmr_tube;
-    callbacks->index_copy    = &storage_index_copy_for_ekmr_tube;
+    callbacks->index_compare = &tensor_storage_index_compare_for_ekmr_tube;
+    callbacks->index_encode  = &tensor_storage_index_encode_for_ekmr_tube;
+    callbacks->index_copy    = &tensor_storage_index_copy_for_ekmr_tube;
     break;
 #endif
   }
   
   storage->size  += 1;
   storage->RO     = MALLOC_N(uint, storage->size);
-  base            = (storage_base_t*) storage;
+  base            = (tensor_storage_base_t*) storage;
   base->callbacks = callbacks;
   
-  debug("storage_malloc_ekmr: callbacks=0x%x\n", callbacks);  
-  debug("storage_malloc_ekmr: storage->CK=0x%x\n", storage->CK);
-  debug("storage_malloc_ekmr: storage->size (of R)=%d\n", storage->size);
-  debug("storage_malloc_ekmr: storage->RO=0x%x\n", storage->RO);
-  debug("storage_malloc_ekmr: storage=0x%x\n", storage);
+  debug("tensor_storage_malloc_ekmr: callbacks=0x%x\n", callbacks);  
+  debug("tensor_storage_malloc_ekmr: storage->CK=0x%x\n", storage->CK);
+  debug("tensor_storage_malloc_ekmr: storage->size (of R)=%d\n", storage->size);
+  debug("tensor_storage_malloc_ekmr: storage->RO=0x%x\n", storage->RO);
+  debug("tensor_storage_malloc_ekmr: storage=0x%x\n", storage);
   
   return storage;
 }

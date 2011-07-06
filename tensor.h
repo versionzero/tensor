@@ -46,7 +46,7 @@ typedef struct {
 
 typedef struct {
   conversion_callbacks_t *callbacks;
-} storage_base_t;
+} tensor_storage_base_t;
 
 typedef struct {
   uint i, j, k;
@@ -54,34 +54,34 @@ typedef struct {
 } coordinate_tuple_t;
  
 typedef struct {
-  storage_base_t     dummy;
+  tensor_storage_base_t     dummy;
   coordinate_tuple_t *tuples;
-} storage_coordinate_t;
+} tensor_storage_coordinate_t;
 
 typedef struct {
-  storage_base_t base;
+  tensor_storage_base_t base;
   uint           size;
   uint           *RO, *CO, *KO;
-} storage_compressed_t;
+} tensor_storage_compressed_t;
 
 typedef struct {
-  storage_base_t base;
+  tensor_storage_base_t base;
   uint           size, r;
   uint           *RO, *CK;
-} storage_extended_t;
+} tensor_storage_extended_t;
 
 typedef struct {
-  storage_extended_t dummy;
-} storage_ekmr_t;
+  tensor_storage_extended_t dummy;
+} tensor_storage_ekmr_t;
 
 typedef struct {
-  storage_extended_t dummy;
-} storage_zzekmr_t;
+  tensor_storage_extended_t dummy;
+} tensor_storage_zzekmr_t;
 
-#define STORAGE_BASE(x) ((storage_base_t*)x->storage)
-#define STORAGE_COORIDINATE(x) ((storage_coordinate_t*)x->storage)
-#define STORAGE_COMPRESSED(x) ((storage_compressed_t*)x->storage)
-#define STORAGE_EXTENDED(x) ((storage_extended_t*)x->storage)
+#define STORAGE_BASE(x) ((tensor_storage_base_t*)x->storage)
+#define STORAGE_COORIDINATE(x) ((tensor_storage_coordinate_t*)x->storage)
+#define STORAGE_COMPRESSED(x) ((tensor_storage_compressed_t*)x->storage)
+#define STORAGE_EXTENDED(x) ((tensor_storage_extended_t*)x->storage)
 
 tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
 tensor_t* tensor_malloc_from_template(tensor_t const *tensor);

@@ -108,7 +108,7 @@ public:
   typedef tensor<T>               tensor_type;
   typedef tensor_impl<T, Storage> tensor_impl_type;
   typedef tensor_impl_type const  const_tensor_impl_type;
-  typedef Storage<T>              storage_type;
+  typedef Storage<T>              tensor_storage_type;
   
 public:
   
@@ -155,7 +155,7 @@ public:
   
 private:
   
-  storage_type strategy_;
+  tensor_storage_type strategy_;
   
 };
 

@@ -28,7 +28,7 @@ tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orien
   
   if (nnz > 0) {
     tensor->values  = MALLOC_N(double, nnz);
-    tensor->storage = storage_malloc(tensor);
+    tensor->storage = tensor_storage_malloc(tensor);
   }
   
   debug("tensor_malloc: tensor->values=0x%x\n", tensor->values);

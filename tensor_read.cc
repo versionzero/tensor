@@ -15,7 +15,7 @@ tensor_fread_array(FILE *file)
   int                  result;
   double               d;
   tensor_t             *tensor;
-  storage_coordinate_t *storage;
+  tensor_storage_coordinate_t *storage;
   coordinate_tuple_t   *tuples;
   
   debug("tensor_fread_array(0x%x)\n", file);
@@ -59,7 +59,7 @@ tensor_fread_coordinate(FILE *file)
   int                  result;
   double               d;
   tensor_t             *tensor;
-  storage_coordinate_t *storage;
+  tensor_storage_coordinate_t *storage;
   coordinate_tuple_t   *tuples;
   
   debug("tensor_fread_coordinate(0x%x)\n", file);
@@ -96,7 +96,7 @@ tensor_fread_compressed(FILE *file)
   double               d;
   tensor_t             *tensor;
   orientation::type_t  orientation;
-  storage_compressed_t *storage;
+  tensor_storage_compressed_t *storage;
   
   debug("tensor_fread_compressed(0x%x)\n", file);
   
@@ -140,7 +140,7 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
   double              d;
   tensor_t            *tensor;
   orientation::type_t orientation;
-  storage_extended_t  *storage;
+  tensor_storage_extended_t  *storage;
   
   debug("tensor_fread_compressed(0x%x)\n", file);
   

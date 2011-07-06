@@ -17,7 +17,7 @@ convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *s
   case orientation::row:
   case orientation::column:
   case orientation::tube:
-    storage_convert_from_coordinate_to_compressed_inplace(destination, source);
+    tensor_storage_convert_from_coordinate_to_compressed_inplace(destination, source);
     break;
   default:
     die("Conversion to orientation '%s' is not currently supported.\n",
@@ -35,7 +35,7 @@ convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source)
   case orientation::row:
   case orientation::column:
   case orientation::tube:
-    storage_convert_from_coordinate_to_ekmr_inplace(destination, source);
+    tensor_storage_convert_from_coordinate_to_ekmr_inplace(destination, source);
     break;
   default:
     die("Conversion to orientation '%s' is not currently supported.\n",
@@ -53,7 +53,7 @@ convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, tensor_t *sourc
   case orientation::row:
   case orientation::column:
   case orientation::tube:
-    storage_convert_from_coordinate_to_zzekmr_inplace(destination, source);
+    tensor_storage_convert_from_coordinate_to_zzekmr_inplace(destination, source);
     break;
   default:
     die("Conversion to orientation '%s' is not currently supported.\n",
@@ -114,9 +114,9 @@ convert_to_zzekmr_inplace(tensor_t *destination, tensor_t *source)
 }
 
 void
-storage_convert_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_inplace(tensor_t *destination, tensor_t *source)
 {
-  debug("storage_convert_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_inplace(destination=0x%x, source=0x%x)\n", destination, source);
   
   switch (destination->strategy) {
   case strategy::compressed:

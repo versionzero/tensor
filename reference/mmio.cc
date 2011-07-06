@@ -100,7 +100,7 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
     char mtx[MM_MAX_TOKEN_LENGTH]; 
     char crd[MM_MAX_TOKEN_LENGTH];
     char data_type[MM_MAX_TOKEN_LENGTH];
-    char storage_scheme[MM_MAX_TOKEN_LENGTH];
+    char tensor_storage_scheme[MM_MAX_TOKEN_LENGTH];
     char *p;
 
 
@@ -110,13 +110,13 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
         return MM_PREMATURE_EOF;
 
     if (sscanf(line, "%s %s %s %s %s", banner, mtx, crd, data_type, 
-        storage_scheme) != 5)
+        tensor_storage_scheme) != 5)
         return MM_PREMATURE_EOF;
 
     for (p=mtx; *p!='\0'; *p=tolower(*p),p++);  /* convert to lower case */
     for (p=crd; *p!='\0'; *p=tolower(*p),p++);  
     for (p=data_type; *p!='\0'; *p=tolower(*p),p++);
-    for (p=storage_scheme; *p!='\0'; *p=tolower(*p),p++);
+    for (p=tensor_storage_scheme; *p!='\0'; *p=tolower(*p),p++);
 
     /* check for banner */
     if (strncmp(banner, MatrixMarketBanner, strlen(MatrixMarketBanner)) != 0)
@@ -160,16 +160,16 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
 
     /* fourth field */
 
-    if (strcmp(storage_scheme, MM_GENERAL_STR) == 0)
+    if (strcmp(tensor_storage_scheme, MM_GENERAL_STR) == 0)
         mm_set_general(matcode);
     else
-    if (strcmp(storage_scheme, MM_SYMM_STR) == 0)
+    if (strcmp(tensor_storage_scheme, MM_SYMM_STR) == 0)
         mm_set_symmetric(matcode);
     else
-    if (strcmp(storage_scheme, MM_HERM_STR) == 0)
+    if (strcmp(tensor_storage_scheme, MM_HERM_STR) == 0)
         mm_set_hermitian(matcode);
     else
-    if (strcmp(storage_scheme, MM_SKEW_STR) == 0)
+    if (strcmp(tensor_storage_scheme, MM_SKEW_STR) == 0)
         mm_set_skew(matcode);
     else
         return MM_UNSUPPORTED_TYPE;

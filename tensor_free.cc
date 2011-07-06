@@ -7,25 +7,25 @@
 #include <assert.h>
 
 void
-storage_free(storage_base_t *storage)
+tensor_storage_free(tensor_storage_base_t *storage)
 {
-  debug("storage_free((storage_base_t*)0x%x)\n", storage);
+  debug("tensor_storage_free((tensor_storage_base_t*)0x%x)\n", storage);
   
   safe_free(storage->callbacks);
 }
 
 void
-storage_free(storage_coordinate_t *storage)
+tensor_storage_free(tensor_storage_coordinate_t *storage)
 {
-  debug("storage_free((storage_coordinate_t*)0x%x)\n", storage);
+  debug("tensor_storage_free((tensor_storage_coordinate_t*)0x%x)\n", storage);
   
   safe_free(storage->tuples);
 }
 
 void
-storage_free(storage_compressed_t *storage)
+tensor_storage_free(tensor_storage_compressed_t *storage)
 {
-  debug("storage_free((storage_compressed_t*)0x%x)\n", storage);
+  debug("tensor_storage_free((tensor_storage_compressed_t*)0x%x)\n", storage);
   
   safe_free(storage->RO);
   safe_free(storage->CO);
@@ -33,35 +33,35 @@ storage_free(storage_compressed_t *storage)
 }
 
 void
-storage_free(storage_extended_t *storage)
+tensor_storage_free(tensor_storage_extended_t *storage)
 {
-  debug("storage_free((storage_extended_t*)0x%x)\n", storage);
+  debug("tensor_storage_free((tensor_storage_extended_t*)0x%x)\n", storage);
   
   safe_free(storage->RO);
   safe_free(storage->CK);
 }
 
 void
-storage_free(tensor_t *tensor)
+tensor_storage_free(tensor_t *tensor)
 {
-  debug("storage_free(0x%x)\n", tensor);
+  debug("tensor_storage_free(0x%x)\n", tensor);
   
   if (!tensor->storage) {
     return;
   }
   
-  storage_free(STORAGE_BASE(tensor));
+  tensor_storage_free(STORAGE_BASE(tensor));
   
   switch (tensor->strategy) {
   case strategy::coordinate:
-    storage_free(STORAGE_COORIDINATE(tensor));
+    tensor_storage_free(STORAGE_COORIDINATE(tensor));
     break;
   case strategy::compressed:
-    storage_free(STORAGE_COMPRESSED(tensor));
+    tensor_storage_free(STORAGE_COMPRESSED(tensor));
     break;
   case strategy::ekmr:
   case strategy::zzekmr:
-    storage_free(STORAGE_EXTENDED(tensor));
+    tensor_storage_free(STORAGE_EXTENDED(tensor));
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", 
@@ -81,7 +81,7 @@ tensor_free(tensor_t *tensor)
   }
   
   safe_free(tensor->values);
-  storage_free(tensor);
+  tensor_storage_free(tensor);
   safe_free(tensor);
 }
 

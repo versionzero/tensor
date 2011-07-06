@@ -3,13 +3,13 @@
 #include "tensor.h"
 
 void
-storage_clear_coordinate(tensor_t *tensor)
+tensor_storage_clear_coordinate(tensor_t *tensor)
 {
   uint i;
-  storage_coordinate_t *storage;
+  tensor_storage_coordinate_t *storage;
   coordinate_tuple_t   *tuples;
   
-  debug("storage_clear_coordinate(0x%x)\n", tensor);
+  debug("tensor_storage_clear_coordinate(0x%x)\n", tensor);
   
   storage = STORAGE_COORIDINATE(tensor);
   tuples  = storage->tuples;
@@ -23,12 +23,12 @@ storage_clear_coordinate(tensor_t *tensor)
 }
 
 void
-storage_clear_compressed(tensor_t *tensor)
+tensor_storage_clear_compressed(tensor_t *tensor)
 {
   uint i;
-  storage_compressed_t *storage;
+  tensor_storage_compressed_t *storage;
   
-  debug("storage_clear_compressed(0x%x)\n", tensor);
+  debug("tensor_storage_clear_compressed(0x%x)\n", tensor);
   
   storage = STORAGE_COMPRESSED(tensor);
   
@@ -43,12 +43,12 @@ storage_clear_compressed(tensor_t *tensor)
 }
 
 void
-storage_clear_extended(tensor_t *tensor)
+tensor_storage_clear_extended(tensor_t *tensor)
 {
   uint i;
-  storage_extended_t *storage;
+  tensor_storage_extended_t *storage;
   
-  debug("storage_clear_ekmr(0x%x)\n", tensor);
+  debug("tensor_storage_clear_ekmr(0x%x)\n", tensor);
   
   storage = STORAGE_EXTENDED(tensor);
   
@@ -75,14 +75,14 @@ tensor_clear(tensor_t *tensor)
   
   switch (tensor->strategy) {
   case strategy::coordinate:
-    storage_clear_coordinate(tensor);
+    tensor_storage_clear_coordinate(tensor);
     break;
   case strategy::compressed:
-    storage_clear_compressed(tensor);
+    tensor_storage_clear_compressed(tensor);
     break;
   case strategy::ekmr:
   case strategy::zzekmr:
-    storage_clear_extended(tensor);
+    tensor_storage_clear_extended(tensor);
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", tensor->strategy);
