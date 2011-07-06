@@ -7,6 +7,7 @@
 
 extern char *tool_name;
 extern bool verbose;
+extern uint verbosity_level;
 
 void
 verror(uint levels, char const *format, va_list args)
@@ -62,6 +63,18 @@ debug(char const *format, ...)
   va_start(args, format);
   verror(level::debug, format, args);
   va_end(args);
+}
+
+void
+debug(verbosity::type_t verbosity, char const *format, ...)
+{
+  va_list args;
+  
+  if (verbosity <= verbosity_level) {
+    va_start(args, format);
+    verror(level::debug, format, args);
+    va_end(args);
+  }
 }
 
 void

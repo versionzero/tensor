@@ -26,6 +26,7 @@
 #define DEFAULT_SIMULATE         false
 #define DEFAULT_STRATEGY         strategy::compressed
 #define DEFAULT_VERBOSITY        false
+#define DEFAULT_VERBOSITY_LEVEL  10
 #define DEFAULT_WRITE_RESULTS    false
 
 #define DEFAULT_CACHE_SIZE       (2*1024)
@@ -39,6 +40,7 @@ char         *tool_name;
 tool::type_t tool_type;
 bool         simulate;
 bool         verbose;
+uint         verbosity_level;
 bool         write_results;
 
 void
@@ -56,6 +58,7 @@ effectuate_tool_usage()
   print_operations_with_descriptions("\t\t- %s : %s\n");
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
+  message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY_LEVEL, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
   message("\t$ ./tensor %s -o n-mode vector.in tensor.in matrix.out\n", tool_name);
@@ -233,13 +236,14 @@ effectuate_tool_main(int argc, char *argv[])
   operation       = DEFAULT_OPERATION;
   simulate        = DEFAULT_SIMULATE;
   verbose         = DEFAULT_VERBOSITY;
+  verbosity_level = DEFAULT_VERBOSITY_LEVEL;
   write_results   = DEFAULT_WRITE_RESULTS;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "hl:m:n:o:svw"))) {
+  while (-1 != (c = getopt(argc, argv, "hl:m:n:o:svV:w"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
@@ -249,21 +253,18 @@ effectuate_tool_main(int argc, char *argv[])
       if (0 == cache_line_size) {
 	cache_line_size = DEFAULT_CACHE_LINE_SIZE;
       }
-      debug("cache_line_size=%d\n", cache_line_size);
       break;
     case 'm':
       cache_size = atoi(optarg);
       if (0 == cache_size) {
 	cache_size = DEFAULT_CACHE_SIZE;
       }
-      debug("cache_size=%d\n", cache_size);
       break;
     case 'n':
       iterations = atoi(optarg);
       if (0 == iterations) {
 	iterations = DEFAULT_ITERATIONS;
       }
-      debug("iterations=%d\n", iterations);
       break;
     case 'o': 
       if (isdigit(optarg[0])) {
@@ -271,19 +272,21 @@ effectuate_tool_main(int argc, char *argv[])
       } else {
 	operation = string_to_operation(optarg);
       }
-      debug("operation='%s'\n", operation_to_string(operation));
       break;
     case 's':
       simulate = !simulate;
-      debug("simulate='%s'\n", bool_to_string(simulate));
       break;
     case 'v': 
       verbose = !verbose;
-      debug("verbose='%s'\n", bool_to_string(verbose));
+      break;
+    case 'V':
+      verbosity_level = atoi(optarg);
+      if (0 == verbosity_level) {
+	iterations = DEFAULT_VERBOSITY_LEVEL;
+      }
       break;
     case 'w':
       write_results = !write_results;
-      debug("write_results='%s'\n", bool_to_string(write_results));
       break;
     case '?':
       if (isprint(optopt)) {
@@ -326,6 +329,7 @@ convert_tool_usage()
   message("\t-o\torientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
   print_orientations("\t\t- %s\n");
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
+  message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY_LEVEL, verbosity::max);
   message("\nExample:\n\n");
   message("\t$ ./tensor %s -s compressed -o column ieee-fig4.in tensor.out\n", tool_name);
   message("\tReading ieee-fig4.in ... done [0.000305]\n");
@@ -366,15 +370,16 @@ convert_tool_main(int argc, char *argv[])
   tensor = result = NULL;
   
   /* set the program's defaults */
-  orientation = DEFAULT_ORIENTATION;
-  strategy    = DEFAULT_STRATEGY;
-  verbose     = DEFAULT_VERBOSITY;
+  orientation     = DEFAULT_ORIENTATION;
+  strategy        = DEFAULT_STRATEGY;
+  verbose         = DEFAULT_VERBOSITY;
+  verbosity_level = DEFAULT_VERBOSITY_LEVEL;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "ho:s:v"))) {
+  while (-1 != (c = getopt(argc, argv, "ho:s:vV:"))) {
     switch (c) {
     case 'h': 
       convert_tool_usage();
@@ -395,6 +400,12 @@ convert_tool_main(int argc, char *argv[])
       break;
     case 'v': 
       verbose = !verbose;
+      break;
+    case 'V':
+      verbosity_level = atoi(optarg);
+      if (0 == verbosity_level) {
+	iterations = DEFAULT_VERBOSITY_LEVEL;
+      }
       break;
     case '?':
       if (isprint(optopt)) {
