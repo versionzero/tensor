@@ -76,10 +76,12 @@ hash_table_free(hash_table_t *table)
   debug("hash_table_free(table=0x%x)\n", table);
   
   for (i = 0; i < table->max_size; ++i) {
-    for (node = table->nodes[i]; node; node = next) {
+    node = table->nodes[i];
+    while (node) {
       next = node->next;
       table->freer(node->key);
       safe_free(node);
+      node = next;
     }
   }
   
@@ -239,10 +241,12 @@ hash_table_resize(hash_table_t *table, size_t max_size)
   new_table.freer      = table->freer;
   
   for (i = 0; i < table->max_size; ++i) {
-    for (node = table->nodes[i]; node; node = next) {
+    node = table->nodes[i];
+    for (node) {
       next = node->next;
       table_insert(&new_table, node->key, node->data);
       table_remove(table, node->key);
+      node = next;
     }
   }
   
@@ -258,7 +262,7 @@ void
 hash_table_debug(hash_table_t *table)
 {
   uint              i;
-  hash_table_node_t *node, *next;
+  hash_table_node_t *node;
   
   if (verbose) {
     message("Hash Table Contents (%d/%d):\n", table->size, table->max_size);
@@ -266,9 +270,9 @@ hash_table_debug(hash_table_t *table)
       node = table->nodes[i];
       if (node) {
 	message("%4d: ", i);
-	for (; node; node = next) {
-	  next = node->next;
+	while (node) {
 	  message("0x%x ", node->key);
+	  node = node->next;
 	}
 	message("\n");
       }

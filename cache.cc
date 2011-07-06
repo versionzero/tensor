@@ -30,6 +30,22 @@
   Retrieved from: http://en.literateprograms.org/Hash_table_(C)?oldid=16749
 */
 
+/*
+  Ok, so the whole idea is to try and simulate an "ideal" cache here.
+  We use a least-recently-used (LRU) eviction policy, as it has been
+  shown to perform closest to the clairvoyant replacement policy
+  (OPT).
+  
+  We use a fusion of a hash table and a linked list.  The hash table
+  allows for fast lookups.  The linked list maintains the access
+  order. This was probably overkill for what we are doing, but
+  because we will be running 100s, even 1000s, of iterations, it has
+  the nice effect of not destroying my machine and exhausting
+  patience.
+  
+  
+*/
+
 #include "address.h"
 #include "cache.h"
 #include "error.h"
@@ -48,18 +64,6 @@ size_t cache_key_tag(void const *address);
 size_t cache_key_compare(void const *a, void const *b);
 void*  cache_key_duplicate(void const *address);
 void   cache_key_free(void *address);
-
-/* Ok, so the whole idea is to try and simulate an "ideal" cache here.
-   We use a least-recently-used (LRU) eviction policy, as it has been
-   shown to perform closest to the clairvoyant replacement policy
-   (OPT).
-   
-   We use a fusion of a hash table and a linked list.  The hash table
-   allows for fast lookups.  The linked list maintains the access
-   order. This was probably overkill for what we are doing, but
-   because we will be running 100s, even 1000s, of iterations, it has
-   the nice effect of not destroying my machine and exhausting
-   patience. */
 
 cache_t*
 cache_malloc(size_t max_size, size_t line_size)
@@ -136,8 +140,11 @@ cache_bucket_size(cache_t *cache, size_t hash)
   cache_node_t *node;
   
   size = 0;
-  for (node = cache->nodes[hash]; node; node = node->next) {
+  node = cache->nodes[hash];
+  
+  while (node) {
     size++;
+    node = node->next;
   }
   
   return size;
@@ -463,7 +470,7 @@ void
 cache_debug(cache_t *cache)
 {
   uint         i;
-  cache_node_t *node, *next;
+  cache_node_t *node;
   
   if (verbose) {
     message("Cache Contents (%d/%d):\n", cache->size, cache->max_size);
@@ -471,9 +478,9 @@ cache_debug(cache_t *cache)
       node = cache->nodes[i];
       if (node) {
 	message("%4d: ", i);
-	for (; node; node = next) {
-	  next = node->next;
+	while (node) {
 	  message("0x%x ", node->key);
+	  node = node->next;
 	}
 	message("\n");
       }
