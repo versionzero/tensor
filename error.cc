@@ -9,28 +9,28 @@ extern char *tool_name;
 extern bool verbose;
 
 void
-verror(uint type, char const *format, va_list args)
+verror(uint levels, char const *format, va_list args)
 {
   bool show;
   
-  show = verbose || !(type & (D_INFORMATION | D_DEBUG));
+  show = verbose || !(levels & (level::information | level::debug));
   if (show) {
-    if (!(type & D_MESSAGE)) {
+    if (!(levels & level::message)) {
       fprintf(stderr, "%s: ", tool_name);
     }
-    if (type & D_INFORMATION) {
+    if (levels & level::information) {
       fprintf(stderr, "INFORMATION: ");
-    } else if (type & D_DEBUG) {
+    } else if (levels & level::debug) {
       fprintf(stderr, "DEBUG: ");
-    } else if (type & D_WARNING) {
+    } else if (levels & level::warning) {
       fprintf(stderr, "WARNING: ");
-    } else if (type & D_ERROR) {
+    } else if (levels & level::error) {
       fprintf(stderr, "ERROR: ");
     }
     vfprintf(stderr, format, args);
   }
-  if (type & D_FATAL) {
-    exit(type);
+  if (levels & level::fatal) {
+    exit(levels);
   }
 }
 
@@ -40,7 +40,7 @@ message(char const *format, ...)
   va_list args;
   
   va_start(args, format);
-  verror(D_MESSAGE, format, args);
+  verror(level::message, format, args);
   va_end(args);
 }
 
@@ -50,7 +50,7 @@ information(char const *format, ...)
   va_list args;
 
   va_start(args, format);
-  verror(D_INFORMATION, format, args);
+  verror(level::information, format, args);
   va_end(args);
 }
 
@@ -60,7 +60,7 @@ debug(char const *format, ...)
   va_list args;
 
   va_start(args, format);
-  verror(D_DEBUG, format, args);
+  verror(level::debug, format, args);
   va_end(args);
 }
 
@@ -70,17 +70,17 @@ warning(char const *format, ...)
   va_list args;
   
   va_start(args, format);
-  verror(D_WARNING, format, args);
+  verror(level::warning, format, args);
   va_end(args);
 }
 
 void
-error(uint type, char const *format, ...)
+error(uint levels, char const *format, ...)
 {
   va_list args;
   
   va_start(args, format);
-  verror(type, format, args);
+  verror(levels, format, args);
   va_end(args);
 }
 
@@ -90,7 +90,7 @@ die(char const *format, ...)
   va_list args;
   
   va_start(args, format);
-  verror(D_ERROR|D_FATAL, format, args);
+  verror(level::error|level::fatal, format, args);
   va_end(args);
 }
 
