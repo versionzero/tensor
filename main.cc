@@ -33,7 +33,7 @@
 
 cache_t      *cache;
 uint         cache_size;
-uint         line_size;
+uint         cache_line_size;
 uint         iterations;
 char         *tool_name;
 tool::type_t tool_type;
@@ -184,7 +184,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   
   cache = NULL;
   if (simulate) {
-    cache = cache_malloc(cache_size, line_size);
+    cache = cache_malloc(cache_size, cache_line_size);
     cache_supported(cache);
   }
   
@@ -227,29 +227,29 @@ effectuate_tool_main(int argc, char *argv[])
   operation::type_t operation;
   
   /* set the program's defaults */
-  cache_size    = DEFAULT_CACHE_SIZE;
-  line_size     = DEFAULT_CACHE_LINE_SIZE;
-  iterations    = DEFAULT_ITERATIONS;
-  operation     = DEFAULT_OPERATION;
-  simulate      = DEFAULT_SIMULATE;
-  verbose       = DEFAULT_VERBOSITY;
-  write_results = DEFAULT_WRITE_RESULTS;
+  cache_size      = DEFAULT_CACHE_SIZE;
+  cache_line_size = DEFAULT_CACHE_LINE_SIZE;
+  iterations      = DEFAULT_ITERATIONS;
+  operation       = DEFAULT_OPERATION;
+  simulate        = DEFAULT_SIMULATE;
+  verbose         = DEFAULT_VERBOSITY;
+  write_results   = DEFAULT_WRITE_RESULTS;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "hm:n:o:svw"))) {
+  while (-1 != (c = getopt(argc, argv, "hl:m:n:o:svw"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
       break;
     case 'l':
-      line_size = atoi(optarg);
-      if (0 == line_size) {
-	line_size = DEFAULT_CACHE_LINE_SIZE;
+      cache_line_size = atoi(optarg);
+      if (0 == cache_line_size) {
+	cache_line_size = DEFAULT_CACHE_LINE_SIZE;
       }
-      debug("line_size=%d\n", line_size);
+      debug("cache_line_size=%d\n", cache_line_size);
       break;
     case 'm':
       cache_size = atoi(optarg);
