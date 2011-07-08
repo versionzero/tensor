@@ -42,7 +42,8 @@ typedef struct {
 } cache_statistics_t;
 
 typedef struct {
-  size_t             size, max_size, line_size, buckets;
+  size_t             size, cache_lines;
+  size_t             cache_size, cache_line_size;
   cache_node_t       **nodes, *mru, *lru;
   cache_statistics_t statistics;
   hash_table_t       *addresses;

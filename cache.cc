@@ -66,30 +66,30 @@ void*  cache_key_duplicate(void const *address);
 void   cache_key_free(void *address);
 
 cache_t*
-cache_malloc(size_t max_size, size_t line_size)
+cache_malloc(size_t cache_size, size_t cache_line_size)
 {
-  uint    i, buckets;
+  uint    i, cache_lines;
   cache_t *cache;
   
-  debug("cache_malloc(max_size=%d, line_size=%d)\n", max_size, line_size);
+  debug("cache_malloc(cache_size=%d, cache_line_size=%d)\n", cache_size, cache_line_size);
   
-  buckets    = max_size/line_size;
-  hash_shift = log2(line_size);
-  tag_shift  = log2(line_size) + log2(max_size);
+  cache_lines = cache_size / cache_line_size;
+  hash_shift  = log2(cache_line_size);
+  tag_shift   = log2(cache_line_size) + log2(cache_size);
   
-  debug("cache_malloc: buckets=%d, hash_shift=%d, tag_shift=%d\n", buckets, hash_shift, tag_shift);
+  debug("cache_malloc: cache_lines=%d, hash_shift=%d, tag_shift=%d\n", cache_lines, hash_shift, tag_shift);
   
-  cache             = MALLOC(cache_t);
-  cache->nodes      = MALLOC_N(cache_node_t*, buckets);
-  cache->addresses  = hash_table_malloc(max_size);
-  cache->max_size   = max_size;
-  cache->line_size  = line_size;
-  cache->buckets    = buckets;
-  cache->size       = 0;
-  cache->mru        = NULL;
-  cache->lru        = NULL;
+  cache                  = MALLOC(cache_t);
+  cache->nodes           = MALLOC_N(cache_node_t*, cache_lines);
+  cache->addresses       = hash_table_malloc(cache_size);
+  cache->cache_size      = cache_size;
+  cache->cache_line_size = cache_line_size;
+  cache->cache_lines     = cache_lines;
+  cache->size            = 0;
+  cache->mru             = NULL;
+  cache->lru             = NULL;
   
-  for (i = 0; i < buckets; ++i) {
+  for (i = 0; i < cache_lines; ++i) {
     cache->nodes[i] = NULL;
   }
   
@@ -114,11 +114,13 @@ cache_free(cache_t *cache)
   
   debug("cache_free(cache=0x%x)\n", cache);
   
-  for (i = 0; i < cache->buckets; ++i) {
-    for (node = cache->nodes[i]; node; node = next) {
-	next = node->next;
-	cache_key_free(node->key);
-	safe_free(node);
+  for (i = 0; i < cache->cache_lines; ++i) {
+    node = cache->nodes[i];
+    while (node) {
+      next = node->next;
+      cache_key_free(node->key);
+      safe_free(node);
+      node = next;
     }
   }
   
@@ -127,14 +129,28 @@ cache_free(cache_t *cache)
   safe_free(cache);
 }
 
+/* http://faculty.cs.niu.edu/~berezin/463/lec/06memory/cachenote1.html 
+*/
 size_t
-cache_bucket(cache_t *cache, void const *key)
+cache_line_bucket(cache_t *cache, void const *address)
 {
-  return cache_key_hash(key) % cache->buckets;
+  register size_t key;
+  
+  key = (size_t) address;
+  return (key % cache->cache_size) / cache->cache_line_size;
 }
 
 size_t
-cache_bucket_size(cache_t *cache, size_t hash)
+cache_line_tag(cache_t *cache, void const *address)
+{
+  register size_t key;
+  
+  key = (size_t) address;
+  return key / cache->cache_size;
+}
+
+size_t
+cache_line_bucket_size(cache_t *cache, size_t hash)
 {
   size_t       size;
   cache_node_t *node;
@@ -154,18 +170,20 @@ void
 cache_remove(cache_t *cache, void const *key)
 {
   cache_node_t *node, *previous;
-  size_t       hash;
+  size_t       hash, tag;
   
   debug("cache_remove(cache=0x%x, key=0x%x)\n", cache, key);
   
-  hash     = cache_bucket(cache, key);
+  hash     = cache_line_bucket(cache, key);
+  tag      = cache_line_tag(cache, key);
   node     = cache->nodes[hash];
   previous = NULL;
   
-  debug("cache_remove: hash=%d ~> root-node=0x%x\n", hash, node);
+  debug("cache_remove: hash=%d, tag=%d ~> root-node=0x%x\n", hash, tag, node);
   
   while (node) {
-    if (0 == cache_key_compare(node->key, key)) {
+    //if (0 == cache_key_compare(node->key, key)) {
+    if (tag == node->tag) {
       /* found */
       debug("cache_remove: hash=%d => node=0x%x\n", hash, node);
       if (previous) {
@@ -223,12 +241,12 @@ void
 cache_insert_impl(cache_t *cache, void const *key)
 {
   cache_node_t *node, *previous;
-  size_t       hash;
+  size_t       hash, tag;
   
   debug("cache_insert_impl(cache=0x%x, key=0x%x)\n", cache, key);
   
   /* if we will be violating the size restrictions, then adjust */
-  if (cache->size >= cache->max_size) {
+  if (cache->size >= cache->cache_size) {
     previous = cache->lru;
     if (cache->lru->newer) {
       cache->lru        = cache->lru->newer;
@@ -237,14 +255,16 @@ cache_insert_impl(cache_t *cache, void const *key)
     cache_remove(cache, previous->key);
   }
   
-  hash = cache_bucket(cache, key);
+  hash = cache_line_bucket(cache, key);
+  tag  = cache_line_tag(cache, key);
   node = cache->nodes[hash];
   
-  debug("cache_insert_impl: hash=%d ~> root-node=0x%x\n", hash, node);
+  debug("cache_insert_impl: hash=%d, tag=%d ~> root-node=0x%x\n", hash, tag, node);
   
   /* search within the bucket */
   while (node) {
-    if (0 == cache_key_compare(node->key, key)) {
+    //if (0 == cache_key_compare(node->key, key)) {
+    if (tag == node->tag) {
       /* found */
       debug("cache_insert_impl: hash=%d => node=0x%x\n", hash, node);
       return;
@@ -255,6 +275,7 @@ cache_insert_impl(cache_t *cache, void const *key)
   /* create new data node */
   node        = MALLOC(cache_node_t);
   node->key   = cache_key_duplicate(key);
+  node->tag   = tag;
   node->next  = cache->nodes[hash];
   node->older = NULL;
   node->newer = NULL;
@@ -283,19 +304,21 @@ cache_node_t*
 cache_find(cache_t *cache, void const *key)
 {
   cache_node_t *node;
-  size_t       hash;
+  size_t       hash, tag;
   
   debug("cache_find(cache=0x%x, key=0x%x)\n", cache, key);
   
-  hash = cache_bucket(cache, key);
+  hash = cache_line_bucket(cache, key);
+  tag  = cache_line_tag(cache, key);
   node = cache->nodes[hash];
   
-  debug("cache_find: hash=%d ~> node=0x%x\n", hash, node);
+  debug("cache_find: hash=%d, tag=%d ~> node=0x%x\n", hash, tag, node);
   cache_debug(cache);
   
   while (node) {
     debug("cache_find: comparing node->key=0x%x to key=0x%x\n", node->key, key);
-    if (0 == cache_key_compare(node->key, key)) {
+    //if (0 == cache_key_compare(node->key, key)) {
+    if (tag == node->tag) {
       /* found */
       debug("cache_find: hash=%d => node=0x%x, found!\n", hash, node);
       return node;
@@ -309,7 +332,7 @@ cache_find(cache_t *cache, void const *key)
 void
 cache_miss(cache_t *cache, void const *key, cache_operation::type_t access)
 {
-  size_t hash, size;
+  size_t hash, size, tag;
   bool   existed, conflict;
   
   debug("cache_miss(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
@@ -318,10 +341,11 @@ cache_miss(cache_t *cache, void const *key, cache_operation::type_t access)
   debug("cache_miss: key=0x%x, existed='%s'\n", key, bool_to_string(existed));
   //hash_table_debug(cache->addresses);
   
-  hash     = cache_bucket(cache, key);
-  size     = cache_bucket_size(cache, hash);
+  hash     = cache_line_bucket(cache, key);
+  size     = cache_line_bucket_size(cache, hash);
+  tag      = cache_line_tag(cache, key);
   conflict = (!existed && size > 0);
-  debug("cache_miss: hash=%d, (bucket) size=%d, conflict='%s'\n", hash, size, bool_to_string(conflict));
+  debug("cache_miss: hash=%d, tag=%d, (bucket) size=%d, conflict='%s'\n", hash, tag, size, bool_to_string(conflict));
   
   if (cache_operation::read == access) {
     if (existed) {
@@ -384,27 +408,27 @@ cache_supported(cache_t *cache)
     die("We received a null cache.\n");
   }
   
-  if (!is_power_of_two(cache->max_size)) {
-    die("Cache size is not a power of two (size=%d).\n", cache->max_size);
+  if (!is_power_of_two(cache->cache_size)) {
+    die("Cache size is not a power of two (size=%d).\n", cache->cache_size);
   }
 
-  if (!is_power_of_two(cache->buckets)) {
-    die("Cache set is not a power of two (%d).\n", cache->buckets);
+  if (!is_power_of_two(cache->cache_lines)) {
+    die("Cache set is not a power of two (%d).\n", cache->cache_lines);
   }
   
-  if (!is_power_of_two(cache->line_size)) {
+  if (!is_power_of_two(cache->cache_line_size)) {
     die("Cache line size is not a power of two.\n");
   }
   
-  if (0 != (cache->max_size % cache->line_size)) {
+  if (0 != (cache->cache_size % cache->cache_line_size)) {
     die("Cache size is not evenly divisible by line size.\n");
   }
   
-  if (cache->line_size < MINIMUM_CACHE_LINE_SIZE) {
+  if (cache->cache_line_size < MINIMUM_CACHE_LINE_SIZE) {
     die("Cache line size is too small.\n");
   }
   
-  if (cache->max_size <= cache->line_size) {
+  if (cache->cache_size <= cache->cache_line_size) {
     die("Cache size is less than or equal to line size.\n");
   }
 }
@@ -471,12 +495,13 @@ cache_debug(cache_t *cache)
 {
   uint         i;
   cache_node_t *node;
+  static uint  threshold = 10;
   
   if (verbose) {
-    message("Cache Contents (%d/%d):\n", cache->size, cache->max_size);
-    for (i = 0; i < cache->buckets; ++i) {
+    message("Cache Contents (%d/%d):\n", cache->size, cache->cache_size);
+    for (i = 0; i < cache->cache_lines; ++i) {
       node = cache->nodes[i];
-      if (node) {
+      if (node || cache->cache_lines < threshold) {
 	message("%4d: ", i);
 	while (node) {
 	  message("0x%x ", node->key);
@@ -488,6 +513,11 @@ cache_debug(cache_t *cache)
   }
 }
 
+/* Source: http://www.concentric.net/~ttwang/tech/addrhash.htm
+   
+   Fibonacci hash function.  The multiplier is the nearest prime to
+   (2^32 times (√5 - 1)/2). (2654435761 is the golden ratio of 2^32.)
+   See Knuth §6.4: volume 3, 3rd ed, p518.x */
 size_t
 cache_key_hash(void const *address)
 {
