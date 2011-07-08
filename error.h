@@ -36,6 +36,7 @@ void message(char const *format, ...);
 void information(char const *format, ...);
 void debug(char const *format, ...);
 void debug(verbosity::type_t verbosity, char const *format, ...);
+void superfluous(char const *format, ...);
 void warning(char const *format, ...);
 void die(char const *format, ...);
 

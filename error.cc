@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-extern char *tool_name;
-extern bool verbose;
-extern uint verbosity_level;
+extern char              *tool_name;
+extern bool              verbose;
+extern verbosity::type_t noisiness;
 
 void
 verror(uint levels, char const *format, va_list args)
@@ -66,11 +66,23 @@ debug(char const *format, ...)
 }
 
 void
-debug(verbosity::type_t verbosity, char const *format, ...)
+debug(verbosity::type_t noise, char const *format, ...)
 {
   va_list args;
   
-  if (verbosity <= verbosity_level) {
+  if (noise <= noisiness) {
+    va_start(args, format);
+    verror(level::debug, format, args);
+    va_end(args);
+  }
+}
+
+void
+superfluous(char const *format, ...)
+{
+  va_list args;
+  
+  if (noisiness >= verbosity::max) {
     va_start(args, format);
     verror(level::debug, format, args);
     va_end(args);

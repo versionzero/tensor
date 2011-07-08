@@ -25,23 +25,23 @@
 #define DEFAULT_ORIENTATION      orientation::row
 #define DEFAULT_SIMULATE         false
 #define DEFAULT_STRATEGY         strategy::compressed
-#define DEFAULT_VERBOSITY        false
-#define DEFAULT_VERBOSITY_LEVEL  10
+#define DEFAULT_VERBOSE          false
+#define DEFAULT_VERBOSITY        verbosity::low
 #define DEFAULT_WRITE_RESULTS    false
 
 #define DEFAULT_CACHE_SIZE       (2*1024)
 #define DEFAULT_CACHE_LINE_SIZE  MINIMUM_CACHE_LINE_SIZE
 
-cache_t      *cache;
-uint         cache_size;
-uint         cache_line_size;
-uint         iterations;
-char         *tool_name;
-tool::type_t tool_type;
-bool         simulate;
-bool         verbose;
-uint         verbosity_level;
-bool         write_results;
+cache_t           *cache;
+uint              cache_size;
+uint              cache_line_size;
+uint              iterations;
+char              *tool_name;
+tool::type_t      tool_type;
+bool              simulate;
+bool              verbose;
+verbosity::type_t noisiness;
+bool              write_results;
 
 void
 effectuate_tool_usage() 
@@ -57,8 +57,8 @@ effectuate_tool_usage()
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
-  message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
-  message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY_LEVEL, verbosity::max);
+  message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
+  message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
   message("\t$ ./tensor %s -o n-mode vector.in tensor.in matrix.out\n", tool_name);
@@ -235,15 +235,15 @@ effectuate_tool_main(int argc, char *argv[])
   iterations      = DEFAULT_ITERATIONS;
   operation       = DEFAULT_OPERATION;
   simulate        = DEFAULT_SIMULATE;
-  verbose         = DEFAULT_VERBOSITY;
-  verbosity_level = DEFAULT_VERBOSITY_LEVEL;
+  verbose         = DEFAULT_VERBOSE;
+  noisiness       = DEFAULT_VERBOSITY;
   write_results   = DEFAULT_WRITE_RESULTS;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "hl:m:n:o:svV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:svV:w"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
@@ -280,20 +280,19 @@ effectuate_tool_main(int argc, char *argv[])
       verbose = !verbose;
       break;
     case 'V':
-      verbosity_level = atoi(optarg);
-      if (0 == verbosity_level) {
-	iterations = DEFAULT_VERBOSITY_LEVEL;
+      noisiness = (verbosity::type_t) atoi(optarg);
+      if (0 == noisiness) {
+	noisiness = DEFAULT_VERBOSITY;
       }
       break;
     case 'w':
       write_results = !write_results;
       break;
+    case ':':
+      die("Option -%c requires an operand\n", optopt);
+      break;
     case '?':
-      if (isprint(optopt)) {
-	die("Unknown option `-%c'.\n", optopt);
-      } else {
-	die("Unknown option character `\\x%x'.\n", optopt);
-      }
+      die("Unknown option: `-%c'\n", optopt);
       break;
     default:
       abort();
@@ -328,8 +327,8 @@ convert_tool_usage()
   print_strategies("\t\t- %s\n");
   message("\t-o\torientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
   print_orientations("\t\t- %s\n");
-  message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSITY));
-  message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY_LEVEL, verbosity::max);
+  message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
+  message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\nExample:\n\n");
   message("\t$ ./tensor %s -s compressed -o column ieee-fig4.in tensor.out\n", tool_name);
   message("\tReading ieee-fig4.in ... done [0.000305]\n");
@@ -370,21 +369,21 @@ convert_tool_main(int argc, char *argv[])
   tensor = result = NULL;
   
   /* set the program's defaults */
-  orientation     = DEFAULT_ORIENTATION;
-  strategy        = DEFAULT_STRATEGY;
-  verbose         = DEFAULT_VERBOSITY;
-  verbosity_level = DEFAULT_VERBOSITY_LEVEL;
+  orientation = DEFAULT_ORIENTATION;
+  strategy    = DEFAULT_STRATEGY;
+  verbose     = DEFAULT_VERBOSE;
+  noisiness   = DEFAULT_VERBOSITY;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, "ho:s:vV:"))) {
+  while (-1 != (c = getopt(argc, argv, ":ho:s:vV:"))) {
     switch (c) {
     case 'h': 
       convert_tool_usage();
       break;
-    case 'o': 
+    case 'o':
       if (isdigit(optarg[0])) {
 	orientation = (orientation::type_t) atoi(optarg);
       } else {
@@ -402,17 +401,16 @@ convert_tool_main(int argc, char *argv[])
       verbose = !verbose;
       break;
     case 'V':
-      verbosity_level = atoi(optarg);
-      if (0 == verbosity_level) {
-	iterations = DEFAULT_VERBOSITY_LEVEL;
+      noisiness = (verbosity::type_t) atoi(optarg);
+      if (0 == noisiness) {
+	noisiness = DEFAULT_VERBOSITY;
       }
       break;
+    case ':':
+      die("Option -%c requires an operand\n", optopt);
+      break;
     case '?':
-      if (isprint(optopt)) {
-	die("Unknown option `-%c'.\n", optopt);
-      } else {
-	die("Unknown option character `\\x%x'.\n", optopt);
-      }
+      die("Unknown option: `-%c'\n", optopt);
       break;
     default:
       abort();

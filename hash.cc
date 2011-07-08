@@ -43,7 +43,7 @@ hash_table_malloc(size_t max_size)
   uint         i;
   hash_table_t *table;
   
-  debug("hash_table_malloc(max_size=%d)\n", max_size);
+  superfluous("hash_table_malloc(max_size=%d)\n", max_size);
   
   table             = MALLOC(hash_table_t);
   table->nodes      = MALLOC_N(hash_table_node_t*, max_size);
@@ -58,11 +58,7 @@ hash_table_malloc(size_t max_size)
     table->nodes[i] = NULL;
   }
   
-  debug("hash_table_malloc: hasher=0x%x\n",     table->hasher);
-  debug("hash_table_malloc: comparator=0x%x\n", table->comparator);
-  debug("hash_table_malloc: duplicator=0x%x\n", table->duplicator);
-  debug("hash_table_malloc: freer=0x%x\n",      table->freer);
-  debug("hash_table_malloc: table=0x%x\n",      table);
+  superfluous("hash_table_malloc: table=0x%x\n",      table);
   
   return table;
 }
@@ -73,7 +69,7 @@ hash_table_free(hash_table_t *table)
   size_t            i;
   hash_table_node_t *node, *next;
 	
-  debug("hash_table_free(table=0x%x)\n", table);
+  superfluous("hash_table_free(table=0x%x)\n", table);
   
   for (i = 0; i < table->max_size; ++i) {
     node = table->nodes[i];
@@ -92,8 +88,6 @@ hash_table_free(hash_table_t *table)
 size_t
 hash_table_bucket(hash_table_t *table, void const *key)
 {
-  assert(NULL != table->hasher);
-  
   return table->hasher(key) % table->max_size;
 }
 
@@ -146,12 +140,12 @@ hash_table_insert_impl(hash_table_t *table, void const *key, void *data)
   hash_table_node_t *node;
   size_t            hash;
   
-  debug("hash_table_insert_impl(table=0x%x, key=0x%x, data=0x%x)\n", table, key, data);
+  superfluous("hash_table_insert_impl(table=0x%x, key=0x%x, data=0x%x)\n", table, key, data);
   
   hash = hash_table_bucket(table, key);
   node = table->nodes[hash];
   
-  debug("hash_table_insert_impl: hash=%d ~> root-node=0x%x\n", hash, node);
+  superfluous("hash_table_insert_impl: hash=%d ~> root-node=0x%x\n", hash, node);
   
   /* search within the bucket */
   while (node) {
@@ -174,7 +168,7 @@ hash_table_insert_impl(hash_table_t *table, void const *key, void *data)
   /* the table just got bigger */
   table->size++;
   
-  debug("hash_table_insert_impl: hash=%d => node=0x%x)\n", hash, node);
+  superfluous("hash_table_insert_impl: hash=%d => node=0x%x)\n", hash, node);
 }
 
 bool
