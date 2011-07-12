@@ -9,6 +9,7 @@ static char const *map_strategy_to_string[] = {
   "array",
   "coordinate",
   "compressed",
+  "lateral",
   "ekmr",
   "zzekmr"
 };
@@ -77,6 +78,43 @@ print_orientations(char const *format)
   
   for (i = 1; i < COUNT_OF(map_orientation_to_string); ++i) {
     message(format, map_orientation_to_string[i]);
+  }
+}
+
+static char const *map_slice_to_string[] = { 
+  "unknown",
+  "lateral",
+  "horizontal",
+  "frontal"
+};
+
+char const*
+slice_to_string(slice::type_t slice)
+{
+  return map_slice_to_string[slice];
+}
+
+slice::type_t
+string_to_slice(char const *name)
+{
+  uint i;
+  
+  for (i = 0; i < COUNT_OF(map_slice_to_string); ++i) {
+    if (0 == strcmp(name, map_slice_to_string[i])) {
+      return (slice::type_t) i;
+    }
+  }
+  
+  return slice::unknown;
+}
+
+void
+print_slices(char const *format)
+{
+  uint i;
+  
+  for (i = 1; i < COUNT_OF(map_slice_to_string); ++i) {
+    message(format, map_slice_to_string[i]);
   }
 }
 

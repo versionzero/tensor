@@ -12,6 +12,7 @@ namespace strategy {
     array,
     coordinate,
     compressed,
+    lateral,
     ekmr,
     zzekmr
   } type_t;
@@ -26,12 +27,22 @@ namespace orientation {
   } type_t;
 }
 
+namespace slice {
+  typedef enum {
+    unknown,
+    lateral,
+    horizontal,
+    frontal
+  } type_t;
+}
+
 typedef struct {
   uint                l, m, n, nnz;
   strategy::type_t    strategy;
   orientation::type_t orientation;
+  slice::type_t       slice;
   void                *storage;
-  double              *values;  
+  double              *values;
 } tensor_t;
 
 typedef int (*index_compare_t)(const void *a, const void *b);
@@ -54,21 +65,25 @@ typedef struct {
 } coordinate_tuple_t;
  
 typedef struct {
-  tensor_storage_base_t     dummy;
-  coordinate_tuple_t *tuples;
+  tensor_storage_base_t dummy;
+  coordinate_tuple_t    *tuples;
 } tensor_storage_coordinate_t;
 
 typedef struct {
   tensor_storage_base_t base;
-  uint           size;
-  uint           *RO, *CO, *KO;
+  uint                  size;
+  uint                  *RO, *CO, *KO;
 } tensor_storage_compressed_t;
 
 typedef struct {
   tensor_storage_base_t base;
-  uint           size, r;
-  uint           *RO, *CK;
+  uint                  size, r;
+  uint                  *RO, *CK;
 } tensor_storage_extended_t;
+
+typedef struct {
+  tensor_storage_extended_t dummy;
+} tensor_storage_compressed_slice_t;
 
 typedef struct {
   tensor_storage_extended_t dummy;
@@ -83,7 +98,8 @@ typedef struct {
 #define STORAGE_COMPRESSED(x) ((tensor_storage_compressed_t*)x->storage)
 #define STORAGE_EXTENDED(x) ((tensor_storage_extended_t*)x->storage)
 
-tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
+tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy,
+			orientation::type_t orientation = orientation::unknown, slice::type_t slice = slice::unknown);
 tensor_t* tensor_malloc_from_template(tensor_t const *tensor);
 void tensor_free(tensor_t *tensor);
 
@@ -103,12 +119,15 @@ void tensor_validate(tensor_t const *tensor);
 
 char const* strategy_to_string(strategy::type_t strategy);
 char const* orientation_to_string(orientation::type_t orientation);
+char const* slice_to_string(slice::type_t slice);
 strategy::type_t string_to_strategy(char const *name);
 orientation::type_t string_to_orientation(char const *name);
+slice::type_t string_to_slice(char const *name);
 strategy::type_t typecode_to_strategy(MM_typecode type);
 void strategy_to_typecode(MM_typecode *type, strategy::type_t strategy);
 void print_strategies(char const *format);
 void print_orientations(char const *format);
+void print_slices(char const *format);
 void print_operations(char const *format);
 void print_operations_with_descriptions(char const *format);
 

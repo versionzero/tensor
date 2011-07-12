@@ -101,7 +101,7 @@ compressed_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, te
 void
 ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  uint                 i, j, k;
+  uint                 i, j, k, ck;
   uint                 size, nnz, offset;
   uint                 start, end;
   uint                 c, r;
@@ -147,10 +147,10 @@ ekmr_row_operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tens
     DEBUG("start=%d, end=%d\n", start, end);
     
     for (k = start; k < end; ++k) {
-      c = CK[k] / offset;
-      j = CK[k] % offset;
+      ck = CK[k];
+      c  = ck / offset;
+      j  = ck % offset;
       
-      cache_access(cache, &CK[k], cache_operation::read);
       cache_access(cache, &CK[k], cache_operation::read);
       
       DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k]);

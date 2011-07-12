@@ -9,12 +9,12 @@
 #include <stdlib.h>
 
 tensor_t*
-tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation)
+tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation, slice::type_t slice)
 {
   tensor_t *tensor;
   
-  debug("tensor_malloc(l=%d, m=%d, n=%d, nnz=%d, strategy='%s', orientation='%s')\n",
-	l, m, n, nnz, strategy_to_string(strategy), orientation_to_string(orientation));
+  debug("tensor_malloc(l=%d, m=%d, n=%d, nnz=%d, strategy='%s', orientation='%s', slice='%s')\n",
+	l, m, n, nnz, strategy_to_string(strategy), orientation_to_string(orientation), slice_to_string(slice));
   
   tensor              = MALLOC(tensor_t);
   tensor->l           = l;
@@ -23,6 +23,7 @@ tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orien
   tensor->nnz         = nnz;
   tensor->strategy    = strategy;
   tensor->orientation = orientation;
+  tensor->slice       = slice;
   tensor->values      = NULL;
   tensor->storage     = NULL;
   

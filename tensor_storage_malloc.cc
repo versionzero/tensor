@@ -44,6 +44,9 @@ tensor_storage_malloc(tensor_t const *tensor)
   case strategy::compressed:
     storage = tensor_storage_malloc_compressed(tensor);
     break;
+  case strategy::slice:
+    storage = tensor_storage_malloc_compressed_slice(tensor);
+    break;
   case strategy::ekmr:
     storage = tensor_storage_malloc_ekmr(tensor);
     break;

@@ -3,11 +3,9 @@
 
 /* Source: http://www.concentric.net/~ttwang/tech/addrhash.htm
    
-   2654435761 is the golden ratio of 2^32. The right shift of 3 bits
-   assumes that all objects are aligned on the 8 byte boundary. If a
-   system aligns on the 4 byte boundary, then a right shift of 2 bits
-   should be done. 
-*/
+   Fibonacci hash function.  The multiplier is the nearest prime to
+   (2^32 times (√5 - 1)/2). (2654435761 is the golden ratio of 2^32.)
+   See Knuth §6.4: volume 3, 3rd ed, p518 */
 size_t
 memory_address_hash(void const *address)
 {

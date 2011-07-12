@@ -55,8 +55,6 @@
 #include <string.h>
 
 extern bool verbose;
-extern uint cache_size;
-extern uint cache_line_size;
 size_t      hash_shift, tag_shift;
   
 size_t cache_key_hash(void const *address);
@@ -68,28 +66,28 @@ void   cache_key_free(void *address);
 cache_t*
 cache_malloc(size_t cache_size, size_t cache_line_size)
 {
-  uint    i, cache_lines;
+  uint    i, lines;
   cache_t *cache;
   
   debug("cache_malloc(cache_size=%d, cache_line_size=%d)\n", cache_size, cache_line_size);
   
-  cache_lines = cache_size / cache_line_size;
-  hash_shift  = log2(cache_line_size);
-  tag_shift   = log2(cache_line_size) + log2(cache_size);
+  lines      = cache_size / cache_line_size;
+  hash_shift = log2(cache_line_size);
+  tag_shift  = log2(cache_line_size) + log2(cache_size);
   
-  debug("cache_malloc: cache_lines=%d, hash_shift=%d, tag_shift=%d\n", cache_lines, hash_shift, tag_shift);
+  debug("cache_malloc: lines=%d, hash_shift=%d, tag_shift=%d\n", lines, hash_shift, tag_shift);
   
   cache                  = MALLOC(cache_t);
-  cache->nodes           = MALLOC_N(cache_node_t*, cache_lines);
+  cache->nodes           = MALLOC_N(cache_node_t*, lines);
   cache->addresses       = hash_table_malloc(cache_size);
   cache->cache_size      = cache_size;
   cache->cache_line_size = cache_line_size;
-  cache->cache_lines     = cache_lines;
-  cache->size            = 0;
+  cache->lines           = lines;
+  cache->entries         = 0;
   cache->mru             = NULL;
   cache->lru             = NULL;
   
-  for (i = 0; i < cache_lines; ++i) {
+  for (i = 0; i < lines; ++i) {
     cache->nodes[i] = NULL;
   }
   
@@ -114,7 +112,7 @@ cache_free(cache_t *cache)
   
   debug("cache_free(cache=0x%x)\n", cache);
   
-  for (i = 0; i < cache->cache_lines; ++i) {
+  for (i = 0; i < cache->lines; ++i) {
     node = cache->nodes[i];
     while (node) {
       next = node->next;
@@ -132,7 +130,7 @@ cache_free(cache_t *cache)
 /* http://faculty.cs.niu.edu/~berezin/463/lec/06memory/cachenote1.html 
 */
 size_t
-cache_line_bucket(cache_t *cache, void const *address)
+compute_cache_line_hash(cache_t *cache, void const *address)
 {
   register size_t key;
   
@@ -141,7 +139,7 @@ cache_line_bucket(cache_t *cache, void const *address)
 }
 
 size_t
-cache_line_tag(cache_t *cache, void const *address)
+compute_cache_line_tag(cache_t *cache, void const *address)
 {
   register size_t key;
   
@@ -150,7 +148,7 @@ cache_line_tag(cache_t *cache, void const *address)
 }
 
 size_t
-cache_line_bucket_size(cache_t *cache, size_t hash)
+compute_cache_line_size(cache_t *cache, size_t hash)
 {
   size_t       size;
   cache_node_t *node;
@@ -174,18 +172,17 @@ cache_remove(cache_t *cache, void const *key)
   
   debug("cache_remove(cache=0x%x, key=0x%x)\n", cache, key);
   
-  hash     = cache_line_bucket(cache, key);
-  tag      = cache_line_tag(cache, key);
+  hash     = compute_cache_line_hash(cache, key);
+  tag      = compute_cache_line_tag(cache, key);
   node     = cache->nodes[hash];
   previous = NULL;
   
-  debug("cache_remove: hash=%d, tag=%d ~> root-node=0x%x\n", hash, tag, node);
+  debug("cache_remove: hash=%d, tag=%d ~> node=0x%x\n", hash, tag, node);
   
   while (node) {
-    //if (0 == cache_key_compare(node->key, key)) {
     if (tag == node->tag) {
       /* found */
-      debug("cache_remove: hash=%d => node=0x%x\n", hash, node);
+      debug("cache_remove: hash=%d => node=0x%x, tag=%d\n", hash, node, node->tag);
       if (previous) {
 	if (previous != node->next) {
 	  previous->next = node->next;
@@ -197,7 +194,7 @@ cache_remove(cache_t *cache, void const *key)
       }
       cache_key_free(node->key);
       safe_free(node);
-      cache->size--;
+      cache->entries--;
       return;
     }
     previous = node;
@@ -208,11 +205,11 @@ cache_remove(cache_t *cache, void const *key)
 }
 
 void
-cache_update_impl(cache_t *cache, cache_node_t *node)
+cache_update(cache_t *cache, cache_node_t *node)
 {
   cache_node_t *older, *newer;
   
-  debug("cache_update_impl(cache=0x%x, node=0x%x)\n", cache, node);
+  debug("cache_update(cache=0x%x, node=0x%x)\n", cache, node);
   
   older = node->older;
   newer = node->newer;
@@ -238,15 +235,15 @@ cache_update_impl(cache_t *cache, cache_node_t *node)
 }
 
 void
-cache_insert_impl(cache_t *cache, void const *key)
+cache_insert(cache_t *cache, void const *key)
 {
   cache_node_t *node, *previous;
   size_t       hash, tag;
   
-  debug("cache_insert_impl(cache=0x%x, key=0x%x)\n", cache, key);
+  debug("cache_insert(cache=0x%x, key=0x%x)\n", cache, key);
   
   /* if we will be violating the size restrictions, then adjust */
-  if (cache->size >= cache->cache_size) {
+  if (cache->entries >= cache->lines) {
     previous = cache->lru;
     if (cache->lru->newer) {
       cache->lru        = cache->lru->newer;
@@ -255,18 +252,17 @@ cache_insert_impl(cache_t *cache, void const *key)
     cache_remove(cache, previous->key);
   }
   
-  hash = cache_line_bucket(cache, key);
-  tag  = cache_line_tag(cache, key);
+  hash = compute_cache_line_hash(cache, key);
+  tag  = compute_cache_line_tag(cache, key);
   node = cache->nodes[hash];
   
-  debug("cache_insert_impl: hash=%d, tag=%d ~> root-node=0x%x\n", hash, tag, node);
+  debug("cache_insert: hash=%d, tag=%d ~> node=0x%x\n", hash, tag, node);
   
   /* search within the bucket */
   while (node) {
-    //if (0 == cache_key_compare(node->key, key)) {
     if (tag == node->tag) {
       /* found */
-      debug("cache_insert_impl: hash=%d => node=0x%x\n", hash, node);
+      debug("cache_insert: hash=%d => node=0x%x\n", hash, node);
       return;
     }
     node = node->next;
@@ -282,7 +278,7 @@ cache_insert_impl(cache_t *cache, void const *key)
   
   /* the cache just got bigger */
   cache->nodes[hash] = node;
-  cache->size++;
+  cache->entries++;
   
   /* update most-recently-used */
   if (cache->mru) {
@@ -297,7 +293,7 @@ cache_insert_impl(cache_t *cache, void const *key)
     cache->lru->newer = cache->mru;
   }
   
-  debug("cache_insert_impl: hash=%d => node=0x%x\n", hash, node);
+  debug("cache_insert: hash=%d => node=0x%x\n", hash, node);
 }
 
 cache_node_t*
@@ -308,16 +304,15 @@ cache_find(cache_t *cache, void const *key)
   
   debug("cache_find(cache=0x%x, key=0x%x)\n", cache, key);
   
-  hash = cache_line_bucket(cache, key);
-  tag  = cache_line_tag(cache, key);
+  hash = compute_cache_line_hash(cache, key);
+  tag  = compute_cache_line_tag(cache, key);
   node = cache->nodes[hash];
   
   debug("cache_find: hash=%d, tag=%d ~> node=0x%x\n", hash, tag, node);
   cache_debug(cache);
   
   while (node) {
-    debug("cache_find: comparing node->key=0x%x to key=0x%x\n", node->key, key);
-    //if (0 == cache_key_compare(node->key, key)) {
+    debug("cache_find: comparing node->tag=%d to tag=%d, key=0x%x\n", node->tag, tag, node->key);
     if (tag == node->tag) {
       /* found */
       debug("cache_find: hash=%d => node=0x%x, found!\n", hash, node);
@@ -332,20 +327,18 @@ cache_find(cache_t *cache, void const *key)
 void
 cache_miss(cache_t *cache, void const *key, cache_operation::type_t access)
 {
-  size_t hash, size, tag;
+  size_t hash, tag;
   bool   existed, conflict;
   
   debug("cache_miss(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   
-  existed = hash_table_insert(cache->addresses, key, NULL);
-  debug("cache_miss: key=0x%x, existed='%s'\n", key, bool_to_string(existed));
-  //hash_table_debug(cache->addresses);
+  existed  = hash_table_insert(cache->addresses, key, NULL);
+  hash     = compute_cache_line_hash(cache, key);
+  tag      = compute_cache_line_tag(cache, key);
+  conflict = (NULL != cache->nodes[hash]);
   
-  hash     = cache_line_bucket(cache, key);
-  size     = cache_line_bucket_size(cache, hash);
-  tag      = cache_line_tag(cache, key);
-  conflict = (!existed && size > 0);
-  debug("cache_miss: hash=%d, tag=%d, (bucket) size=%d, conflict='%s'\n", hash, tag, size, bool_to_string(conflict));
+  debug("cache_miss: key=0x%x, existed='%s', hash=%d, tag=%d, conflict='%s'\n",
+	key, bool_to_string(existed), hash, tag, bool_to_string(conflict));
   
   if (cache_operation::read == access) {
     if (existed) {
@@ -393,11 +386,11 @@ cache_access(cache_t *cache, void const *key, cache_operation::type_t access)
   debug("cache_access(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   
   if (NULL == (node = cache_find(cache, key))) {
-    cache_insert_impl(cache, key);
     cache_miss(cache, key, access);
+    cache_insert(cache, key);
   } else {
-    cache_update_impl(cache, node);
     cache_hit(cache, key, access);
+    cache_update(cache, node);
   }
 }
 
@@ -411,9 +404,9 @@ cache_supported(cache_t *cache)
   if (!is_power_of_two(cache->cache_size)) {
     die("Cache size is not a power of two (size=%d).\n", cache->cache_size);
   }
-
-  if (!is_power_of_two(cache->cache_lines)) {
-    die("Cache set is not a power of two (%d).\n", cache->cache_lines);
+  
+  if (!is_power_of_two(cache->lines)) {
+    die("Cache set is not a power of two (%d).\n", cache->lines);
   }
   
   if (!is_power_of_two(cache->cache_line_size)) {
@@ -474,6 +467,7 @@ cache_print_statistics(cache_t *cache)
   message("total conflict misses:   %d\n", conflict);
   message("total misses:            %d\n", misses);
   message("ideal misses:            %d\n", ideal_misses);
+  message("ideal / miss ratio:      %2.4f\n", (double) ideal_misses / (double) misses);
   message("hit rate:                %2.4f\n", 1.0 - (double) misses / (double) accesses);
   message("miss rate:               %2.4f\n", (double) misses / (double) accesses);
   message("ideal hit rate:          %2.4f\n", 1.0 - (double) ideal_misses / (double) ideal_accesses);
@@ -498,10 +492,10 @@ cache_debug(cache_t *cache)
   static uint  threshold = 10;
   
   if (verbose) {
-    message("Cache Contents (%d/%d):\n", cache->size, cache->cache_size);
-    for (i = 0; i < cache->cache_lines; ++i) {
+    message("Cache Contents (%d/%d):\n", cache->entries, cache->lines);
+    for (i = 0; i < cache->lines; ++i) {
       node = cache->nodes[i];
-      if (node || cache->cache_lines < threshold) {
+      if (node || cache->lines < threshold) {
 	message("%4d: ", i);
 	while (node) {
 	  message("0x%x ", node->key);
