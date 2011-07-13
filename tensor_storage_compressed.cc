@@ -222,7 +222,7 @@ tensor_storage_malloc_compressed(tensor_t const *tensor)
   tensor_storage_compressed_t   *storage;
   conversion_callbacks_t *callbacks;
   
-  debug("tensor_storage_malloc_compressed(tensor=0x%x)\n", tensor);
+  superfluous("tensor_storage_malloc_compressed(tensor=0x%x)\n", tensor);
   
   storage       = MALLOC(tensor_storage_compressed_t);
   storage->CO   = MALLOC_N(uint, tensor->nnz);
@@ -261,12 +261,12 @@ tensor_storage_malloc_compressed(tensor_t const *tensor)
   base            = (tensor_storage_base_t*) storage;
   base->callbacks = callbacks;
   
-  debug("tensor_storage_malloc_compressed: callbacks=0x%x\n", callbacks);
-  debug("tensor_storage_malloc_compressed: storage->CO=0x%x\n", storage->CO);
-  debug("tensor_storage_malloc_compressed: storage->KO=0x%x\n", storage->KO);
-  debug("tensor_storage_malloc_compressed: storage->size (of RO)=%d\n", storage->size);
-  debug("tensor_storage_malloc_compressed: storage->RO=0x%x\n", storage->RO);
-  debug("tensor_storage_malloc_compressed: storage=0x%x\n", storage);
+  superfluous("tensor_storage_malloc_compressed: callbacks=0x%x\n", callbacks);
+  superfluous("tensor_storage_malloc_compressed: storage->CO=0x%x\n", storage->CO);
+  superfluous("tensor_storage_malloc_compressed: storage->KO=0x%x\n", storage->KO);
+  superfluous("tensor_storage_malloc_compressed: storage->size (of RO)=%d\n", storage->size);
+  superfluous("tensor_storage_malloc_compressed: storage->RO=0x%x\n", storage->RO);
+  superfluous("tensor_storage_malloc_compressed: storage=0x%x\n", storage);
   
   return storage;
 }

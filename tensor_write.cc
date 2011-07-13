@@ -20,11 +20,11 @@ tensor_initialize_typecode(MM_typecode *type, strategy::type_t strategy)
 void
 tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 {
-  uint                 i, nnz;
-  int                  result;
-  MM_typecode          type;
+  uint                        i, nnz;
+  int                         result;
+  MM_typecode                 type;
   tensor_storage_coordinate_t *storage;
-  coordinate_tuple_t   *tuples;
+  coordinate_tuple_t          *tuples;
   
   debug("tensor_write_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
   
@@ -63,11 +63,11 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 void
 tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
 {
-  uint                 l, m, n;
-  int                  i, nnz, size, result;
-  MM_typecode          type;
+  uint                        l, m, n;
+  int                         i, nnz, size, result;
+  MM_typecode                 type;
   tensor_storage_compressed_t *storage;
-  char const           *name;
+  char const                  *name;
   
   debug("tensor_write_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
   
@@ -113,11 +113,11 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
 void
 tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor, strategy::type_t strategy)
 {
-  uint               l, m, n;
-  int                i, nnz, size, result;
-  MM_typecode        type;
+  uint                      l, m, n;
+  int                       i, nnz, size, result;
+  MM_typecode               type;
   tensor_storage_extended_t *storage;
-  char const         *name;
+  char const                *name;
   
   debug("tensor_fwrite_extended_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
   
@@ -175,6 +175,7 @@ tensor_fwrite(FILE *file, tensor_t const *tensor)
   case strategy::compressed:
     tensor_fwrite_compressed(file, tensor);
     break;
+  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor_fwrite_extended_compressed(file, tensor, tensor->strategy);

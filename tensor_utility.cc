@@ -9,7 +9,7 @@ static char const *map_strategy_to_string[] = {
   "array",
   "coordinate",
   "compressed",
-  "lateral",
+  "slice",
   "ekmr",
   "zzekmr"
 };
@@ -48,7 +48,10 @@ static char const *map_orientation_to_string[] = {
   "unknown",
   "row", 
   "column",
-  "tube"
+  "tube",
+  "lateral",
+  "horizontal",
+  "frontal"
 };
 
 char const*
@@ -81,43 +84,6 @@ print_orientations(char const *format)
   }
 }
 
-static char const *map_slice_to_string[] = { 
-  "unknown",
-  "lateral",
-  "horizontal",
-  "frontal"
-};
-
-char const*
-slice_to_string(slice::type_t slice)
-{
-  return map_slice_to_string[slice];
-}
-
-slice::type_t
-string_to_slice(char const *name)
-{
-  uint i;
-  
-  for (i = 0; i < COUNT_OF(map_slice_to_string); ++i) {
-    if (0 == strcmp(name, map_slice_to_string[i])) {
-      return (slice::type_t) i;
-    }
-  }
-  
-  return slice::unknown;
-}
-
-void
-print_slices(char const *format)
-{
-  uint i;
-  
-  for (i = 1; i < COUNT_OF(map_slice_to_string); ++i) {
-    message(format, map_slice_to_string[i]);
-  }
-}
-
 strategy::type_t
 typecode_to_strategy(MM_typecode type)
 {
@@ -127,6 +93,8 @@ typecode_to_strategy(MM_typecode type)
     return strategy::coordinate;
   } else if (mm_is_compressed(type)) {
     return strategy::compressed;
+  } else if (mm_is_slice(type)) {
+    return strategy::slice;
   } else if (mm_is_ekmr(type)) {
     return strategy::ekmr;
   } else if (mm_is_zzekmr(type)) {
@@ -148,6 +116,9 @@ strategy_to_typecode(MM_typecode *type, strategy::type_t strategy)
     break;
   case strategy::compressed:
     mm_set_compressed(type);
+    break;
+  case strategy::slice:
+    mm_set_slice(type);
     break;
   case strategy::ekmr:
     mm_set_ekmr(type);

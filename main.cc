@@ -133,34 +133,6 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
   message("done [%lf]\n", SECONDS_SINCE(t));
 }
 
-/* adapted from: operation_n_mode_product.cc */
-void
-calculate_matrix_dimentions(tensor_t const *tensor, uint *m, uint *n)
-{
-  *m = 0;
-  *n = 0;
-  switch (tensor->orientation) {
-  case orientation::row:
-    /* rows * tubes */
-    *m = tensor->m;
-    *n = tensor->l;
-    break;
-  case orientation::column:
-    /* columns * tubes */
-    *m = tensor->n;
-    *n = tensor->l;
-    break;
-  case orientation::tube:
-    /* rows * columns */
-    *m = tensor->m;
-    *n = tensor->n;
-    break;
-  default:
-    die("calculate_matrix_dimentions: unknown or unsupported orientation %d \n", tensor->orientation);
-    break;
-  }
-}
-
 void
 timed_operation_n_mode_product(int argc, char *argv[])
 {
@@ -181,8 +153,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   debug("timed_operation_n_mode_product: tensor=0x%x\n", tensor);
   
   compatible(vector, tensor);
-  
-  calculate_matrix_dimentions(tensor, &m, &n);
+  calculate_output_matrix_dimentions(tensor, &m, &n);
   matrix = matrix_malloc(m, n);
   
   cache = NULL;
@@ -289,7 +260,7 @@ effectuate_tool_main(int argc, char *argv[])
       write_results = !write_results;
       break;
     case ':':
-      die("Option -%c requires an operand\n", optopt);
+      die("Option -%c requires an operand; that is, an integer or string value.\n", optopt);
       break;
     case '?':
       die("Unknown option: `-%c'\n", optopt);
@@ -390,7 +361,7 @@ convert_tool_main(int argc, char *argv[])
 	orientation = string_to_orientation(optarg); 
       }
       break;
-    case 's': 
+    case 's':
       if (isdigit(optarg[0])) {
 	strategy = (strategy::type_t) atoi(optarg);
       } else {
@@ -407,7 +378,7 @@ convert_tool_main(int argc, char *argv[])
       }
       break;
     case ':':
-      die("Option -%c requires an operand\n", optopt);
+      die("Option -%c requires an operand; that is, an integer or string value.\n", optopt);
       break;
     case '?':
       die("Unknown option: `-%c'\n", optopt);
@@ -415,7 +386,7 @@ convert_tool_main(int argc, char *argv[])
     default:
       abort();
       break;
-    }    
+    }
   }
   
   /* count the number of remaining arguments */
@@ -499,12 +470,12 @@ main(int argc, char *argv[])
   
   /* overly clever user? */
   if (tool::tensor == tool_type) {
-    die("Just had to try, didn't you? No, it's not recursive.\n");
+    die("Just had to try, didn't you? No; it's not recursive.\n");
   }
   
   /* typo? */
   if (tool::unknown == tool_type) {
-    die("Using this binary as the '%s' tool is not currently supported.\n", tool_name);
+    die("The name '%s' does not match any known tool name.\n", tool_name);
   }
   
   /* run the tool the user requested */

@@ -142,6 +142,8 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
       mm_set_dense(matcode);
     } else if (strcmp(crd, MM_COMPRESSED_STR) == 0) {
       mm_set_compressed(matcode);
+    } else if (strcmp(crd, MM_SLICE_STR) == 0) {
+      mm_set_slice(matcode);
     } else if (strcmp(crd, MM_EKMR_STR) == 0) {
       mm_set_ekmr(matcode);
     } else if (strcmp(crd, MM_ZZPKMR_STR) == 0) {
@@ -632,6 +634,8 @@ char  *mm_typecode_to_str(MM_typecode matcode)
       types[1] = MM_DENSE_STR;
     } else if (mm_is_compressed(matcode)) {
       types[1] = MM_COMPRESSED_STR;
+    } else if (mm_is_slice(matcode)) {
+      types[1] = MM_SLICE_STR;
     } else if (mm_is_ekmr(matcode)) {
       types[1] = MM_EKMR_STR;
     } else if (mm_is_zzekmr(matcode)) {

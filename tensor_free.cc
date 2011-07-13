@@ -9,7 +9,7 @@
 void
 tensor_storage_free(tensor_storage_base_t *storage)
 {
-  debug("tensor_storage_free((tensor_storage_base_t*)0x%x)\n", storage);
+  superfluous("tensor_storage_free((tensor_storage_base_t*)0x%x)\n", storage);
   
   safe_free(storage->callbacks);
 }
@@ -17,7 +17,7 @@ tensor_storage_free(tensor_storage_base_t *storage)
 void
 tensor_storage_free(tensor_storage_coordinate_t *storage)
 {
-  debug("tensor_storage_free((tensor_storage_coordinate_t*)0x%x)\n", storage);
+  superfluous("tensor_storage_free((tensor_storage_coordinate_t*)0x%x)\n", storage);
   
   safe_free(storage->tuples);
 }
@@ -25,7 +25,7 @@ tensor_storage_free(tensor_storage_coordinate_t *storage)
 void
 tensor_storage_free(tensor_storage_compressed_t *storage)
 {
-  debug("tensor_storage_free((tensor_storage_compressed_t*)0x%x)\n", storage);
+  superfluous("tensor_storage_free((tensor_storage_compressed_t*)0x%x)\n", storage);
   
   safe_free(storage->RO);
   safe_free(storage->CO);
@@ -35,7 +35,7 @@ tensor_storage_free(tensor_storage_compressed_t *storage)
 void
 tensor_storage_free(tensor_storage_extended_t *storage)
 {
-  debug("tensor_storage_free((tensor_storage_extended_t*)0x%x)\n", storage);
+  superfluous("tensor_storage_free((tensor_storage_extended_t*)0x%x)\n", storage);
   
   safe_free(storage->RO);
   safe_free(storage->CK);
@@ -44,7 +44,7 @@ tensor_storage_free(tensor_storage_extended_t *storage)
 void
 tensor_storage_free(tensor_t *tensor)
 {
-  debug("tensor_storage_free(0x%x)\n", tensor);
+  superfluous("tensor_storage_free(0x%x)\n", tensor);
   
   if (!tensor->storage) {
     return;
@@ -59,6 +59,7 @@ tensor_storage_free(tensor_t *tensor)
   case strategy::compressed:
     tensor_storage_free(STORAGE_COMPRESSED(tensor));
     break;
+  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor_storage_free(STORAGE_EXTENDED(tensor));
@@ -74,7 +75,7 @@ tensor_storage_free(tensor_t *tensor)
 void
 tensor_free(tensor_t *tensor)
 {
-  debug("tensor_free(0x%x)\n", tensor);
+  superfluous("tensor_free(0x%x)\n", tensor);
   
   if (!tensor) {
     return;

@@ -9,24 +9,23 @@
 #include <assert.h>
 
 void
-matrix_free(matrix_t *t)
+matrix_free(matrix_t *matrix)
 {
   uint i;
   
-  debug("matrix_free(matrix=0x%x)\n", t);
-  assert(NULL != t);
+  superfluous("matrix_free(matrix=0x%x)\n", matrix);
   
-  if (ownership::creator == t->owner) {    
-    assert(NULL != t->data);    
-    for (i = 0; i < t->m; ++i) {
-      assert(NULL != t->data[i]);
-      safe_free(t->data[i]);
+  if (!matrix) {
+    return;
+  }
+  
+  if (ownership::creator == matrix->owner) {
+    for (i = 0; i < matrix->m; ++i) {
+      safe_free(matrix->data[i]);
     }    
-    safe_free(t->data);
+    safe_free(matrix->data);
   }
   
-  if (NULL != t) {
-    safe_free(t);
-  }
+  safe_free(matrix);
 }
 

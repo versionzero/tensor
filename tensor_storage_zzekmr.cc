@@ -122,7 +122,7 @@ tensor_storage_malloc_zzekmr(tensor_t const *tensor)
   tensor_storage_extended_t     *storage;
   conversion_callbacks_t *callbacks;
   
-  debug("tensor_storage_malloc_zzekmr(tensor=0x%x)\n", tensor);
+  superfluous("tensor_storage_malloc_zzekmr(tensor=0x%x)\n", tensor);
   
   storage                  = MALLOC(tensor_storage_extended_t);
   storage->CK              = MALLOC_N(uint, tensor->nnz);
@@ -167,11 +167,11 @@ tensor_storage_malloc_zzekmr(tensor_t const *tensor)
   base            = (tensor_storage_base_t*) storage;
   base->callbacks = callbacks;
   
-  debug("tensor_storage_malloc_zzekmr: callbacks=0x%x\n", callbacks);  
-  debug("tensor_storage_malloc_zzekmr: storage->CK=0x%x\n", storage->CK);
-  debug("tensor_storage_malloc_zzekmr: storage->size (of R)=%d\n", storage->size);
-  debug("tensor_storage_malloc_zzekmr: storage->RO=0x%x\n", storage->RO);
-  debug("tensor_storage_malloc_zzekmr: storage=0x%x\n", storage);
+  superfluous("tensor_storage_malloc_zzekmr: callbacks=0x%x\n", callbacks);  
+  superfluous("tensor_storage_malloc_zzekmr: storage->CK=0x%x\n", storage->CK);
+  superfluous("tensor_storage_malloc_zzekmr: storage->size (of R)=%d\n", storage->size);
+  superfluous("tensor_storage_malloc_zzekmr: storage->RO=0x%x\n", storage->RO);
+  superfluous("tensor_storage_malloc_zzekmr: storage=0x%x\n", storage);
   
   return storage;
 }

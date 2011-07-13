@@ -6,7 +6,7 @@
 
 void* tensor_storage_malloc(tensor_t const *tensor);
 tensor_storage_compressed_t* tensor_storage_malloc_compressed(tensor_t const *tensor);
-tensor_storage_compressed_lateral_t* tensor_storage_malloc_compressed_slice(tensor_t const *tensor);
+tensor_storage_extended_t* tensor_storage_malloc_compressed_slice(tensor_t const *tensor);
 tensor_storage_extended_t* tensor_storage_malloc_ekmr(tensor_t const *tensor);
 tensor_storage_extended_t* tensor_storage_malloc_zzekmr(tensor_t const *tensor);
 

@@ -19,6 +19,11 @@ convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *s
   case orientation::tube:
     tensor_storage_convert_from_coordinate_to_compressed_inplace(destination, source);
     break;
+  case orientation::lateral:
+  case orientation::horizontal:
+  case orientation::frontal:
+    tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(destination, source);
+    break;
   default:
     die("Conversion to orientation '%s' is not currently supported.\n",
 	orientation_to_string(destination->orientation));
@@ -74,7 +79,7 @@ convert_to_compressed_inplace(tensor_t *destination, tensor_t *source)
   default:
     die("Conversion from '%s' strategy to '%s' is not currently supported.\n",
 	strategy_to_string(source->strategy), 
-	strategy_to_string(strategy::compressed));
+	strategy_to_string(destination->strategy));
     break;
   }
 }
@@ -91,7 +96,7 @@ convert_to_ekmr_inplace(tensor_t *destination, tensor_t *source)
   default:
     die("Conversion from '%s' strategy to '%s' is not currently supported.\n",
 	strategy_to_string(source->strategy), 
-	strategy_to_string(strategy::compressed));
+	strategy_to_string(destination->strategy));
     break;
   }
 }
@@ -108,7 +113,7 @@ convert_to_zzekmr_inplace(tensor_t *destination, tensor_t *source)
   default:
     die("Conversion from '%s' strategy to '%s' is not currently supported.\n",
 	strategy_to_string(source->strategy), 
-	strategy_to_string(strategy::compressed));
+	strategy_to_string(destination->strategy));
     break;
   }
 }
@@ -120,6 +125,7 @@ tensor_storage_convert_inplace(tensor_t *destination, tensor_t *source)
   
   switch (destination->strategy) {
   case strategy::compressed:
+  case strategy::slice:
     convert_to_compressed_inplace(destination, source);
     break;
   case strategy::ekmr:

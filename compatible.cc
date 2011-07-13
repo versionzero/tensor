@@ -31,6 +31,7 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
   
   switch (rhs->strategy) {
   case strategy::compressed:
+  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     supported = true;
@@ -47,12 +48,11 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
   
   switch (rhs->orientation) {
   case orientation::row:
-    compatible = (lhs->n == rhs->n);
-    break;
   case orientation::column:
-    compatible = (lhs->n == rhs->m);
-    break;
   case orientation::tube:
+  case orientation::lateral:
+  case orientation::horizontal:
+  case orientation::frontal:
     compatible = (lhs->n == rhs->l);
     break;
   default:

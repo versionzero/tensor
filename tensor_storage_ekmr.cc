@@ -71,12 +71,12 @@ tensor_storage_index_copy_for_ekmr_row(void *destination, void const *source, ui
 void
 tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source)
 {
-  int                  i, nnz;
+  int                         i, nnz;
   tensor_storage_base_t       *base;
   tensor_storage_extended_t   *d;
   tensor_storage_coordinate_t *s;
-  coordinate_tuple_t   *tuples;
-  double               *values;
+  coordinate_tuple_t          *tuples;
+  double                      *values;
   
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_EXTENDED(destination);
@@ -101,11 +101,11 @@ tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, te
 tensor_storage_extended_t*
 tensor_storage_malloc_ekmr(tensor_t const *tensor)
 {
-  tensor_storage_base_t         *base;
-  tensor_storage_extended_t     *storage;
-  conversion_callbacks_t *callbacks;
+  tensor_storage_base_t     *base;
+  tensor_storage_extended_t *storage;
+  conversion_callbacks_t    *callbacks;
   
-  debug("tensor_storage_malloc_ekmr(tensor=0x%x)\n", tensor);
+  superfluous("tensor_storage_malloc_ekmr(tensor=0x%x)\n", tensor);
   
   storage                  = MALLOC(tensor_storage_extended_t);
   storage->CK              = MALLOC_N(uint, tensor->nnz);
@@ -150,11 +150,11 @@ tensor_storage_malloc_ekmr(tensor_t const *tensor)
   base            = (tensor_storage_base_t*) storage;
   base->callbacks = callbacks;
   
-  debug("tensor_storage_malloc_ekmr: callbacks=0x%x\n", callbacks);  
-  debug("tensor_storage_malloc_ekmr: storage->CK=0x%x\n", storage->CK);
-  debug("tensor_storage_malloc_ekmr: storage->size (of R)=%d\n", storage->size);
-  debug("tensor_storage_malloc_ekmr: storage->RO=0x%x\n", storage->RO);
-  debug("tensor_storage_malloc_ekmr: storage=0x%x\n", storage);
+  superfluous("tensor_storage_malloc_ekmr: callbacks=0x%x\n", callbacks);  
+  superfluous("tensor_storage_malloc_ekmr: storage->CK=0x%x\n", storage->CK);
+  superfluous("tensor_storage_malloc_ekmr: storage->size (of R)=%d\n", storage->size);
+  superfluous("tensor_storage_malloc_ekmr: storage->RO=0x%x\n", storage->RO);
+  superfluous("tensor_storage_malloc_ekmr: storage=0x%x\n", storage);
   
   return storage;
 }

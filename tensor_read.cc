@@ -133,14 +133,14 @@ tensor_fread_compressed(FILE *file)
 tensor_t*
 tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
 {
-  uint                j;
-  int                 i, l, m, n, nnz, size;
-  int                 result;
-  char                name[20];
-  double              d;
-  tensor_t            *tensor;
-  orientation::type_t orientation;
-  tensor_storage_extended_t  *storage;
+  uint                      j;
+  int                       i, l, m, n, nnz, size;
+  int                       result;
+  char                      name[20];
+  double                    d;
+  tensor_t                  *tensor;
+  orientation::type_t       orientation;
+  tensor_storage_extended_t *storage;
   
   debug("tensor_fread_compressed(0x%x)\n", file);
   
@@ -199,6 +199,7 @@ tensor_fread_data(FILE *file, MM_typecode type)
   case strategy::compressed:
     tensor = tensor_fread_compressed(file);
     break;
+  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor = tensor_fread_extended_compressed(file, strategy);

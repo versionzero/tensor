@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static uint g_r;
+
 int 
 tensor_storage_index_compare_for_compressed_slice_lateral(void const *a, void const *b)
 {
@@ -29,17 +31,18 @@ tensor_storage_index_compare_for_compressed_slice_lateral(void const *a, void co
 int 
 tensor_storage_index_compare_for_compressed_slice_horizontal(void const *a, void const *b)
 {
-  int result;
+  uint                     ja, jb;
+  int                      result;
   coordinate_tuple_t const *ta;
   coordinate_tuple_t const *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
+  ja = ta->j * g_r + ta->k;
+  jb = tb->j * g_r + tb->k;
   
-  if (0 == (result = ta->j - tb->j)) {
-    if (0 == (result = ta->k - tb->k)) {
-      result = ta->i - tb->i;
-    }
+  if (0 == (result = ta->i - tb->i)) {
+    result = ja - jb;
   }
   
   return result;
@@ -48,17 +51,17 @@ tensor_storage_index_compare_for_compressed_slice_horizontal(void const *a, void
 int
 tensor_storage_index_compare_for_compressed_slice_frontal(void const *a, void const *b)
 {
-  int result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  uint                     ja, jb;
+  int                      result;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
-    
-  if (0 == (result = ta->k - tb->k)) {
-    if (0 == (result = ta->j - tb->j)) {
-      result = ta->i - tb->i;
-    }
+  ja = ta->j * g_r + ta->k;
+  jb = tb->j * g_r + tb->k;
+  
+  if (0 == (result = ja - jb)) {
+    result = ta->i - tb->i;
   }
   
   return result;
@@ -78,7 +81,7 @@ tensor_storage_index_encode_for_compressed_slice_lateral(uint *indices, void con
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].i;
+    index = tuple[current].k;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
@@ -101,7 +104,7 @@ tensor_storage_index_encode_for_compressed_slice_horizontal(uint *indices, void 
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].j;
+    index = tuple[current].k;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
@@ -124,7 +127,7 @@ tensor_storage_index_encode_for_compressed_slice_frontal(uint *indices, void con
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].k;
+    index = tuple[current].i;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
@@ -138,16 +141,15 @@ tensor_storage_index_copy_for_compressed_slice_lateral(void *destination, void c
 {
   uint i;
   tensor_storage_coordinate_t const *s;
-  tensor_storage_compressed_slice_t *d;
+  tensor_storage_extended_t *d;
   
   s = (tensor_storage_coordinate_t const*) source;
-  d = (tensor_storage_compressed_slice_t*) destination;
+  d = (tensor_storage_extended_t*) destination;
   
   debug("tensor_storage_index_copy_for_compressed_slice_lateral(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->CO[i] = s->tuples[i].j;
-    d->KO[i] = s->tuples[i].k;
+    d->CK[i] = s->tuples[i].k;
   }
 }
 
@@ -156,16 +158,15 @@ tensor_storage_index_copy_for_compressed_slice_horizontal(void *destination, voi
 {
   uint i;
   tensor_storage_coordinate_t const *s;
-  tensor_storage_compressed_slice_t *d;
+  tensor_storage_extended_t *d;
   
   s = (tensor_storage_coordinate_t const*) source;
-  d = (tensor_storage_compressed_slice_t*) destination;
+  d = (tensor_storage_extended_t*) destination;
   
   debug("tensor_storage_index_copy_for_compressed_slice_horizontal(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->CO[i] = s->tuples[i].i;
-    d->KO[i] = s->tuples[i].k;
+    d->CK[i] = s->tuples[i].k;
   }
 }
 
@@ -174,37 +175,37 @@ tensor_storage_index_copy_for_compressed_slice_frontal(void *destination, void c
 {
   uint i;
   tensor_storage_coordinate_t const *s;
-  tensor_storage_compressed_slice_t *d;
+  tensor_storage_extended_t *d;
   
   s = (tensor_storage_coordinate_t const*) source;
-  d = (tensor_storage_compressed_slice_t*) destination;
+  d = (tensor_storage_extended_t*) destination;
   
   debug("tensor_storage_index_copy_for_compressed_slice_frontal(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->CO[i] = s->tuples[i].i;
-    d->KO[i] = s->tuples[i].j;
+    d->CK[i] = s->tuples[i].j;
   }
 }
 
 void
 tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *destination, tensor_t *source)
 {
-  int                               i, nnz;
-  tensor_storage_base_t             *base;
-  tensor_storage_compressed_slice_t *d;
-  tensor_storage_coordinate_t       *s;
-  coordinate_tuple_t                *tuples;
-  double                            *values;
+  int                         i, nnz;
+  tensor_storage_base_t       *base;
+  tensor_storage_extended_t   *d;
+  tensor_storage_coordinate_t *s;
+  coordinate_tuple_t          *tuples;
+  double                      *values;
+  
+  s = STORAGE_COORIDINATE(source);
+  d = STORAGE_EXTENDED(destination);
   
   debug("tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(destination=0x%x, source=0x%x)\n", destination, source);
   
+  base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
   values = source->values;
-  s      = STORAGE_COORIDINATE(source);
   tuples = s->tuples;
-  d      = STORAGE_COMPRESSED(destination);
-  base   = (tensor_storage_base_t*) d;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
   (*base->callbacks->index_encode)(d->RO, tuples, nnz);
@@ -215,16 +216,16 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
   }
 }
 
-tensor_storage_compressed_slice_t*
+tensor_storage_extended_t*
 tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
 {
-  tensor_storage_base_t             *base;
-  tensor_storage_compressed_slice_t *storage;
-  conversion_callbacks_t            *callbacks;
+  tensor_storage_base_t     *base;
+  tensor_storage_extended_t *storage;
+  conversion_callbacks_t    *callbacks;
   
-  debug("tensor_storage_malloc_compressed_slice(tensor=0x%x)\n", tensor);
+  superfluous("tensor_storage_malloc_compressed_slice(tensor=0x%x)\n", tensor);
   
-  storage       = MALLOC(tensor_storage_compressed_slice_t);
+  storage       = MALLOC(tensor_storage_extended_t);
   storage->CK   = MALLOC_N(uint, tensor->nnz);
   storage->size = 0;
   storage->RO   = NULL;
@@ -232,20 +233,26 @@ tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
   callbacks     = MALLOC(conversion_callbacks_t);
   
   switch (tensor->orientation) {
-  case slice::lateral:
-    storage->size            = tensor->m;
+  case orientation::lateral:
+    /* rows * tubes */
+    storage->size            = tensor->m * tensor->l;
+    storage->r               = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_lateral;
     callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_slice_lateral;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_lateral;
     break;
-  case slice::horizontal:
-    storage->size            = tensor->n;
+  case orientation::horizontal:
+    /* columns * tubes */
+    storage->size            = tensor->n * tensor->l;
+    storage->r               = tensor->n;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_horizontal;
     callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_slice_horizontal;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_horizontal;
     break;
-  case slice::frontal:
-    storage->size            = tensor->l;
+  case orientation::frontal:
+    /* rows * columns */
+    storage->size            = tensor->m * tensor->n;
+    storage->r               = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_frontal;
     callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_slice_frontal;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_frontal;
@@ -260,12 +267,11 @@ tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
   base            = (tensor_storage_base_t*) storage;
   base->callbacks = callbacks;
   
-  debug("tensor_storage_malloc_compressed_slice: callbacks=0x%x\n", callbacks);
-  debug("tensor_storage_malloc_compressed_slice: storage->CO=0x%x\n", storage->CO);
-  debug("tensor_storage_malloc_compressed_slice: storage->KO=0x%x\n", storage->KO);
-  debug("tensor_storage_malloc_compressed_slice: storage->size (of RO)=%d\n", storage->size);
-  debug("tensor_storage_malloc_compressed_slice: storage->RO=0x%x\n", storage->RO);
-  debug("tensor_storage_malloc_compressed_slice: storage=0x%x\n", storage);
+  superfluous("tensor_storage_malloc_compressed_slice: callbacks=0x%x\n", callbacks);
+  superfluous("tensor_storage_malloc_compressed_slice: storage->CK=0x%x\n", storage->CK);
+  superfluous("tensor_storage_malloc_compressed_slice: storage->size (of RO)=%d\n", storage->size);
+  superfluous("tensor_storage_malloc_compressed_slice: storage->RO=0x%x\n", storage->RO);
+  superfluous("tensor_storage_malloc_compressed_slice: storage=0x%x\n", storage);
   
   return storage;
 }

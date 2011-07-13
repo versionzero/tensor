@@ -55,6 +55,7 @@
 #include <string.h>
 
 extern bool verbose;
+extern bool simulate;
 size_t      hash_shift, tag_shift;
   
 size_t cache_key_hash(void const *address);
@@ -382,6 +383,10 @@ void
 cache_access(cache_t *cache, void const *key, cache_operation::type_t access)
 {
   cache_node_t *node;
+  
+  if (!simulate) {
+    return;
+  }
   
   debug("cache_access(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   

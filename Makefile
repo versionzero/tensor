@@ -1,7 +1,7 @@
 CXX=g++
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
-EXTRA_DEBUG=-g -DNODEBUG
+EXTRA_DEBUG=-g #-DNODEBUG
 EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(DEBUG) $(STRICT) $(INCLUDES)
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG) $(DEBUG)
 
@@ -22,11 +22,10 @@ SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
 	matrix_malloc.cc matrix_partition.cc matrix_supported.cc	\
 	matrix_read.cc matrix_write.cc
-SOURCES_STORAGE=tensor_storage_convert.cc		\
-	tensor_storage_compressed.cc			\
-	tensor_storage_malloc_compressed_slice.cc	\
-	tensor_storage_ekmr.cc tensor_storage_malloc.cc	\
-	tensor_storage_zzekmr.cc
+SOURCES_STORAGE=tensor_storage_convert.cc				\
+	tensor_storage_compressed.cc					\
+	tensor_storage_compressed_slice.cc tensor_storage_ekmr.cc	\
+	tensor_storage_malloc.cc tensor_storage_zzekmr.cc
 SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
 	tensor_free.cc tensor_malloc.cc tensor_supported.cc		\
 	tensor_read.cc tensor_write.cc tensor_utility.cc		\
