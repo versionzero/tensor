@@ -1,9 +1,13 @@
 CXX=g++
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
-EXTRA_DEBUG=-g -DNODEBUG
-EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(DEBUG) $(STRICT) $(INCLUDES)
-EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG) $(DEBUG)
+ifdef DEBUG
+	EXTRA_DEBUG=-g
+else
+	EXTRA_DEBUG=-g -DNODEBUG
+endif
+EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
+EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h memory.h	\
