@@ -165,7 +165,7 @@ tensor_storage_index_copy_for_compressed_slice_horizontal(void *destination, voi
   debug("tensor_storage_index_copy_for_compressed_slice_horizontal(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->CK[i] = s->tuples[i].k;
+    d->CK[i] = s->tuples[i].j;
   }
 }
 
