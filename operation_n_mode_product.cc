@@ -104,6 +104,84 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 }
 
 void
+compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+{
+  uint                       i, j, k;
+  uint                       size, nnz;
+  uint                       start, end;
+  uint                       c, r, r0, t, m, n;
+  double                     **M;
+  double const               *p, *V;
+  uint const                 *R, *C, *T;
+  tensor_storage_compressed_t const *storage;
+  
+  debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  
+  matrix_clear(matrix);
+  
+  p       = vector->data;
+  M       = matrix->data;
+  V       = tensor->values;
+  nnz     = tensor->nnz;
+  m       = matrix->m;
+  n       = matrix->n;
+  
+  storage = STORAGE_COMPRESSED(tensor);
+  size    = storage->size;
+  R       = storage->RO;
+  C       = storage->CO;
+  T       = storage->KO;
+  
+  /*
+    Using \emph{compressed row storage} ($\CRS$), this tensor can be
+    represented as:
+    
+           $k$   0   1   2    3   4   5   6    7   8   9   10   11
+     $\rowcrs$ & 0 & 4 & 8 & 12
+     $\colcrs$ & 1 & 3 & 0 &  2 & 0 & 2 & 1 &  2 & 1 & 2 &  0 &  3
+    $\tubecrs$ & 0 & 0 & 1 &  1 & 0 & 0 & 1 &  1 & 0 & 0 &  1 &  1
+     $\valcrs$ & 1 & 2 & 7 &  8 & 3 & 4 & 9 & 10 & 5 & 6 & 11 & 12
+  */
+  
+  DEBUG("\n");
+  
+  for (r = 1; r < size; ++r) {
+    r0    = r-1;
+    i     = r0;
+    start = R[r0];
+    end   = R[r];
+    
+    cache_access(cache, &R[r0], cache_operation::read);
+    cache_access(cache, &R[r],  cache_operation::read);
+    
+    DEBUG("start=%d, end=%d\n", start, end);
+    
+    for (k = start; k < end; ++k) {
+      c = C[k];
+      t = T[k]; // row
+      j = t;
+      
+      cache_access(cache, &C[k], cache_operation::read);
+      cache_access(cache, &T[k], cache_operation::read);
+      
+      DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[r] * V[k]);
+      
+      M[i][j] += p[c] * V[k];
+      
+      cache_access(cache, &V[k],    cache_operation::read);
+      cache_access(cache, &p[t],    cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::write);
+      
+      cache_debug(cache);
+      
+      DEBUG("%2.0f\t", M[i][j]);
+      DEBUG("C[k=%2d]=%2d, T[k]=%d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, C[k], T[k], c, r, t, i, j);
+    }
+  }
+}
+
+void
 n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   debug("n_mode_product_compressed(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
@@ -111,6 +189,9 @@ n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t con
   switch (tensor->orientation) {
   case orientation::row:
     compressed_row(matrix, vector, tensor);
+    break;
+  case orientation::tube:
+    compressed_tube(matrix, vector, tensor);
     break;
   default:
     die("Tensor product for '%s' orientation is not currently supported.\n",

@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static uint g_r;
+
 int 
 tensor_storage_index_compare_for_compressed_row(void const *a, void const *b)
 {
@@ -48,17 +50,17 @@ tensor_storage_index_compare_for_compressed_column(void const *a, void const *b)
 int 
 tensor_storage_index_compare_for_compressed_tube(void const *a, void const *b)
 {
-  int result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  uint                     ia, ib;
+  int                      result;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
-    
-  if (0 == (result = ta->k - tb->k)) {
-    if (0 == (result = ta->j - tb->j)) {
-      result = ta->i - tb->i;
-    }
+  ia = ta->i * g_r + ta->j;
+  ib = tb->i * g_r + tb->j;
+  
+  if (0 == (result = ia - ib)) {
+    result = ta->k - tb->k;
   }
   
   return result;
@@ -124,7 +126,7 @@ tensor_storage_index_encode_for_compressed_tube(uint *indices, void const *p, ui
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].k;
+    index = tuple[current].i;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
@@ -182,7 +184,7 @@ tensor_storage_index_copy_for_compressed_tube(void *destination, void const *sou
   debug("tensor_storage_index_copy_for_compressed_tube(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->CO[i] = s->tuples[i].i;
+    d->CO[i] = s->tuples[i].k;
     d->KO[i] = s->tuples[i].j;
   }
 }
@@ -190,12 +192,12 @@ tensor_storage_index_copy_for_compressed_tube(void *destination, void const *sou
 void
 tensor_storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *source)
 {
-  int                  i, nnz;
+  int                         i, nnz;
   tensor_storage_base_t       *base;
   tensor_storage_compressed_t *d;
   tensor_storage_coordinate_t *s;
-  coordinate_tuple_t   *tuples;
-  double               *values;
+  coordinate_tuple_t          *tuples;
+  double                      *values;
   
   debug("tensor_storage_convert_from_coordinate_to_compressed_inplace(destination=0x%x, source=0x%x)\n", destination, source);
   
@@ -247,6 +249,7 @@ tensor_storage_malloc_compressed(tensor_t const *tensor)
     break;
   case orientation::tube:
     storage->size            = tensor->l;
+    g_r                      = tensor->n;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_tube;
     callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_tube;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_tube;
