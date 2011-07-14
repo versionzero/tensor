@@ -12,17 +12,17 @@ static uint g_r;
 int 
 tensor_storage_index_compare_for_compressed_slice_lateral(void const *a, void const *b)
 {
-  int result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  uint                     ka, kb;
+  int                      result;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
+  ka = ta->k * g_r + ta->j;
+  kb = tb->k * g_r + tb->j;
   
-  if (0 == (result = ta->i - tb->i)) {
-    if (0 == (result = ta->k - tb->k)) {
-      result = ta->j - tb->j;
-    }
+  if (0 == (result = ka - kb)) {
+    result = ta->i - tb->i;
   }
   
   return result;
@@ -33,8 +33,7 @@ tensor_storage_index_compare_for_compressed_slice_horizontal(void const *a, void
 {
   uint                     ja, jb;
   int                      result;
-  coordinate_tuple_t const *ta;
-  coordinate_tuple_t const *tb;
+  coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
@@ -81,7 +80,7 @@ tensor_storage_index_encode_for_compressed_slice_lateral(uint *indices, void con
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].k;
+    index = tuple[current].i;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
