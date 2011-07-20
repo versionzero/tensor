@@ -10,6 +10,7 @@ extern tool::type_t tool_type;
 
 #define TENSOR_DESCRIPTION     "A tool for working with tensors."
 #define CONVERT_DESCRIPTION    "A tool for converting between th-order tensor storage strategies."
+#define GENERATE_DESCRIPTION   "A tool for generating varieties of th-order tensors."
 #define EFFECTUATE_DESCRIPTION "A tool for performing computations on th-order tensors."
 #define VERSION "Version 0.01 (" __DATE__ "), " \
   "Copyright (C) 2011, and GPLv3'd, by Ben Burnett\n" \
@@ -22,6 +23,7 @@ static char const *map_tool_to_string[] = {
   "unknown",
   "tensor",
   "convert", 
+  "generate",
   "effectuate"
 };
 
@@ -29,6 +31,7 @@ static char const *map_tools_to_description[] = {
   "unknown",
   TENSOR_DESCRIPTION,
   CONVERT_DESCRIPTION,
+  GENERATE_DESCRIPTION,
   EFFECTUATE_DESCRIPTION
 };
 
