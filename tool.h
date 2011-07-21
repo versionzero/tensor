@@ -28,6 +28,7 @@ namespace tool {
 #define DEFAULT_VERBOSE         false
 #define DEFAULT_VERBOSITY       verbosity::low
 #define DEFAULT_WRITE_RESULTS   false
+#define DEFAULT_SEED            1234
 
 #define DEFAULT_CACHE_SIZE      (2*1024)
 #define DEFAULT_CACHE_LINE_SIZE MINIMUM_CACHE_LINE_SIZE

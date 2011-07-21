@@ -8,6 +8,8 @@ datatype_read_typecode(FILE *file, MM_typecode *type)
 {
   int result;
   
+  debug("datatype_read_typecode(file=0x%x)\n");
+  
   if (0 != (result = mm_read_banner(file, type))) {
     die("Could not process Matrix Market banner: %s.\n", 
 	mm_error_to_str(result));

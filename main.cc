@@ -21,6 +21,7 @@ cache_t           *cache;
 uint              cache_size;
 uint              cache_line_size;
 uint              iterations;
+uint              seed;
 char              *tool_name;
 tool::type_t      tool_type;
 bool              simulate;

@@ -12,11 +12,12 @@ matrix_malloc(uint m, uint n, ownership::type_t owner)
   uint     i;
   matrix_t *mr;
   
-  mr        = MALLOC(matrix_t);
-  mr->m     = m;
-  mr->n     = n;
-  mr->data  = NULL;
-  mr->owner = owner;
+  mr         = MALLOC(matrix_t);
+  mr->m      = m;
+  mr->n      = n;
+  mr->data   = NULL;
+  mr->owner  = owner;
+  mr->scheme = scheme::general;
   
   if (ownership::viewer == owner) {
     return mr;

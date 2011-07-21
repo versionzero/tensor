@@ -12,11 +12,12 @@ EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h memory.h	\
 		operation.h random.h tool.h utility.h compatible.h
+HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=storage.h tensor.h
 HEADERS_VECTOR=vector.h
-HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_MATRIX)	\
-	$(HEADERS_TENSOR) $(HEADERS_VECTOR)
+HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
+	$(HEADERS_MATRIX) $(HEADERS_TENSOR) $(HEADERS_VECTOR)
 
 SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
@@ -24,6 +25,7 @@ SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
 	operation_utility.cc random.cc tool_convert.cc			\
 	tool_effectuate.cc tool_generate.cc tool_timing.cc		\
 	tool_utility.cc types.cc utility.cc
+SOURCES_GENERATE=generate_tensor_from_matrix.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
 	matrix_malloc.cc matrix_partition.cc matrix_supported.cc	\
@@ -38,9 +40,9 @@ SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
 	tensor_validate.cc
 SOURCES_VECTOR=vector_clear.cc vector_free.cc vector_malloc.cc	\
 	vector_read.cc vector_write.cc
-SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_MATRIX)	\
-	$(SOURCES_STORAGE) $(SOURCES_TENSOR) $(SOURCES_VECTOR)	\
-	main.cc
+SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_GENERATE)	\
+	$(SOURCES_MATRIX) $(SOURCES_STORAGE) $(SOURCES_TENSOR)	\
+	$(SOURCES_VECTOR) main.cc
 
 ASSEMBLER=$(SOURCES:.cc=.s)
 OBJECTS=$(ASSEMBLER:.s=.o)

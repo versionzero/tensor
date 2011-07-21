@@ -72,6 +72,11 @@ matrix_fread_data(FILE *file, MM_typecode type)
     mr = matrix_read_coordinate(file);
   }
   
+  mr->scheme = scheme::general;
+  if (mm_is_symmetric(type)) {
+    mr->scheme = scheme::symmetric;
+  }
+  
   return mr;
 }
 

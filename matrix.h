@@ -13,9 +13,17 @@ namespace format {
   } type_t;
 }
 
+namespace scheme {
+  typedef enum {
+    general,
+    symmetric
+  } type_t;
+}
+
 typedef struct {
   uint              m, n;
   ownership::type_t owner;
+  scheme::type_t    scheme;
   double            **data;
 } matrix_t;
 

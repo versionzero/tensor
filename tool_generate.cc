@@ -3,8 +3,10 @@
 #include "compatible.h"
 #include "error.h"
 #include "file.h"
+#include "generate.h"
 #include "matrix.h"
 #include "operation.h"
+#include "random.h"
 #include "tensor.h"
 #include "tool.h"
 #include "utility.h"
@@ -21,6 +23,7 @@ extern cache_t           *cache;
 extern uint              cache_size;
 extern uint              cache_line_size;
 extern uint              iterations;
+extern uint              seed;
 extern char              *tool_name;
 extern tool::type_t      tool_type;
 extern bool              simulate;
@@ -36,6 +39,7 @@ generate_tool_usage()
   message("\t%s [options] <input> [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
+  message("\t-s\trandom number generator seed (default: %d)\n", DEFAULT_SEED);
   exit(1);
 }
 
@@ -67,7 +71,6 @@ timed_tensor_write(int argc, char *argv[], int const offset, tensor_t const *ten
 void
 timed_generation(int argc, char *argv[])
 {
-  uint     i, m, n;
   int      offset;
   char     *name;
   matrix_t *matrix;
@@ -82,6 +85,8 @@ timed_generation(int argc, char *argv[])
   matrix = timed_matrix_read(name);
   debug("timed_generation: matrix=0x%x\n", matrix);
   
+  tensor = generate_tensor_from_matrix(matrix);
+  debug("timed_generation: tensor=0x%x\n", tensor);
   
   timed_tensor_write(argc, argv, offset, tensor);
   
@@ -93,12 +98,11 @@ void
 generate_tool_main(int argc, char *argv[])
 {
   int      c;
-  clock_t  t;
-  char     *name;
   
   /* set the program's defaults */
   verbose     = DEFAULT_VERBOSE;
   noisiness   = DEFAULT_VERBOSITY;
+  seed        = DEFAULT_SEED;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -109,7 +113,12 @@ generate_tool_main(int argc, char *argv[])
     case 'h': 
       generate_tool_usage();
       break;
-    case 'v': 
+    case 's':
+      seed = atoi(optarg);
+      if (0 == seed) {
+	seed = DEFAULT_SEED;
+      }
+    case 'v':
       verbose = !verbose;
       break;
     case 'V':
@@ -134,6 +143,9 @@ generate_tool_main(int argc, char *argv[])
   if (argc-optind < 1) {
     generate_tool_usage();
   }
+  
+  /* seed the random number generator */
+  random_seed(seed);
   
   /* pass control over to some naive timing procedures */
   timed_generation(argc, argv);
