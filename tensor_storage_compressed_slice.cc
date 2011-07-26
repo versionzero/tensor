@@ -103,7 +103,7 @@ tensor_storage_index_encode_for_compressed_slice_horizontal(uint *indices, void 
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].k;
+    index = tuple[current].j;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
@@ -126,7 +126,7 @@ tensor_storage_index_encode_for_compressed_slice_frontal(uint *indices, void con
   
   indices[size++] = 0;
   for (current = 0; current < nnz; ++current) {
-    index = tuple[current].i;
+    index = tuple[current].j;
     if (previous != index) {
       indices[size++] = current;
       previous        = index;
