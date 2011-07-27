@@ -111,6 +111,7 @@ void tensor_validate(tensor_t const *tensor);
 
 char const* strategy_to_string(strategy::type_t strategy);
 char const* orientation_to_string(orientation::type_t orientation);
+char const* orientation_to_latex_macro(orientation::type_t orientation);
 strategy::type_t string_to_strategy(char const *name);
 orientation::type_t string_to_orientation(char const *name);
 strategy::type_t typecode_to_strategy(MM_typecode type);

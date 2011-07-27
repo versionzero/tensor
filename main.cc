@@ -28,6 +28,7 @@ bool              simulate;
 bool              verbose;
 verbosity::type_t noisiness;
 bool              write_results;
+bool              write_latex;
 
 void
 usage()

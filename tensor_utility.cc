@@ -44,6 +44,23 @@ print_strategies(char const *format)
   }
 }
 
+
+static char const *map_orientation_to_latex_macro[] = { 
+  "unknown",
+  "crs", 
+  "ccs",
+  "cts",
+  "clss",
+  "chss",
+  "cfss"
+};
+
+char const*
+orientation_to_latex_macro(orientation::type_t orientation)
+{
+  return map_orientation_to_latex_macro[orientation];
+}
+
 static char const *map_orientation_to_string[] = { 
   "unknown",
   "row", 
