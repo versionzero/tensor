@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "mmio.h"
 #include "tensor.h"
+#include "storage.h"
 #include "utility.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,29 +46,6 @@ tensor_storage_index_compare_for_zzekmr_row(void const *a, void const *b)
   return result;
 }
 
-void 
-tensor_storage_index_encode_for_zzekmr_row(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple;
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("tensor_storage_index_encode_for_zzekmr_row(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].i;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
-}
-
 void
 tensor_storage_index_copy_for_zzekmr_row(void *destination, void const *source, uint nnz)
 {
@@ -107,7 +85,7 @@ tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, 
   tuples = s->tuples;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  (*base->callbacks->index_encode)(d->RO, tuples, nnz);
+  d->size = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_encoder);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
@@ -118,9 +96,9 @@ tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, 
 tensor_storage_extended_t*
 tensor_storage_malloc_zzekmr(tensor_t const *tensor)
 {
-  tensor_storage_base_t         *base;
-  tensor_storage_extended_t     *storage;
-  conversion_callbacks_t *callbacks;
+  tensor_storage_base_t     *base;
+  tensor_storage_extended_t *storage;
+  conversion_callbacks_t    *callbacks;
   
   superfluous("tensor_storage_malloc_zzekmr(tensor=0x%x)\n", tensor);
   
@@ -131,7 +109,7 @@ tensor_storage_malloc_zzekmr(tensor_t const *tensor)
   
   callbacks                = MALLOC(conversion_callbacks_t);
   callbacks->index_compare = NULL;
-  callbacks->index_encode  = NULL;
+  callbacks->index_encoder = NULL;
   callbacks->index_copy	   = NULL;
   
   switch (tensor->orientation) {
@@ -139,7 +117,7 @@ tensor_storage_malloc_zzekmr(tensor_t const *tensor)
     storage->r               = tensor->n;
     storage->size            = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_zzekmr_row;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_zzekmr_row;
+    callbacks->index_encoder = &encoder_for_i;
     callbacks->index_copy    = &tensor_storage_index_copy_for_zzekmr_row;
     break;
   default:

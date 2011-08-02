@@ -6,8 +6,9 @@
 #include "tensor.h"
 #include "vector.h"
 
-void compatible(tensor_t const *lhs, tensor_t const *rhs);
 void compatible(vector_t const *lhs, tensor_t const *rhs);
+void compatible(matrix_t const *lhs, tensor_t const *rhs);
+void compatible(tensor_t const *lhs, tensor_t const *rhs);
 
 #endif
 

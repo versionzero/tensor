@@ -3,6 +3,17 @@
 #include "mmio.h"
 #include "types.h"
 
+static char const *map_ownership_to_string[] = {
+  "creator",
+  "viewer"
+};
+
+char const*
+ownership_to_string(ownership::type_t strategy)
+{
+  return map_ownership_to_string[strategy];
+}
+
 void
 datatype_read_typecode(FILE *file, MM_typecode *type)
 {

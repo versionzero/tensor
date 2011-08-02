@@ -27,7 +27,7 @@ extern bool              simulate;
 extern bool              verbose;
 extern verbosity::type_t noisiness;
 extern bool              write_results;
-extern bool              write_latex;
+extern bool              emit_latex;
 
 void
 convert_tool_usage() 
@@ -37,7 +37,7 @@ convert_tool_usage()
   message("\t%s [options] <input> [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
-  message("\t-l\temit LaTeX code as output (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_LATEX));
+  message("\t-l\temit LaTeX code as output (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_EMIT_LATEX));
   message("\t-s\tstrategy (default: %s)\n", strategy_to_string(DEFAULT_STRATEGY));
   print_strategies("\t\t- %s\n");
   message("\t-o\torientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
@@ -88,7 +88,7 @@ convert_tool_main(int argc, char *argv[])
   strategy    = DEFAULT_STRATEGY;
   verbose     = DEFAULT_VERBOSE;
   noisiness   = DEFAULT_VERBOSITY;
-  write_latex = DEFAULT_WRITE_LATEX;
+  emit_latex  = DEFAULT_EMIT_LATEX;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -100,7 +100,7 @@ convert_tool_main(int argc, char *argv[])
       convert_tool_usage();
       break;
     case 'l':
-      write_latex = !write_latex;
+      emit_latex = !emit_latex;
       break;
     case 'o':
       if (isdigit(optarg[0])) {
@@ -137,7 +137,7 @@ convert_tool_main(int argc, char *argv[])
     }
   }
 
-  debug("main: write_latex=%s\n", ON_OR_OFF(write_latex));
+  debug("main: emit_latex=%s\n", bool_to_string(emit_latex));
   
   /* count the number of remaining arguments */
   if (argc-optind < 1) {

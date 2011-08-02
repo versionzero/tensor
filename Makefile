@@ -10,8 +10,9 @@ EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
-HEADERS_GENERAL=arithmetic.h error.h file.h information.h memory.h	\
-		operation.h random.h tool.h utility.h compatible.h
+HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
+		memory.h operation.h random.h strings.h tool.h		\
+		utility.h compatible.h
 HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=storage.h tensor.h
@@ -21,19 +22,21 @@ HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
 
 SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
-	information.cc memory.cc mmio.cc operation_n_mode_product.cc	\
-	operation_utility.cc random.cc tool_convert.cc			\
-	tool_effectuate.cc tool_generate.cc tool_timing.cc		\
-	tool_utility.cc types.cc utility.cc
+	information.cc latex.cc memory.cc mmio.cc			\
+	operation_n_mode_product.cc operation_utility.cc random.cc	\
+	strings.cc tool_convert.cc tool_effectuate.cc			\
+	tool_generate.cc tool_timing.cc tool_utility.cc types.cc	\
+	utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
 	matrix_malloc.cc matrix_partition.cc matrix_supported.cc	\
 	matrix_read.cc matrix_write.cc
-SOURCES_STORAGE=tensor_storage_convert.cc				\
-	tensor_storage_compressed.cc					\
-	tensor_storage_compressed_slice.cc tensor_storage_ekmr.cc	\
-	tensor_storage_malloc.cc tensor_storage_zzekmr.cc
+SOURCES_STORAGE=tensor_storage_convert.cc			\
+	tensor_storage_compressed.cc				\
+	tensor_storage_compressed_slice.cc tensor_emit_latex.cc	\
+	tensor_storage_ekmr.cc tensor_storage_malloc.cc		\
+	tensor_storage_utility.cc tensor_storage_zzekmr.cc
 SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
 	tensor_free.cc tensor_malloc.cc tensor_supported.cc		\
 	tensor_read.cc tensor_write.cc tensor_utility.cc		\
@@ -69,6 +72,9 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 .cc.s: $(HEADERS)
 	$(CXX) $(CXXFLAGS) -S $<
 	$(CXX) $(CXXFLAGS) $@ -o $(@:.s=.o)
+
+debug:
+	make DEBUG=1
 
 rebuild: clean all
 

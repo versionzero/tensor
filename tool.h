@@ -2,6 +2,7 @@
 #ifndef _TOOL_H_
 #define _TOOL_H_
 
+#include "cache.h"
 #include "matrix.h"
 #include "tensor.h"
 #include "types.h"
@@ -19,7 +20,6 @@ namespace tool {
 
 #define OPTION_MESSAGE(x,a,b)   (x ? a:b)
 #define DEFAULT_ON_OR_OFF(x)    OPTION_MESSAGE(x, "on", "off")
-#define ON_OR_OFF(x)            OPTION_MESSAGE(x, "on", "off")
 
 #define DEFAULT_ITERATIONS      1
 #define DEFAULT_OPERATION       operation::n_mode_product
@@ -29,7 +29,7 @@ namespace tool {
 #define DEFAULT_VERBOSE         false
 #define DEFAULT_VERBOSITY       verbosity::low
 #define DEFAULT_WRITE_RESULTS   false
-#define DEFAULT_WRITE_LATEX     false
+#define DEFAULT_EMIT_LATEX      false
 #define DEFAULT_SEED            1234
 
 #define DEFAULT_CACHE_SIZE      (2*1024)

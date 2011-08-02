@@ -8,10 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CHOSE_SPERATATOR(x,y,a,b)   ((x != y) ? a : b)
-#define AMPERSAND_OR_ENDOFLINE(x,y) CHOSE_SPERATATOR(x,y," & "," \\\\")
-
-extern bool write_latex;
+extern bool emit_latex;
 
 void
 tensor_initialize_typecode(MM_typecode *type, strategy::type_t strategy)
@@ -58,9 +55,7 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
   
   for (i = 0; i < nnz; ++i) {
     if (!might_as_well_be_zero(tensor->values[i])) {
-      fprintf(file, "%d %d %d %10.32g\n", 
-	      tuples[i].k, tuples[i].i, tuples[i].j,
-	      tensor->values[tuples[i].index]);
+      fprintf(file, "%d %d %d %10.32g\n", tuples[i].k, tuples[i].i, tuples[i].j, tensor->values[tuples[i].index]);
     }
   }
 }
@@ -109,72 +104,8 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
   }
   
   for (i = 0; i < nnz; ++i) {
-    fprintf(file, "%d %d %10.32g\n",
-	    storage->CO[i], storage->KO[i],
-	    tensor->values[i]);
+    fprintf(file, "%d %d %10.32g\n", storage->CO[i], storage->KO[i], tensor->values[i]);
   }
-}
-
-template<class T>
-void
-for_each_fprintf(FILE *file, char const *format, T values, uint size, char const *separator, char const *eol)
-{
-  uint i;
-  
-  for (i = 0; i < size; ++i) {
-    fprintf(file, format, values[i], CHOSE_SPERATATOR(i, size-1, separator, eol));
-  }
-}
-
-
-void
-tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
-{
-  uint                        l, m, n;
-  int                         nnz, size, result;
-  MM_typecode                 type;
-  tensor_storage_compressed_t *storage;
-  char const                  *name, *macro;
-  
-  debug("tensor_fwrite_compressed_latex(file=0x%x, tensor=0x%x)\n", file, tensor);
-  
-  tensor_initialize_typecode(&type, strategy::compressed);
-  
-  if (0 != (result = mm_write_banner(file, type))) {
-    die("Could not write Tensor Market banner (%d).\n", result);
-  }
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  l       = tensor->l;
-  m       = tensor->m;
-  n       = tensor->n;
-  nnz     = tensor->nnz;
-  size    = storage->size;
-  name    = orientation_to_string(tensor->orientation);
-  macro   = orientation_to_latex_macro(tensor->orientation);
-  
-  debug("tensor_fwrite_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', macro='%s', size=%d.\n", 
-	l, m, n, nnz, name, macro, size);
-  
-  /* Fixing zeros here may be tricky, so I'll leave it until it is
-     required.  The problem with zeros here is that if we find one, we
-     will need to update the offset indices in KO.  Addmitedly, this
-     should not be too difficult, but it may take some time to ensure
-     the re-indexing is correct. */
-  
-  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size-1))) {
-    die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
-  }
-  
-  /* we don't write out the 0th entry-- it is a constant, namely 0 */
-  fprintf(file, "$\\row{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->RO+1, size-1, " & ", " \\\\\n");
-  fprintf(file, "$\\col{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CO, nnz,  " & ", " \\\\\n");
-  fprintf(file, "$\\tube{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->KO, nnz,  " & ", " \\\\\n");
-  fprintf(file, "$\\val{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%g%s", tensor->values, nnz,  " & ", " \\\\\n");
 }
 
 void
@@ -224,67 +155,15 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor, strategy::
   }
   
   for (i = 0; i < nnz; ++i) {
-    fprintf(file, "%d %10.32g\n",
-	    storage->CK[i], tensor->values[i]);
+    fprintf(file, "%d %10.32g\n", storage->CK[i], tensor->values[i]);
   }
 }
 
 void
-tensor_fwrite_extended_compressed_latex(FILE *file, tensor_t const *tensor, strategy::type_t strategy)
+tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
 {
-  uint                      l, m, n;
-  int                       nnz, size, result;
-  MM_typecode               type;
-  tensor_storage_extended_t *storage;
-  char const                *name, *macro;
-  
-  debug("tensor_fwrite_extended_compressed_latex(file=0x%x, tensor=0x%x)\n", file, tensor);
-  
-  tensor_initialize_typecode(&type, strategy);
-  
-  debug("tensor_fwrite_extended_compressed_latex: strategy='%s'.\n", 
-	strategy_to_string(strategy));
-  
-  if (0 != (result = mm_write_banner(file, type))) {
-    die("Could not write Tensor Market banner (%d).\n", result);
-  }
-  
-  storage = STORAGE_EXTENDED(tensor);
-  l       = tensor->l;
-  m       = tensor->m;
-  n       = tensor->n;
-  nnz     = tensor->nnz;
-  size    = storage->size;
-  name    = orientation_to_string(tensor->orientation);
-  macro   = orientation_to_latex_macro(tensor->orientation);
-  
-  debug("tensor_fwrite_extended_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
-	l, m, n, nnz, name, size);
-  
-  /* Fixing zeros here may be tricky, so I'll leave it until it is
-     required.  The problem with zeros here is that if we find one, we
-     will need to update the offset indices in KO.  Addmitedly, this
-     should not be too difficult, but it may take some time to ensure
-     the re-indexing is correct. */
-  
-  if (0 != (result = mm_write_tensor_compressed_size(file, l, m, n, nnz, name, size-1))) {
-    die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
-  }
-  
-  /* we don't write out the 0th entry-- it is a constant, namely 0 */
-  fprintf(file, "$\\row{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->RO+1, size-1, " & ", " \\\\\n");
-  fprintf(file, "$\\ct{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CK, nnz, " & ", " \\\\\n");
-  fprintf(file, "$\\val{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%g%s", tensor->values, nnz, " & ", " \\\\\n");
-}
-
-void
-tensor_fwrite_plain(FILE *file, tensor_t const *tensor)
-{
-  debug("tensor_fwrite(file=0x%x, tensor=0x%x)\n", file, tensor);
-  debug("tensor_fwrite: strategy='%s'\n", strategy_to_string(tensor->strategy));
+  debug("tensor_fwrite_implementation(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_fwrite_implementation: strategy='%s'\n", strategy_to_string(tensor->strategy));
   
   switch (tensor->strategy) {
   case strategy::coordinate:
@@ -305,36 +184,15 @@ tensor_fwrite_plain(FILE *file, tensor_t const *tensor)
 }
 
 void
-tensor_fwrite_latex(FILE *file, tensor_t const *tensor)
-{
-  debug("tensor_fwrite_latex(file=0x%x, tensor=0x%x)\n", file, tensor);
-  debug("tensor_fwrite_latex: strategy='%s'\n", strategy_to_string(tensor->strategy));
-  
-  switch (tensor->strategy) {
-  case strategy::compressed:
-    tensor_fwrite_compressed_latex(file, tensor);
-    break;
-  case strategy::slice:
-  case strategy::ekmr:
-  case strategy::zzekmr:
-    tensor_fwrite_extended_compressed_latex(file, tensor, tensor->strategy);
-    break;
-  default:
-    die("Emitting LaTeX source for storage strategy '%d' is not supported.\n", 
-	strategy_to_string(tensor->strategy));
-  }
-}
-
-void
 tensor_fwrite(FILE *file, tensor_t const *tensor)
 {
   debug("tensor_fwrite(file=0x%x, tensor=0x%x)\n", file, tensor);
   debug("tensor_fwrite: strategy='%s'\n", strategy_to_string(tensor->strategy));
   
-  if (write_latex) {
-    tensor_fwrite_latex(file, tensor);
+  if (emit_latex) {
+    tensor_emit_latex(file, tensor);
   } else {
-    tensor_fwrite_plain(file, tensor);
+    tensor_fwrite_implementation(file, tensor);
   }  
 }
 

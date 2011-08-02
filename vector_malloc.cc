@@ -8,7 +8,7 @@ vector_malloc(uint n, ownership::type_t owner)
 {
   vector_t *v;
   
-  debug("vector_malloc(n=%d)\n", n);
+  superfluous("vector_malloc(n=%d, owner='%s')\n", n, ownership_to_string(owner));
   
   v        = MALLOC(vector_t);
   v->n     = n;
@@ -19,7 +19,7 @@ vector_malloc(uint n, ownership::type_t owner)
     return v;
   }
   
-  v->data  = MALLOC_N(double, n);  
+  v->data  = MALLOC_N(double, n);
   
   return v;
 }

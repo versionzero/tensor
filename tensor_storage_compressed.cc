@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "mmio.h"
 #include "tensor.h"
+#include "storage.h"
 #include "utility.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,75 +65,6 @@ tensor_storage_index_compare_for_compressed_tube(void const *a, void const *b)
   }
   
   return result;
-}
-
-void 
-tensor_storage_index_encode_for_compressed_row(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple;
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("tensor_storage_index_encode_for_compressed_row(indices=0x%x, tuple=0x%x)\n", indices, tuple);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].i;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
-}
-
-void 
-tensor_storage_index_encode_for_compressed_column(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple; 
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("tensor_storage_index_encode_for_compressed_column(indices=0x%x, tuple=0x%x)\n", indices, tuple);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].j;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
-}
-
-void 
-tensor_storage_index_encode_for_compressed_tube(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple; 
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("tensor_storage_index_encode_for_compressed_tube(indices=0x%x, tuple=0x%x)\n", indices, tuple);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].i;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
 }
 
 void
@@ -209,7 +141,7 @@ tensor_storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destinati
   base   = (tensor_storage_base_t*) d;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  (*base->callbacks->index_encode)(d->RO, tuples, nnz);
+  d->size = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_encoder);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
@@ -220,38 +152,41 @@ tensor_storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destinati
 tensor_storage_compressed_t*
 tensor_storage_malloc_compressed(tensor_t const *tensor)
 {
-  tensor_storage_base_t         *base;
-  tensor_storage_compressed_t   *storage;
-  conversion_callbacks_t *callbacks;
+  tensor_storage_base_t       *base;
+  tensor_storage_compressed_t *storage;
+  conversion_callbacks_t      *callbacks;
   
   superfluous("tensor_storage_malloc_compressed(tensor=0x%x)\n", tensor);
   
-  storage       = MALLOC(tensor_storage_compressed_t);
-  storage->CO   = MALLOC_N(uint, tensor->nnz);
-  storage->KO   = MALLOC_N(uint, tensor->nnz);
-  storage->size = 0;
-  storage->RO   = NULL;
+  storage                  = MALLOC(tensor_storage_compressed_t);
+  storage->CO              = MALLOC_N(uint, tensor->nnz);
+  storage->KO              = MALLOC_N(uint, tensor->nnz);
+  storage->size            = 0;
+  storage->RO              = NULL;
   
-  callbacks = MALLOC(conversion_callbacks_t);
+  callbacks                = MALLOC(conversion_callbacks_t);
+  callbacks->index_compare = NULL;
+  callbacks->index_encoder = NULL;
+  callbacks->index_copy	   = NULL;
   
   switch (tensor->orientation) {
   case orientation::row:
     storage->size            = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_row;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_row;
+    callbacks->index_encoder = &encoder_for_i;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_row;
     break;
   case orientation::column:
     storage->size            = tensor->n;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_column;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_column;
+    callbacks->index_encoder = &encoder_for_j;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_column;
     break;
   case orientation::tube:
     storage->size            = tensor->l;
     g_r                      = tensor->n;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_tube;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_compressed_tube;
+    callbacks->index_encoder = &encoder_for_i;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_tube;
     break;
   default:

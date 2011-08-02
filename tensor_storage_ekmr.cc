@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "mmio.h"
 #include "tensor.h"
+#include "storage.h"
 #include "utility.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,29 +27,6 @@ tensor_storage_index_compare_for_ekmr_row(void const *a, void const *b)
   }
   
   return result;
-}
-
-void 
-tensor_storage_index_encode_for_ekmr_row(uint *indices, void const *p, uint nnz)
-{
-  uint size, index, current, previous;
-  coordinate_tuple_t const *tuple;
-  
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
-  
-  debug("tensor_storage_index_encode_for_ekmr_row(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
-  
-  indices[size++] = 0;
-  for (current = 0; current < nnz; ++current) {
-    index = tuple[current].i;
-    if (previous != index) {
-      indices[size++] = current;
-      previous        = index;
-    }
-  }
-  indices[size++] = nnz;
 }
 
 void
@@ -90,7 +68,7 @@ tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, te
   tuples = s->tuples;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  (*base->callbacks->index_encode)(d->RO, tuples, nnz);
+  d->size = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_encoder);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
@@ -114,7 +92,7 @@ tensor_storage_malloc_ekmr(tensor_t const *tensor)
   
   callbacks                = MALLOC(conversion_callbacks_t);
   callbacks->index_compare = NULL;
-  callbacks->index_encode  = NULL;
+  callbacks->index_encoder = NULL;
   callbacks->index_copy	   = NULL;
   
   switch (tensor->orientation) {
@@ -122,7 +100,7 @@ tensor_storage_malloc_ekmr(tensor_t const *tensor)
     storage->r               = tensor->n;
     storage->size            = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_ekmr_row;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_ekmr_row;
+    callbacks->index_encoder = &encoder_for_i;
     callbacks->index_copy    = &tensor_storage_index_copy_for_ekmr_row;
     break;
   default:
@@ -133,13 +111,13 @@ tensor_storage_malloc_ekmr(tensor_t const *tensor)
     storage->r               = tensor->m-1;
     storage->size            = tensor->n*tensor->l;
     callbacks->index_compare = &tensor_storage_index_compare_for_ekmr_column;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_ekmr_column;
+    callbacks->index_encoder = &tensor_storage_index_encode_for_ekmr_column;
     callbacks->index_copy    = &tensor_storage_index_copy_for_ekmr_column;
     break;
   case orientation::tube:
     storage->r               = ?;
     callbacks->index_compare = &tensor_storage_index_compare_for_ekmr_tube;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_ekmr_tube;
+    callbacks->index_encoder = &tensor_storage_index_encode_for_ekmr_tube;
     callbacks->index_copy    = &tensor_storage_index_copy_for_ekmr_tube;
     break;
 #endif

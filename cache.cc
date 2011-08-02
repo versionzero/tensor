@@ -54,6 +54,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define FULL_CACHE_DEBUG_WOULD_BE_TOO_VERBOSE 10
+
 extern bool verbose;
 extern bool simulate;
 size_t      hash_shift, tag_shift;
@@ -494,13 +496,16 @@ cache_debug(cache_t *cache)
 {
   uint         i;
   cache_node_t *node;
-  static uint  threshold = 10;
+  
+  if (!simulate) {
+    return;
+  }
   
   if (verbose) {
     message("Cache Contents (%d/%d):\n", cache->entries, cache->lines);
     for (i = 0; i < cache->lines; ++i) {
       node = cache->nodes[i];
-      if (node || cache->lines < threshold) {
+      if (node || cache->lines < FULL_CACHE_DEBUG_WOULD_BE_TOO_VERBOSE) {
 	message("%4d: ", i);
 	while (node) {
 	  message("0x%x ", node->key);

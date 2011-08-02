@@ -16,5 +16,10 @@ void tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t
 void tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source);
 void tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, tensor_t *source);
 
+uint tensor_storage_index_encode(uint *indices, void const *p, uint nnz, index_encoder_t encoder);
+uint encoder_for_i(coordinate_tuple_t const *tuple);
+uint encoder_for_j(coordinate_tuple_t const *tuple);
+uint encoder_for_k(coordinate_tuple_t const *tuple);
+
 #endif
 

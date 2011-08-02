@@ -5,6 +5,7 @@
 #include "file.h"
 #include "matrix.h"
 #include "operation.h"
+#include "strings.h"
 #include "tensor.h"
 #include "tool.h"
 #include "utility.h"
@@ -28,7 +29,7 @@ bool              simulate;
 bool              verbose;
 verbosity::type_t noisiness;
 bool              write_results;
-bool              write_latex;
+bool              emit_latex;
 
 void
 usage()
@@ -56,7 +57,7 @@ main(int argc, char *argv[])
   };
     
   /* store the our name for future use */
-  tool_name = mybasename(argv[0]);
+  tool_name = basename_inplace(argv[0]);
   
   /* figure out which tool the user is invoking */
   tool_type = tool_from_string(tool_name);
@@ -70,7 +71,7 @@ main(int argc, char *argv[])
     if (0 == argc) {
       usage();
     }
-    tool_name = mybasename(argv[1]);
+    tool_name = basename_inplace(argv[1]);
     tool_type = tool_from_string(tool_name);
     argv++;
   }

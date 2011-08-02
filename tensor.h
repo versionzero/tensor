@@ -38,13 +38,18 @@ typedef struct {
   double              *values;
 } tensor_t;
 
-typedef int (*index_compare_t)(const void *a, const void *b);
-typedef void (*index_encode_t)(uint *indices, void const *touple, uint nnz);
+typedef struct {
+  uint i, j, k;
+  uint index;
+} coordinate_tuple_t;
+
+typedef int  (*index_compare_t)(const void *a, const void *b);
+typedef uint (*index_encoder_t)(coordinate_tuple_t const *tuple);
 typedef void (*index_copy_t)(void *destination, void const *source, uint nnz);
 
 typedef struct {
   index_compare_t index_compare;
-  index_encode_t  index_encode;
+  index_encoder_t index_encoder;
   index_copy_t    index_copy;
 } conversion_callbacks_t;
 
@@ -52,11 +57,6 @@ typedef struct {
   conversion_callbacks_t *callbacks;
 } tensor_storage_base_t;
 
-typedef struct {
-  uint i, j, k;
-  uint index;
-} coordinate_tuple_t;
- 
 typedef struct {
   tensor_storage_base_t dummy;
   coordinate_tuple_t    *tuples;
@@ -105,6 +105,7 @@ tensor_t *tensor_fread(FILE *file);
 tensor_t *tensor_fread_data(FILE *file, MM_typecode type);
 void tensor_write(char const *filename, tensor_t const *tensor);
 void tensor_fwrite(FILE *file, tensor_t const *tensor);
+void tensor_emit_latex(FILE *file, tensor_t const *tensor);
 
 void tensor_supported(tensor_t const *t1);
 void tensor_validate(tensor_t const *tensor);

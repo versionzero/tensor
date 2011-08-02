@@ -24,6 +24,7 @@
 */
 
 extern cache_t *cache;
+static uint    g_r;
 
 void
 compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
@@ -115,7 +116,7 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   uint const                 *R, *C, *T;
   tensor_storage_compressed_t const *storage;
   
-  debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("compressed_tube(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -132,17 +133,6 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   C       = storage->CO;
   T       = storage->KO;
   
-  /*
-    Using \emph{compressed row storage} ($\CRS$), this tensor can be
-    represented as:
-    
-           $k$   0   1   2    3   4   5   6    7   8   9   10   11
-     $\rowcrs$ & 0 & 4 & 8 & 12
-     $\colcrs$ & 1 & 3 & 0 &  2 & 0 & 2 & 1 &  2 & 1 & 2 &  0 &  3
-    $\tubecrs$ & 0 & 0 & 1 &  1 & 0 & 0 & 1 &  1 & 0 & 0 &  1 &  1
-     $\valcrs$ & 1 & 2 & 7 &  8 & 3 & 4 & 9 & 10 & 5 & 6 & 11 & 12
-  */
-  
   DEBUG("\n");
   
   for (r = 1; r < size; ++r) {
@@ -158,15 +148,15 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
     
     for (k = start; k < end; ++k) {
       c = C[k];
-      t = T[k]; // row
-      j = t;
+      j = T[k];
+      t = c;
       
       cache_access(cache, &C[k], cache_operation::read);
       cache_access(cache, &T[k], cache_operation::read);
       
-      DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[c], k, V[k], p[r] * V[k]);
+      DEBUG("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", i, j, M[i][j], c, p[t], k, V[k], p[t] * V[k]);
       
-      M[i][j] += p[c] * V[k];
+      M[i][j] += p[t] * V[k];
       
       cache_access(cache, &V[k],    cache_operation::read);
       cache_access(cache, &p[t],    cache_operation::read);
@@ -201,18 +191,18 @@ n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t con
 }
 
 void
-compressed_horizontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+horizontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
   uint                       size, nnz;
   uint                       start, end;
-  uint                       c, r, r0, t, m, n;
+  uint                       c, r, r0, t, l, m, n;
   double                     **M;
   double const               *p, *V;
   uint const                 *R, *C;
   tensor_storage_extended_t const *storage;
   
-  debug("compressed_horizontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("horizontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -220,6 +210,7 @@ compressed_horizontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t c
   M       = matrix->data;
   V       = tensor->values;
   nnz     = tensor->nnz;
+  l       = tensor->l;
   m       = matrix->m;
   n       = matrix->n;
   
@@ -233,18 +224,18 @@ compressed_horizontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t c
   for (r = 1; r < size; ++r) {
     r0    = r-1;
     i     = r0 / n;
-    t     = r0 % n;
     start = R[r0];
     end   = R[r];
     
     cache_access(cache, &R[r0], cache_operation::read);
     cache_access(cache, &R[r],  cache_operation::read);
     
-    DEBUG("r0=%d, start=%d, end=%d\n", r0, start, end);
+    DEBUG("r0=%d, i=%d, t=%d, start=%d, end=%d\n", r0, i, t, start, end);
     
     for (k = start; k < end; ++k) {
       c = C[k];
-      j = c;
+      j = c % g_r;
+      t = c / g_r;
       
       cache_access(cache, &C[k], cache_operation::read);
       
@@ -267,18 +258,18 @@ compressed_horizontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t c
 }
 
 void
-compressed_lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
   uint                       size, nnz;
   uint                       start, end;
-  uint                       c, r, r0, t, m, n;
+  uint                       c, r, r0, t, l, m, n;
   double                     **M;
   double const               *p, *V;
   uint const                 *R, *C;
   tensor_storage_extended_t const *storage;
   
-  debug("compressed_lateral_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("lateral_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -286,6 +277,7 @@ compressed_lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t cons
   M       = matrix->data;
   V       = tensor->values;
   nnz     = tensor->nnz;
+  l       = tensor->l;
   m       = matrix->m;
   n       = matrix->n;
   
@@ -298,7 +290,6 @@ compressed_lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t cons
   
   for (r = 1; r < size; ++r) {
     r0    = r-1;
-    j     = r0 % n;
     i     = r0 / n;
     start = R[r0];
     end   = R[r];
@@ -306,11 +297,12 @@ compressed_lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t cons
     cache_access(cache, &R[r0], cache_operation::read);
     cache_access(cache, &R[r],  cache_operation::read);
     
-    DEBUG("r0=%d, start=%d, end=%d\n", r0, start, end);
+    DEBUG("r0=%d, i=%d, j=%d, start=%d, end=%d\n", r0, i, j, start, end);
     
     for (k = start; k < end; ++k) {
       c = C[k];
-      t = c;
+      j = c % g_r;
+      t = r0 / l;
       
       cache_access(cache, &C[k], cache_operation::read);
       
@@ -333,18 +325,18 @@ compressed_lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t cons
 }
 
 void
-compressed_frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
   uint                       size, nnz;
   uint                       start, end;
-  uint                       c, r, r0, t, m, n;
+  uint                       c, r, r0, t, l, m, n;
   double                     **M;
   double const               *p, *V;
   uint const                 *R, *C;
   tensor_storage_extended_t const *storage;
   
-  debug("compressed_frontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("frontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -352,6 +344,7 @@ compressed_frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t cons
   M       = matrix->data;
   V       = tensor->values;
   nnz     = tensor->nnz;
+  l       = tensor->l;
   m       = matrix->m;
   n       = matrix->n;
   
@@ -375,15 +368,15 @@ compressed_frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t cons
   
   for (r = 1; r < size; ++r) {
     r0    = r-1;
-    i     = r0 % n;
-    t     = r0 / n;
+    i     = r0 % g_r;
+    t     = r0 / l;
     start = R[r0];
     end   = R[r];
     
     cache_access(cache, &R[r0], cache_operation::read);
     cache_access(cache, &R[r],  cache_operation::read);
     
-    DEBUG("r0=%d, start=%d, end=%d\n", r0, start, end);
+    DEBUG("r0=%d, i=%d, t=%d, start=%d, end=%d\n", r0, i, t, start, end);
     
     for (k = start; k < end; ++k) {
       c = C[k];
@@ -416,13 +409,16 @@ n_mode_product_compressed_slice(matrix_t *matrix, vector_t const *vector, tensor
   
   switch (tensor->orientation) {
   case orientation::horizontal:
-    compressed_horizontal_slice(matrix, vector, tensor);
+    g_r = tensor->m;
+    horizontal_slice(matrix, vector, tensor);
     break;
   case orientation::lateral:
-    compressed_lateral_slice(matrix, vector, tensor);
+    g_r = tensor->l;
+    lateral_slice(matrix, vector, tensor);
     break;
   case orientation::frontal:
-    compressed_frontal_slice(matrix, vector, tensor);
+    g_r = tensor->m;
+    frontal_slice(matrix, vector, tensor);
     break;
   default:
     die("Tensor product for '%s' orientation is not currently supported.\n",
@@ -484,9 +480,9 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
     
     for (k = start; k < end; ++k) {
       ck = CK[k];
-      c  = ck / n;
+      c  = ck / g_r;
       j  = c;
-      t  = ck % n;
+      t  = ck % g_r;
       
       cache_access(cache, &CK[k], cache_operation::read);
       
@@ -529,6 +525,7 @@ operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tenso
   debug("operation_n_mode_product_inplace(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   compatible(vector, tensor);
+  compatible(matrix, tensor);
   
   switch (tensor->strategy) {
   case strategy::compressed:
@@ -538,9 +535,9 @@ operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tenso
     n_mode_product_compressed_slice(matrix, vector, tensor);
     break;
   case strategy::ekmr:
-  case strategy::zzekmr:  /* NOTE: the encoding may differ, but the
-			     way we calculate products remains the
-			     same.  How is that for simplicity? */
+    /* NOTE: the encoding may differ, but the way we calculate
+       products remains the same.  How is that for simplicity? */
+  case strategy::zzekmr:
     n_mode_product_ekmr(matrix, vector, tensor);
     break;
   default:
@@ -553,8 +550,11 @@ operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tenso
 void
 calculate_output_matrix_dimentions(tensor_t const *tensor, uint *m, uint *n)
 {
+  debug("calculate_output_matrix_dimentions(tensor=0x%x)\n", tensor);
+  
   *m = 0;
   *n = 0;
+  
   switch (tensor->orientation) {
   case orientation::row:
   case orientation::column:
@@ -571,6 +571,8 @@ calculate_output_matrix_dimentions(tensor_t const *tensor, uint *m, uint *n)
 	orientation_to_string(tensor->orientation), tensor->orientation);
     break;
   }
+  
+  debug("calculate_output_matrix_dimentions: m=%d, n=%d\n", *m, *n);
 }
 
 matrix_t*
@@ -579,14 +581,15 @@ operation_n_mode_product(vector_t const *vector, tensor_t const *tensor)
   uint     m, n;
   matrix_t *matrix;
   
+  compatible(vector, tensor);
   debug("operation_n_mode_product(vector=0x%x, tensor=0x%x)\n", vector, tensor);
   
-  compatible(vector, tensor);
   calculate_output_matrix_dimentions(tensor, &m, &n);
-  
   debug("operation_n_mode_product: m=%d, n=%d\n");
   
-  matrix = matrix_malloc(m, n);
+  matrix = matrix_malloc(m, n, ownership::creator);
+  debug("operation_n_mode_product: matrix=0x%x\n", matrix);
+  
   operation_n_mode_product_inplace(matrix, vector, tensor);
   
   return matrix;

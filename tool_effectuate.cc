@@ -112,6 +112,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   compatible(vector, tensor);
   calculate_output_matrix_dimentions(tensor, &m, &n);
   matrix = matrix_malloc(m, n);
+  debug("timed_operation_n_mode_product: matrix=0x%x\n", matrix);
   
   cache = NULL;
   if (simulate) {
@@ -122,7 +123,6 @@ timed_operation_n_mode_product(int argc, char *argv[])
   for (i = 0; i < iterations; ++i) {
     timed_operation_n_mode_product(matrix, vector, tensor);
   }
-  debug("timed_operation_n_mode_product: matrix=0x%x\n", matrix);
   
   if (write_results) {
     timed_matrix_write(argc, argv, offset, matrix);
