@@ -166,28 +166,21 @@ tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
   callbacks->index_compare = NULL;
   callbacks->index_encoder = NULL;
   callbacks->index_copy	   = NULL;
+  storage->size            = tensor->n * tensor->n;
+  storage->r               = tensor->n;
   
   switch (tensor->orientation) {
   case orientation::lateral:
-    /* rows * columns */
-    storage->size            = tensor->m * tensor->n;
-    storage->r               = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_lateral;
     callbacks->index_encoder = &encoder_for_i;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_lateral;
     break;
   case orientation::horizontal:
-    /* columns * tubes */
-    storage->size            = tensor->n * tensor->l;
-    storage->r               = tensor->l;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_horizontal;
     callbacks->index_encoder = &encoder_for_j;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_horizontal;
     break;
   case orientation::frontal:
-    /* rows * columns */
-    storage->size            = tensor->m * tensor->n;
-    storage->r               = tensor->m;
     callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_frontal;
     callbacks->index_encoder = &encoder_for_j;
     callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_frontal;
