@@ -89,8 +89,8 @@ tensor_fread_coordinate(FILE *file)
 tensor_t*
 tensor_fread_compressed(FILE *file)
 {
-  uint                 j, k;
-  int                  i, l, m, n, nnz, size;
+  uint                 i, j, k;
+  int                  l, m, n, nnz, size;
   int                  result;
   char                 name[20];
   double               d;
@@ -107,18 +107,20 @@ tensor_fread_compressed(FILE *file)
   orientation    = string_to_orientation(name);
   tensor         = tensor_malloc(l, m, n, nnz, strategy::compressed, orientation);
   storage        = STORAGE_COMPRESSED(tensor);
-  storage->size  = size+1;
-  storage->RO    = MALLOC_N(uint, storage->size);
+  storage->rn    = size+1;
+  storage->cn    = nnz;
+  storage->kn    = nnz;
+  storage->RO    = MALLOC_N(uint, storage->rn);
   storage->RO[0] = 0;
   
-  for (i = 1; i <= size; ++i) {
+  for (i = 1; i < storage->rn; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
     storage->RO[i] = j;
   }
   
-  for (i = 0; i < nnz; ++i) {
+  for (i = 0; i < storage->cn; ++i) {
     if (3 != (result = fscanf(file, "%u %u %lg\n", &j, &k, &d))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }

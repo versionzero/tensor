@@ -32,7 +32,7 @@ tensor_storage_clear_compressed(tensor_t *tensor)
   
   storage = STORAGE_COMPRESSED(tensor);
   
-  for (i = 0; i < storage->size; ++i) {
+  for (i = 0; i < storage->rn; ++i) {
     storage->RO[i] = 0;
   }
   

@@ -82,7 +82,7 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
   m       = tensor->m;
   n       = tensor->n;
   nnz     = tensor->nnz;
-  size    = storage->size;
+  size    = storage->rn;
   name    = orientation_to_string(tensor->orientation);
   
   debug("tensor_fwrite_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
@@ -170,9 +170,9 @@ tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
     tensor_fwrite_coordinate(file, tensor);
     break;
   case strategy::compressed:
+  case strategy::slice:
     tensor_fwrite_compressed(file, tensor);
     break;
-  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor_fwrite_extended_compressed(file, tensor, tensor->strategy);

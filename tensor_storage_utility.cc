@@ -22,14 +22,12 @@ encoder_for_k(coordinate_tuple_t const *tuple)
 }
 
 uint
-tensor_storage_index_encode(uint *indices, void const *p, uint nnz, index_encoder_t encoder)
+tensor_storage_index_encode(uint *indices, coordinate_tuple_t const *tuple, uint nnz, index_encoder_t encoder)
 {
   uint size, index, current, previous;
-  coordinate_tuple_t const *tuple; 
   
-  tuple      = (coordinate_tuple_t const*) p;
-  size       = 0;
-  previous   = 0;
+  size     = 0;
+  previous = 0;
   
   debug("tensor_storage_index_encode(indices=0x%x, tuple=0x%x)\n", indices, tuple);
   

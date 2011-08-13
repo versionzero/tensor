@@ -93,7 +93,7 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
 void
 timed_operation_n_mode_product(int argc, char *argv[])
 {
-  uint     i, m, n;
+  uint     i;
   int      offset;
   char     *name;
   vector_t *vector;
@@ -110,8 +110,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   debug("timed_operation_n_mode_product: tensor=0x%x\n", tensor);
   
   compatible(vector, tensor);
-  calculate_output_matrix_dimentions(tensor, &m, &n);
-  matrix = matrix_malloc(m, n);
+  matrix = matrix_malloc(tensor->m, tensor->n);
   debug("timed_operation_n_mode_product: matrix=0x%x\n", matrix);
   
   cache = NULL;

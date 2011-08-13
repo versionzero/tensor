@@ -64,7 +64,7 @@ typedef struct {
 
 typedef struct {
   tensor_storage_base_t base;
-  uint                  size;
+  uint                  rn, cn, kn;
   uint                  *RO, *CO, *KO;
 } tensor_storage_compressed_t;
 
@@ -73,10 +73,6 @@ typedef struct {
   uint                  size, r;
   uint                  *RO, *CK;
 } tensor_storage_extended_t;
-
-typedef struct {
-  tensor_storage_extended_t dummy;
-} tensor_storage_compressed_slice_t;
 
 typedef struct {
   tensor_storage_extended_t dummy;

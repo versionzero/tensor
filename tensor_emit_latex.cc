@@ -58,7 +58,7 @@ tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
   m       = tensor->m;
   n       = tensor->n;
   nnz     = tensor->nnz;
-  size    = storage->size;
+  size    = storage->rn;
   name    = orientation_to_string(tensor->orientation);
   macro   = orientation_to_latex_macro(tensor->orientation);
   
