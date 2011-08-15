@@ -71,7 +71,7 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
   
   debug("tensor_fwrite_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_initialize_typecode(&type, strategy::compressed);
+  tensor_initialize_typecode(&type, strategy::slice);
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
@@ -109,7 +109,58 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
 }
 
 void
-tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor, strategy::type_t strategy)
+tensor_fwrite_compressed_slice(FILE *file, tensor_t const *tensor)
+{
+  uint                        l, m, n;
+  uint                        i, nnz, result;
+  MM_typecode                 type;
+  tensor_storage_compressed_t *storage;
+  char const                  *name;
+  
+  debug("tensor_fwrite_compressed_slice(file=0x%x, tensor=0x%x)\n", file, tensor);
+  
+  tensor_initialize_typecode(&type, strategy::compressed);
+  
+  if (0 != (result = mm_write_banner(file, type))) {
+    die("Could not write Tensor Market banner (%d).\n", result);
+  }
+  
+  storage = STORAGE_COMPRESSED(tensor);
+  l       = tensor->l;
+  m       = tensor->m;
+  n       = tensor->n;
+  nnz     = tensor->nnz;
+  name    = orientation_to_string(tensor->orientation);
+  
+  debug("tensor_fwrite_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s'\n", 
+	l, m, n, nnz, name);
+  
+  /* Fixing zeros here may be tricky, so I'll leave it until it is
+     required.  The problem with zeros here is that if we find one, we
+     will need to update the offset indices in KO.  Addmitedly, this
+     should not be too difficult, but it may take some time to ensure
+     the re-indexing is correct. */
+  
+  if (0 != (result = mm_write_tensor_compressed_slice_size(file, l, m, n, nnz, name, storage->rn-1, storage->cn, storage->kn))) {
+    die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
+  }
+  
+  /* we don't write out the 0th entry-- it is a constant, namely 0 */
+  for (i = 1; i < storage->rn; ++i) {
+    fprintf(file, "%d\n", storage->RO[i]);
+  }
+  
+  for (i = 0; i < storage->cn; ++i) {
+    fprintf(file, "%d\n", storage->CO[i]);
+  }
+  
+  for (i = 0; i < nnz; ++i) {
+    fprintf(file, "%d %10.32g\n", storage->KO[i], tensor->values[i]);
+  }
+}
+
+void
+tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor)
 {
   uint                      l, m, n;
   int                       i, nnz, size, result;
@@ -118,11 +169,8 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor, strategy::
   char const                *name;
   
   debug("tensor_fwrite_extended_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
-  
-  tensor_initialize_typecode(&type, strategy);
-  
   debug("tensor_fwrite_extended_compressed: strategy='%s'.\n", 
-	strategy_to_string(strategy));
+	strategy_to_string(tensor->strategy));
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
@@ -170,12 +218,14 @@ tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
     tensor_fwrite_coordinate(file, tensor);
     break;
   case strategy::compressed:
-  case strategy::slice:
     tensor_fwrite_compressed(file, tensor);
+    break;
+  case strategy::slice:
+    tensor_fwrite_compressed_slice(file, tensor);
     break;
   case strategy::ekmr:
   case strategy::zzekmr:
-    tensor_fwrite_extended_compressed(file, tensor, tensor->strategy);
+    tensor_fwrite_extended_compressed(file, tensor);
     break;
   default:
     die("Tensor storage strategy '%d' is not supported.\n", 

@@ -206,7 +206,15 @@ int mm_write_tensor_coordinate_size(FILE *f, int L, int M, int N, int nz)
 
 int mm_write_tensor_compressed_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int size)
 {
-  if (fprintf(f, "%d %d %d %d %s %d\n", L, M, N, nz, orientation, size) < 4) {
+  if (fprintf(f, "%d %d %d %d %s %d\n", L, M, N, nz, orientation, size) < 6) {
+    return MM_COULD_NOT_WRITE_FILE;
+  }
+  return 0;
+}
+
+int mm_write_tensor_compressed_slice_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int rn, int cn, int kn)
+{
+  if (fprintf(f, "%d %d %d %d %s %d %d %d\n", L, M, N, nz, orientation, rn, cn, kn) < 8) {
     return MM_COULD_NOT_WRITE_FILE;
   }
   return 0;
@@ -297,6 +305,36 @@ int mm_read_tensor_compressed_size(FILE *f, int *L, int *M, int *N, int *nz, cha
 	  return MM_PREMATURE_EOF;
 	}
     } while (num_items_read != 6);
+  }
+  
+  return 0;
+}
+
+int mm_read_tensor_compressed_slice_size(FILE *f, int *L, int *M, int *N, int *nz, char *orientation, int *rn, int *cn, int *kn)
+{
+  char line[MM_MAX_LINE_LENGTH];
+  int num_items_read;
+  
+  /* set return null parameter values, in case we exit with errors */
+  *L = *M = *N = *nz = *orientation = *rn = *cn = *kn = 0;
+  
+  /* now continue scanning until you reach the end-of-comments */
+  do {
+    if (NULL == fgets(line, MM_MAX_LINE_LENGTH, f)) {
+      return MM_PREMATURE_EOF;
+    }
+  } while ('%' == line[0]);
+  
+  /* line[] is either blank or has L,M,N,nz,orientation,size */
+  if (8 == sscanf(line, "%d %d %d %d %s %d %d %d", L, M, N, nz, orientation, rn, cn, kn)) {
+    return 0;
+  } else {
+    do { 
+      num_items_read = fscanf(f, "%d %d %d %d %s %d %d %d", L, M, N, nz, orientation, rn, cn, kn);
+        if (EOF == num_items_read) {
+	  return MM_PREMATURE_EOF;
+	}
+    } while (num_items_read != 8);
   }
   
   return 0;

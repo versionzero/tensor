@@ -57,9 +57,9 @@ tensor_storage_free(tensor_t *tensor)
     tensor_storage_free(STORAGE_COORIDINATE(tensor));
     break;
   case strategy::compressed:
+  case strategy::slice:
     tensor_storage_free(STORAGE_COMPRESSED(tensor));
     break;
-  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor_storage_free(STORAGE_EXTENDED(tensor));

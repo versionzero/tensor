@@ -76,7 +76,8 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 debug:
 	make DEBUG=1
 
-rebuild: clean all
+rebuild: clean
+	make -j8 all
 
 clean:
 	rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\

@@ -169,7 +169,6 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
 tensor_storage_compressed_t*
 tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
 {
-  uint                        n;
   tensor_storage_base_t       *base;
   tensor_storage_compressed_t *storage;
   conversion_callbacks_t      *callbacks;
@@ -178,11 +177,14 @@ tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
   
   storage                  = MALLOC(tensor_storage_compressed_t);
   storage->rn              = tensor->n + 1;
-  storage->cn              = n * tensor->n;
+  storage->cn              = storage->rn * tensor->n;
   storage->kn              = tensor->nnz;
   storage->RO              = MALLOC_N(uint, storage->rn);
   storage->CO              = MALLOC_N(uint, storage->cn);
   storage->KO              = MALLOC_N(uint, storage->kn);
+  
+  debug("tensor_storage_malloc_compressed_slice: rn=%d, cn=%d, kn=%d\n", 
+	storage->rn, storage->cn, storage->kn);
   
   callbacks                = MALLOC(conversion_callbacks_t);
   callbacks->index_compare = NULL;
