@@ -50,6 +50,7 @@ typedef void (*index_copy_t)(void *destination, void const *source, uint nnz);
 typedef struct {
   index_compare_t index_compare;
   index_encoder_t index_encoder;
+  index_encoder_t index_compressor;
   index_copy_t    index_copy;
 } conversion_callbacks_t;
 

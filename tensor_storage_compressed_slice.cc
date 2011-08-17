@@ -11,37 +11,54 @@
 static uint g_n;
 
 uint
-encoder_for_lateral(coordinate_tuple_t const *tuple)
+slice_encoder_for_lateral(coordinate_tuple_t const *tuple)
 {
-  return tuple->j * g_n + tuple->k;
+  return tuple->j;
 }
 
 uint
-encoder_for_horizontal(coordinate_tuple_t const *tuple)
+crs_encoder_for_lateral(coordinate_tuple_t const *tuple)
 {
-  return tuple->i * g_n + tuple->k;
+  return tuple->i;
 }
 
 uint
-encoder_for_frontal(coordinate_tuple_t const *tuple)
+slice_encoder_for_horizontal(coordinate_tuple_t const *tuple)
 {
-  return tuple->k * g_n + tuple->i;
+  return tuple->i;
+}
+
+uint
+crs_encoder_for_horizontal(coordinate_tuple_t const *tuple)
+{
+  return tuple->j;
+}
+
+uint
+slice_encoder_for_frontal(coordinate_tuple_t const *tuple)
+{
+  return tuple->k;
+}
+
+uint
+crs_encoder_for_frontal(coordinate_tuple_t const *tuple)
+{
+  return tuple->i;
 }
 
 int
 tensor_storage_index_compare_for_compressed_slice_lateral(void const *a, void const *b)
 {
-  uint                     ja, jb;
   int                      result;
   coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
-  ja = ta->j * g_n + ta->k;
-  jb = tb->j * g_n + tb->k;
   
-  if (0 == (result = ja - jb)) {
-    result = ta->i - tb->i;
+  if (0 == (result = ta->j - tb->j)) {
+    if (0 == (result = ta->i - tb->i)) {
+      result = ta->k - tb->k;
+    }
   }
   
   return result;
@@ -50,17 +67,16 @@ tensor_storage_index_compare_for_compressed_slice_lateral(void const *a, void co
 int 
 tensor_storage_index_compare_for_compressed_slice_horizontal(void const *a, void const *b)
 {
-  uint                     ka, kb;
   int                      result;
   coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
-  ka = ta->i * g_n + ta->k;
-  kb = tb->i * g_n + tb->k;
   
-  if (0 == (result = ka - kb)) {
-    result = ta->j - tb->j;
+  if (0 == (result = ta->i - tb->i)) {
+    if (0 == (result = ta->j - tb->j)) {
+      result = ta->k - tb->k;
+    }
   }
   
   return result;
@@ -69,17 +85,16 @@ tensor_storage_index_compare_for_compressed_slice_horizontal(void const *a, void
 int 
 tensor_storage_index_compare_for_compressed_slice_frontal(void const *a, void const *b)
 {
-  uint                     ka, kb;
   int                      result;
   coordinate_tuple_t const *ta, *tb;
   
   ta = (coordinate_tuple_t const*) a;
   tb = (coordinate_tuple_t const*) b;
-  ka = ta->k * g_n + ta->i;
-  kb = tb->k * g_n + tb->i;
   
-  if (0 == (result = ka - kb)) {
-    result = ta->j - tb->j;
+  if (0 == (result = ta->k - tb->k)) {
+    if (0 == (result = ta->i - tb->i)) {
+      result = ta->j - tb->j;
+    }
   }
   
   return result;
@@ -98,7 +113,7 @@ tensor_storage_index_copy_for_compressed_slice_lateral(void *destination, void c
   debug("tensor_storage_index_copy_for_compressed_slice_lateral(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->KO[i] = s->tuples[i].j;
+    d->KO[i] = s->tuples[i].k;
   }
 }
 
@@ -115,7 +130,7 @@ tensor_storage_index_copy_for_compressed_slice_horizontal(void *destination, voi
   debug("tensor_storage_index_copy_for_compressed_slice_horizontal(destination=0x%x, source=0x%x)\n", d, s);
   
   for (i = 0; i < nnz; ++i) {
-    d->KO[i] = s->tuples[i].j;
+    d->KO[i] = s->tuples[i].k;
   }
 }
 
@@ -159,6 +174,7 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
   d->rn = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_encoder);
+  d->cn = tensor_storage_index_encode(d->CO, tuples, nnz, base->callbacks->index_compressor);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
@@ -186,26 +202,30 @@ tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
   debug("tensor_storage_malloc_compressed_slice: rn=%d, cn=%d, kn=%d\n", 
 	storage->rn, storage->cn, storage->kn);
   
-  callbacks                = MALLOC(conversion_callbacks_t);
-  callbacks->index_compare = NULL;
-  callbacks->index_encoder = NULL;
-  callbacks->index_copy	   = NULL;
+  callbacks                   = MALLOC(conversion_callbacks_t);
+  callbacks->index_compare    = NULL;
+  callbacks->index_encoder    = NULL;
+  callbacks->index_compressor = NULL;
+  callbacks->index_copy	      = NULL;
   
   switch (tensor->orientation) {
   case orientation::lateral:
-    callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_lateral;
-    callbacks->index_encoder = &encoder_for_lateral;
-    callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_lateral;
+    callbacks->index_compare    = &tensor_storage_index_compare_for_compressed_slice_lateral;
+    callbacks->index_encoder    = &slice_encoder_for_lateral;
+    callbacks->index_compressor = &crs_encoder_for_lateral;
+    callbacks->index_copy       = &tensor_storage_index_copy_for_compressed_slice_lateral;
     break;
   case orientation::horizontal:
-    callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_horizontal;
-    callbacks->index_encoder = &encoder_for_horizontal;
-    callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_horizontal;
+    callbacks->index_compare    = &tensor_storage_index_compare_for_compressed_slice_horizontal;
+    callbacks->index_encoder    = &slice_encoder_for_horizontal;
+    callbacks->index_compressor = &crs_encoder_for_horizontal;
+    callbacks->index_copy       = &tensor_storage_index_copy_for_compressed_slice_horizontal;
     break;
   case orientation::frontal:
-    callbacks->index_compare = &tensor_storage_index_compare_for_compressed_slice_frontal;
-    callbacks->index_encoder = &encoder_for_frontal;
-    callbacks->index_copy    = &tensor_storage_index_copy_for_compressed_slice_frontal;
+    callbacks->index_compare    = &tensor_storage_index_compare_for_compressed_slice_frontal;
+    callbacks->index_encoder    = &slice_encoder_for_frontal;
+    callbacks->index_compressor = &crs_encoder_for_frontal;
+    callbacks->index_copy       = &tensor_storage_index_copy_for_compressed_slice_frontal;
     break;
   default:
     die("Unknown or unsupported orientation %d.\n", tensor->orientation);

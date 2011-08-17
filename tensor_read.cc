@@ -76,11 +76,11 @@ tensor_fread_coordinate(FILE *file)
     if (4 != (result = fscanf(file, "%u %u %u %lg\n", &k, &i, &j, &d))) {
       die("Failed to process line %d of the input stream (%d).\n", q, result);
     }
-    tensor->values[q] = d;
+    tuples[q].index   = q;
     tuples[q].i       = i;
     tuples[q].j       = j;
     tuples[q].k       = k;
-    tuples[q].index   = q;
+    tensor->values[q] = d;
   }
   
   return tensor;
@@ -107,13 +107,12 @@ tensor_fread_compressed(FILE *file)
   orientation    = string_to_orientation(name);
   tensor         = tensor_malloc(l, m, n, nnz, strategy::compressed, orientation);
   storage        = STORAGE_COMPRESSED(tensor);
-  storage->rn    = size+1;
+  storage->rn    = size;
   storage->cn    = nnz;
   storage->kn    = nnz;
   storage->RO    = MALLOC_N(uint, storage->rn);
-  storage->RO[0] = 0;
   
-  for (i = 1; i < storage->rn; ++i) {
+  for (i = 0; i < storage->rn; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
@@ -124,9 +123,60 @@ tensor_fread_compressed(FILE *file)
     if (3 != (result = fscanf(file, "%u %u %lg\n", &j, &k, &d))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
-    tensor->values[i] = d;
     storage->CO[i]    = j;
     storage->KO[i]    = k;
+    tensor->values[i] = d;
+  }
+  
+  return tensor;
+}
+
+tensor_t*
+tensor_fread_compressed_slice(FILE *file)
+{
+  uint                 i, j;
+  int                  l, m, n, nnz, rn, cn, kn;
+  int                  result;
+  char                 name[20];
+  double               d;
+  tensor_t             *tensor;
+  orientation::type_t  orientation;
+  tensor_storage_compressed_t *storage;
+  
+  debug("tensor_fread_compressed(0x%x)\n", file);
+  
+  if (0 != (result = mm_read_tensor_compressed_slice_size(file, &l, &m, &n, &nnz, name, &rn, &cn, &kn))) {
+    die("Failed to read tensor dimensions (%d).\n", result);
+  }
+  
+  orientation    = string_to_orientation(name);
+  tensor         = tensor_malloc(l, m, n, nnz, strategy::compressed, orientation);
+  storage        = STORAGE_COMPRESSED(tensor);
+  storage->rn    = rn;
+  storage->cn    = cn;
+  storage->kn    = kn;
+  storage->RO    = MALLOC_N(uint, storage->rn);
+  
+  for (i = 0; i < storage->rn; ++i) {
+    if (1 != (result = fscanf(file, "%u\n", &j))) {
+      die("Failed to process line %d of the input stream (%d).\n", i, result);
+    }
+    storage->RO[i] = j;
+  }
+  
+  for (i = 0; i < storage->cn; ++i) {
+    if (1 != (result = fscanf(file, "%u\n", &j))) {
+      die("Failed to process line %d of the input stream (%d).\n", i, result);
+    }
+    storage->CO[i] = j;
+  }
+    
+  for (i = 0; i < storage->kn; ++i) {
+    if (2 != (result = fscanf(file, "%u %lg\n", &j, &d))) {
+      die("Failed to process line %d of the input stream (%d).\n", i, result);
+    }
+    storage->KO[i]    = j;
+    tensor->values[i] = d;
   }
   
   return tensor;
@@ -153,11 +203,11 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
   orientation    = string_to_orientation(name);
   tensor         = tensor_malloc(l, m, n, nnz, strategy, orientation);
   storage        = STORAGE_EXTENDED(tensor);
-  storage->size  = size+1;
+  storage->size  = size;
   storage->RO    = MALLOC_N(uint, storage->size);
   storage->RO[0] = 0;
   
-  for (i = 1; i <= size; ++i) {
+  for (i = 0; i < size; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);
     }
