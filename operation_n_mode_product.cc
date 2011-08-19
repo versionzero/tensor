@@ -455,7 +455,7 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   n       = matrix->n;
   
   storage = STORAGE_EXTENDED(tensor);
-  size    = storage->size;
+  size    = storage->rn;
   R       = storage->RO;
   CK      = storage->CK;
   

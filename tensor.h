@@ -45,12 +45,12 @@ typedef struct {
 
 typedef int  (*index_compare_t)(const void *a, const void *b);
 typedef uint (*index_encoder_t)(coordinate_tuple_t const *tuple);
-typedef void (*index_copy_t)(void *destination, void const *source, uint nnz);
+typedef void (*index_copy_t)(void *destination, void const *source, uint i);
 
 typedef struct {
   index_compare_t index_compare;
-  index_encoder_t index_encoder;
-  index_encoder_t index_compressor;
+  index_encoder_t index_r_encoder;
+  index_encoder_t index_c_encoder;
   index_copy_t    index_copy;
 } conversion_callbacks_t;
 
@@ -71,7 +71,7 @@ typedef struct {
 
 typedef struct {
   tensor_storage_base_t base;
-  uint                  size, r;
+  uint                  rn, ckn;
   uint                  *RO, *CK;
 } tensor_storage_extended_t;
 

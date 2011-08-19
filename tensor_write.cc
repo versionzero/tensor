@@ -184,7 +184,7 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor)
   m       = tensor->m;
   n       = tensor->n;
   nnz     = tensor->nnz;
-  size    = storage->size;
+  size    = storage->rn;
   name    = orientation_to_string(tensor->orientation);
   
   debug("tensor_fwrite_extended_compressed: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 

@@ -72,7 +72,7 @@ tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, 
   tensor_storage_coordinate_t *s;
   coordinate_tuple_t   *tuples;
   double               *values;
-  
+   
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_EXTENDED(destination);
   
@@ -81,11 +81,11 @@ tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, 
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
   values = source->values;
-  g_r    = d->r;
+  g_r    = d->rn;
   tuples = s->tuples;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  d->size = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_encoder);
+  d->rn = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_r_encoder);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {
@@ -102,52 +102,36 @@ tensor_storage_malloc_zzekmr(tensor_t const *tensor)
   
   superfluous("tensor_storage_malloc_zzekmr(tensor=0x%x)\n", tensor);
   
-  storage                  = MALLOC(tensor_storage_extended_t);
-  storage->CK              = MALLOC_N(uint, tensor->nnz);
-  storage->RO              = NULL;
-  storage->size            = 0;
+  storage     = MALLOC(tensor_storage_extended_t);
+  storage->CK = MALLOC_N(uint, tensor->nnz);
+  storage->RO = NULL;
+  storage->rn = 0;
   
-  callbacks                = MALLOC(conversion_callbacks_t);
-  callbacks->index_compare = NULL;
-  callbacks->index_encoder = NULL;
-  callbacks->index_copy	   = NULL;
+  callbacks                  = MALLOC(conversion_callbacks_t);
+  callbacks->index_compare   = NULL;
+  callbacks->index_r_encoder = NULL;
+  callbacks->index_copy	     = NULL;
   
   switch (tensor->orientation) {
   case orientation::row:
-    storage->r               = tensor->n;
-    storage->size            = tensor->m;
-    callbacks->index_compare = &tensor_storage_index_compare_for_zzekmr_row;
-    callbacks->index_encoder = &encoder_for_i;
-    callbacks->index_copy    = &tensor_storage_index_copy_for_zzekmr_row;
+    storage->rn                = tensor->n;
+    callbacks->index_compare   = &tensor_storage_index_compare_for_zzekmr_row;
+    callbacks->index_r_encoder = &encoder_for_i;
+    callbacks->index_copy      = &tensor_storage_index_copy_for_zzekmr_row;
     break;
   default:
     die("Tensor orientation '%s' not yet supported.\n", orientation_to_string(tensor->orientation));
     break;
-#if 0
-  case orientation::column:
-    storage->r               = tensor->m-1;
-    storage->size            = tensor->n*tensor->l;
-    callbacks->index_compare = &tensor_storage_index_compare_for_zzekmr_column;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_zzekmr_column;
-    callbacks->index_copy    = &tensor_storage_index_copy_for_zzekmr_column;
-    break;
-  case orientation::tube:
-    storage->r               = ?;
-    callbacks->index_compare = &tensor_storage_index_compare_for_zzekmr_tube;
-    callbacks->index_encode  = &tensor_storage_index_encode_for_zzekmr_tube;
-    callbacks->index_copy    = &tensor_storage_index_copy_for_zzekmr_tube;
-    break;
-#endif
   }
   
-  storage->size  += 1;
-  storage->RO     = MALLOC_N(uint, storage->size);
+  storage->rn    += 1;
+  storage->RO     = MALLOC_N(uint, storage->rn);
   base            = (tensor_storage_base_t*) storage;
   base->callbacks = callbacks;
   
   superfluous("tensor_storage_malloc_zzekmr: callbacks=0x%x\n", callbacks);  
   superfluous("tensor_storage_malloc_zzekmr: storage->CK=0x%x\n", storage->CK);
-  superfluous("tensor_storage_malloc_zzekmr: storage->size (of R)=%d\n", storage->size);
+  superfluous("tensor_storage_malloc_zzekmr: storage->size (of R)=%d\n", storage->rn);
   superfluous("tensor_storage_malloc_zzekmr: storage->RO=0x%x\n", storage->RO);
   superfluous("tensor_storage_malloc_zzekmr: storage=0x%x\n", storage);
   

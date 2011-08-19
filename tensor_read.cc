@@ -203,9 +203,8 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
   orientation    = string_to_orientation(name);
   tensor         = tensor_malloc(l, m, n, nnz, strategy, orientation);
   storage        = STORAGE_EXTENDED(tensor);
-  storage->size  = size;
-  storage->RO    = MALLOC_N(uint, storage->size);
-  storage->RO[0] = 0;
+  storage->rn    = size;
+  storage->RO    = MALLOC_N(uint, storage->rn);
   
   for (i = 0; i < size; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {

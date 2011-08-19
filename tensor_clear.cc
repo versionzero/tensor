@@ -52,7 +52,7 @@ tensor_storage_clear_extended(tensor_t *tensor)
   
   storage = STORAGE_EXTENDED(tensor);
   
-  for (i = 0; i < storage->size; ++i) {
+  for (i = 0; i < storage->rn; ++i) {
     storage->RO[i] = 0;
   }
   
