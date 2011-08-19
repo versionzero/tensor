@@ -14,9 +14,12 @@ for_each_fprintf(FILE *file, char const *format, T values, uint size, char const
 {
   uint i, j;
   
-  for (i = 0, j = size-1; i < size; ++i) {
-    fprintf(file, format, values[i], ((i != j) ? separator : eol));
+  j = size - 1;
+  
+  for (i = 0; i < j; ++i) {
+    fprintf(file, format, values[i], separator);
   }
+  fprintf(file, format, values[j], eol);
 }
 
 void
@@ -47,7 +50,7 @@ void
 tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
 {
   uint                        l, m, n;
-  int                         nnz, size;
+  int                         nnz;
   tensor_storage_compressed_t *storage;
   char const                  *name, *macro;
   
@@ -58,23 +61,22 @@ tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
   m       = tensor->m;
   n       = tensor->n;
   nnz     = tensor->nnz;
-  size    = storage->rn;
   name    = orientation_to_string(tensor->orientation);
   macro   = orientation_to_latex_macro(tensor->orientation);
   
-  debug("tensor_fwrite_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', macro='%s', size=%d.\n", 
-	l, m, n, nnz, name, macro, size);
+  debug("tensor_fwrite_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', macro='%s'.\n", 
+	l, m, n, nnz, name, macro);
   
   print_header(file, nnz);
-  print_hline(file, size);
+  print_hline(file, storage->rn);
   fprintf(file, "$\\row_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->RO, size, " & ", " \\\\\n");
-  print_hline(file, nnz);
+  for_each_fprintf(file, "%d%s", storage->RO, storage->rn, " & ", " \\\\\n");
+  print_hline(file, storage->cn);
   fprintf(file, "$\\col_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CO, nnz,  " & ", " \\\\\n");
-  print_hline(file, nnz);
+  for_each_fprintf(file, "%d%s", storage->CO, storage->cn,  " & ", " \\\\\n");
+  print_hline(file, storage->kn);
   fprintf(file, "$\\tube_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->KO, nnz,  " & ", " \\\\\n");
+  for_each_fprintf(file, "%d%s", storage->KO, storage->kn,  " & ", " \\\\\n");
   print_hline(file, nnz);
   fprintf(file, "$\\val_{\\%s}$ & ", macro);
   for_each_fprintf(file, "%g%s", tensor->values, nnz,  " & ", " \\\\\n");
@@ -86,7 +88,7 @@ void
 tensor_fwrite_extended_compressed_latex(FILE *file, tensor_t const *tensor, strategy::type_t strategy)
 {
   uint                      l, m, n;
-  int                       nnz, size;
+  int                       nnz;
   tensor_storage_extended_t *storage;
   char const                *name, *macro;
   
@@ -97,20 +99,19 @@ tensor_fwrite_extended_compressed_latex(FILE *file, tensor_t const *tensor, stra
   m       = tensor->m;
   n       = tensor->n;
   nnz     = tensor->nnz;
-  size    = storage->rn;
   name    = orientation_to_string(tensor->orientation);
   macro   = orientation_to_latex_macro(tensor->orientation);
   
-  debug("tensor_fwrite_extended_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', size=%d.\n", 
-	l, m, n, nnz, name, size);
+  debug("tensor_fwrite_extended_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s'.\n", 
+	l, m, n, nnz, name);
   
   print_header(file, nnz);
-  print_hline(file, size);
+  print_hline(file, storage->rn);
   fprintf(file, "$\\row_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->RO, size, " & ", " \\\\\n");
-  print_hline(file, nnz);
+  for_each_fprintf(file, "%d%s", storage->RO, storage->rn, " & ", " \\\\\n");
+  print_hline(file, storage->ckn);
   fprintf(file, "$\\ct_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CK, nnz, " & ", " \\\\\n");
+  for_each_fprintf(file, "%d%s", storage->CK, storage->ckn, " & ", " \\\\\n");
   print_hline(file, nnz);
   fprintf(file, "$\\val_{\\%s}$ & ", macro);
   for_each_fprintf(file, "%g%s", tensor->values, nnz, " & ", " \\\\\n");
@@ -126,9 +127,9 @@ tensor_emit_latex(FILE *file, tensor_t const *tensor)
   
   switch (tensor->strategy) {
   case strategy::compressed:
+  case strategy::slice:
     tensor_fwrite_compressed_latex(file, tensor);
     break;
-  case strategy::slice:
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor_fwrite_extended_compressed_latex(file, tensor, tensor->strategy);
