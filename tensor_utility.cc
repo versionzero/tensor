@@ -9,6 +9,7 @@ static char const *map_strategy_to_string[] = {
   "array",
   "coordinate",
   "compressed",
+  "gundersen"
   "slice",
   "ekmr",
   "zzekmr"
@@ -110,6 +111,8 @@ typecode_to_strategy(MM_typecode type)
     return strategy::coordinate;
   } else if (mm_is_compressed(type)) {
     return strategy::compressed;
+  } else if (mm_is_gundersen(type)) {
+    return strategy::gundersen;
   } else if (mm_is_slice(type)) {
     return strategy::slice;
   } else if (mm_is_ekmr(type)) {

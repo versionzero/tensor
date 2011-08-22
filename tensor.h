@@ -12,6 +12,7 @@ namespace strategy {
     array,
     coordinate,
     compressed,
+    gundersen,
     slice,
     ekmr,
     zzekmr
@@ -65,8 +66,8 @@ typedef struct {
 
 typedef struct {
   tensor_storage_base_t base;
-  uint                  rn, cn, kn;
-  uint                  *RO, *CO, *KO;
+  uint                  rn, cn, tn, kn;
+  uint                  *RO, *CO, *TO, *KO;
 } tensor_storage_compressed_t;
 
 typedef struct {

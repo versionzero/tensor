@@ -51,6 +51,7 @@ int mm_write_tensor_array_size(FILE *f, int L, int M, int N);
 #define mm_is_dense(typecode)	   ((typecode)[1]=='A')
 #define mm_is_array(typecode)	   ((typecode)[1]=='A')
 #define mm_is_compressed(typecode) ((typecode)[1]=='O')
+#define mm_is_gundersen(typecode)  ((typecode)[1]=='G')
 #define mm_is_slice(typecode)      ((typecode)[1]=='S')
 #define mm_is_ekmr(typecode)       ((typecode)[1]=='K')
 #define mm_is_zzekmr(typecode)     ((typecode)[1]=='Z')
@@ -79,6 +80,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define mm_set_dense(typecode)	    mm_set_array(typecode)
 #define mm_set_sparse(typecode)	    mm_set_coordinate(typecode)
 #define mm_set_compressed(typecode) ((*typecode)[1]='O')
+#define mm_set_gundersen(typecode)  ((*typecode)[1]='G')
 #define mm_set_slice(typecode)      ((*typecode)[1]='S')
 #define mm_set_ekmr(typecode)       ((*typecode)[1]='K')
 #define mm_set_zzekmr(typecode)     ((*typecode)[1]='Z')
@@ -133,6 +135,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define MM_COORDINATE_STR       "coordinate"
 #define MM_SPARSE_STR	        "coordinate"
 #define MM_COMPRESSED_STR	"compressed"
+#define MM_GUNDERSEN_STR	"gundersen"
 #define MM_SLICE_STR	        "slice"
 #define MM_EKMR_STR	        "ekmr"
 #define MM_ZZPKMR_STR	        "zzekmr"
