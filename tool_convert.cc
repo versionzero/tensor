@@ -136,6 +136,10 @@ convert_tool_main(int argc, char *argv[])
       break;
     }
   }
+  
+  if (noisiness > DEFAULT_VERBOSITY) {
+    verbose = true;
+  }
 
   debug("main: emit_latex=%s\n", bool_to_string(emit_latex));
   debug("main: strategy=%s\n", strategy_to_string(strategy));

@@ -227,6 +227,10 @@ effectuate_tool_main(int argc, char *argv[])
     }    
   }
   
+  if (noisiness > DEFAULT_VERBOSITY) {
+    verbose = true;
+  }
+  
   /* count the number of remaining arguments */
   if (argc-optind < 2) {
     effectuate_tool_usage();
