@@ -138,6 +138,7 @@ convert_tool_main(int argc, char *argv[])
   }
 
   debug("main: emit_latex=%s\n", bool_to_string(emit_latex));
+  debug("main: strategy=%s\n", strategy_to_string(strategy));
   
   /* count the number of remaining arguments */
   if (argc-optind < 1) {

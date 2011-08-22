@@ -9,7 +9,7 @@ static char const *map_strategy_to_string[] = {
   "array",
   "coordinate",
   "compressed",
-  "gundersen"
+  "gundersen",
   "slice",
   "ekmr",
   "zzekmr"
