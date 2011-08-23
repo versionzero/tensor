@@ -143,14 +143,16 @@ tensor_fread_compressed_slice(FILE *file)
   orientation::type_t  orientation;
   tensor_storage_compressed_t *storage;
   
-  debug("tensor_fread_compressed(0x%x)\n", file);
+  debug("tensor_fread_compressed_slice(0x%x)\n", file);
   
   if (0 != (result = mm_read_tensor_compressed_slice_size(file, &l, &m, &n, &nnz, name, &rn, &cn, &kn))) {
     die("Failed to read tensor dimensions (%d).\n", result);
   }
   
+  debug("tensor_fread_compressed_slice: l=%d, m=%d, n=%d, name='%s'\n", l, m, n, name);
+  
   orientation    = string_to_orientation(name);
-  tensor         = tensor_malloc(l, m, n, nnz, strategy::compressed, orientation);
+  tensor         = tensor_malloc(l, m, n, nnz, strategy::slice, orientation);
   storage        = STORAGE_COMPRESSED(tensor);
   storage->rn    = rn;
   storage->cn    = cn;
@@ -240,6 +242,8 @@ tensor_fread_data(FILE *file, MM_typecode type)
   strategy = typecode_to_strategy(type);
   tensor   = NULL;
   
+  debug("Reading strategy '%s' (%d)\n", strategy_to_string(strategy), strategy);
+  
   switch (strategy) {
   case strategy::array:
     tensor = tensor_fread_array(file);
@@ -251,6 +255,8 @@ tensor_fread_data(FILE *file, MM_typecode type)
     tensor = tensor_fread_compressed(file);
     break;
   case strategy::slice:
+    tensor = tensor_fread_compressed_slice(file);
+    break;
   case strategy::ekmr:
   case strategy::zzekmr:
     tensor = tensor_fread_extended_compressed(file, strategy);

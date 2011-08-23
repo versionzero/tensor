@@ -71,7 +71,7 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
   
   debug("tensor_fwrite_compressed(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_initialize_typecode(&type, strategy::slice);
+  tensor_initialize_typecode(&type, strategy::compressed);
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
@@ -119,7 +119,7 @@ tensor_fwrite_compressed_slice(FILE *file, tensor_t const *tensor)
   
   debug("tensor_fwrite_compressed_slice(file=0x%x, tensor=0x%x)\n", file, tensor);
   
-  tensor_initialize_typecode(&type, strategy::compressed);
+  tensor_initialize_typecode(&type, strategy::slice);
   
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
