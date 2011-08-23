@@ -27,7 +27,8 @@ typedef struct {
 hash_table_t* hash_table_malloc(size_t max_size);
 void hash_table_free(hash_table_t *table);
 void hash_table_remove(hash_table_t *table, void const *key);
-bool hash_table_insert(hash_table_t *table, void const *key, void *data);
+hash_table_node_t* hash_table_insert(hash_table_t *table, void const *key, void *data);
+void hash_table_update(hash_table_t *table, hash_table_node_t *node, void *data);
 hash_table_node_t* hash_table_find(hash_table_t *table, void const *key);
 void hash_table_debug(hash_table_t *table);
 

@@ -127,14 +127,14 @@ hash_table_remove(hash_table_t *table, void const *key)
 }
 
 void
-hash_table_update_impl(hash_table_t *table, hash_table_node_t *node, void *data)
+hash_table_update(hash_table_t *table, hash_table_node_t *node, void *data)
 {
-  debug("hash_table_update_impl(table=0x%x, node=0x%x, data=0x%x)\n", table, node, data);
+  debug("hash_table_update(table=0x%x, node=0x%x, data=0x%x)\n", table, node, data);
   
   node->data = data;
 }
 
-void
+hash_table_node_t*
 hash_table_insert_impl(hash_table_t *table, void const *key, void *data)
 {
   hash_table_node_t *node;
@@ -153,7 +153,7 @@ hash_table_insert_impl(hash_table_t *table, void const *key, void *data)
       /* found */
       debug("hash_table_insert_impl: hash=%d => node=0x%x\n", hash, node);
       node->data = data;
-      return;
+      return node;
     }
     node = node->next;
   }
@@ -169,9 +169,11 @@ hash_table_insert_impl(hash_table_t *table, void const *key, void *data)
   table->size++;
   
   superfluous("hash_table_insert_impl: hash=%d => node=0x%x)\n", hash, node);
+  
+  return node;
 }
 
-bool
+hash_table_node_t*
 hash_table_insert(hash_table_t *table, void const *key, void *data)
 {
   bool              existed;
@@ -180,16 +182,16 @@ hash_table_insert(hash_table_t *table, void const *key, void *data)
   debug("hash_table_insert(table=0x%x, key=0x%x, data=0x%x)\n", table, key, data);
   
   if (NULL == (node = hash_table_find(table, key))) {
-    hash_table_insert_impl(table, key, data);
+    node = hash_table_insert_impl(table, key, data);
     existed = false;
   } else {
-    hash_table_update_impl(table, node, data);
+    hash_table_update(table, node, data);
     existed = true;
   }
   
   debug("hash_table_insert: existed='%s'\n", bool_to_string(existed));
   
-  return existed;
+  return node;
 }
 
 hash_table_node_t*
