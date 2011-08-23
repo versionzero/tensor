@@ -128,7 +128,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   }
   
   if (simulate) {
-    cache_print_statistics(cache);
+    cache_print_profile(cache);
     cache_free(cache);
   }
   
