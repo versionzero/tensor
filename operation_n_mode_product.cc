@@ -337,11 +337,11 @@ frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
   uint                       size, nnz;
-  uint                       start, end;
-  uint                       c, r, r0, t, m, n;
+  uint                       cstart, cend, rstart, rend;
+  uint                       c, c1, r, r0, t, m, n;
   double                     **M;
   double const               *p, *V;
-  uint const                 *R, *C;
+  uint const                 *R, *C, *K;
   tensor_storage_compressed_t const *storage;
   
   debug("frontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
@@ -359,6 +359,7 @@ frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   size    = storage->rn;
   R       = storage->RO;
   C       = storage->CO;
+  K       = storage->KO;
   
   /*
     Using frontal \emph{compressed slice storage} ($\FCSS$), this
@@ -374,37 +375,47 @@ frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   DEBUG("\nsize=%d, m=%d, n=%d\n", size, m, n);
   
   for (r = 1; r < size; ++r) {
-    r0    = r-1;
-    i     = r0 % n;
-    t     = r0 / n;
-    start = R[r0];
-    end   = R[r];
+    r0     = r-1;
+    t      = r0;
+    rstart = R[r0];
+    rend   = R[r];
     
     cache_access(cache, &R[r0], cache_operation::read);
     cache_access(cache, &R[r],  cache_operation::read);
     
-    DEBUG("r0=%d, start=%d, end=%d\n", r0, start, end);
+    DEBUG("* r0=%d, rstart=%d, rend=%d\n", r0, rstart, rend);
     
-    for (k = start; k < end; ++k) {
-      c = C[k];
-      j = c;
+    for (c = rstart; c < rend; ++c) {
+      c1     = c+1;
+      cstart = C[c];
+      cend   = C[c1];
+      i      = c % n;
       
-      cache_access(cache, &C[k], cache_operation::read);
+      cache_access(cache, &C[c],  cache_operation::read);
+      cache_access(cache, &C[c1], cache_operation::read);
       
-      DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
-      DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
+      DEBUG("** c=%d, c1=%d, cstart=%d, cend=%d\n", c, c1, cstart, cend);
       
-      M[i][j] += p[t] * V[k];
-      
-      cache_access(cache, &V[k],    cache_operation::read);
-      cache_access(cache, &p[t],    cache_operation::read);
-      cache_access(cache, &M[i][j], cache_operation::read);
-      cache_access(cache, &M[i][j], cache_operation::write);
-      
-      cache_debug(cache);
-      
-      DEBUG("%2.0f\t", M[i][j]);
-      DEBUG("C[k=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, C[k], c, r, t, i, j);
+      for (k = cstart; k < cend; ++k) {
+	j = K[k];
+	
+	cache_access(cache, &K[k], cache_operation::read);
+	
+	DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
+	DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
+	
+	M[i][j] += p[t] * V[k];
+	
+	cache_access(cache, &V[k],    cache_operation::read);
+	cache_access(cache, &p[t],    cache_operation::read);
+	cache_access(cache, &M[i][j], cache_operation::read);
+	cache_access(cache, &M[i][j], cache_operation::write);
+	
+	cache_debug(cache);
+	
+	DEBUG("%2.0f\t", M[i][j]);
+	DEBUG("C[k=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, C[k], c, r, t, i, j);
+      }
     }
   }
 }
