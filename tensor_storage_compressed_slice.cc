@@ -19,34 +19,35 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
   coordinate_tuple_t          *tuples;
   double                      *values;
   uint                        *R, *C, *K;
-  
-  s = STORAGE_COORIDINATE(source);
-  d = STORAGE_COMPRESSED(destination);
+  index_encoder_t             r_encoder, c_encoder;
   
   debug("tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(destination=0x%x, source=0x%x)\n", destination, source);
   
-  base   = STORAGE_BASE(destination);
-  nnz    = source->nnz;
-  values = source->values;
-  tuples = s->tuples;
-  R      = d->RO;
-  C      = d->CO;
-  K      = d->KO;
+  nnz       = source->nnz;
+  values    = source->values;
+  
+  base      = STORAGE_BASE(destination);
+  r_encoder = base->callbacks->index_r_encoder;
+  c_encoder = base->callbacks->index_c_encoder;
+  
+  s         = STORAGE_COORIDINATE(source);
+  d         = STORAGE_COMPRESSED(destination);
+  tuples    = s->tuples;
+  R         = d->RO;
+  C         = d->CO;
+  K         = d->KO;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-#if 0
-  d->rn = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_r_encoder);
-  d->cn = tensor_storage_index_encode(d->CO, tuples, nnz, base->callbacks->index_c_encoder);
-#endif
   tensor_storage_copy(d, s, nnz, base->callbacks->index_copy);
   tensor_storage_copy(destination, source, nnz, (index_copy_t) &copier_for_values);
   
+  rn      = 0;
+  cn      = 0;
+  prev_ri = r_encoder(&tuples[0]);
+  prev_ci = c_encoder(&tuples[0]);
   
-  rn = cn = 0;
-  prev_ri = base->callbacks->index_r_encoder(&tuples[0]);
-  prev_ci = base->callbacks->index_c_encoder(&tuples[0]);
-  R[rn++] = 0;
   C[cn++] = 0;
+  R[rn++] = 1;
   
   for (current = 0; current < nnz; ++current) {
     DEBUG("i=%u, j=%u, k=%u, index=%u\n", 
@@ -61,7 +62,7 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
     index = base->callbacks->index_r_encoder(&tuples[current]);
     if (prev_ri != index) {
       DEBUG("R[size=%u]=%u\n", rn, current);
-      R[rn++] = cn-1;
+      R[rn++] = cn;
       prev_ri = index;
     }
   }
@@ -70,7 +71,7 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
   DEBUG("R[size=%u]=%u\n", rn, cn);
   
   C[cn++] = nnz;
-  R[rn++] = cn-1;
+  R[rn++] = cn;
   
   DEBUG("rn=%u\n", rn);
   DEBUG("cn=%u\n", cn);

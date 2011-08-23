@@ -29,7 +29,7 @@ void
 compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
-  uint                       size, nnz;
+  uint                       rn, nnz;
   uint                       start, end;
   uint                       c, r, r0, t, m, n;
   double                     **M;
@@ -49,7 +49,7 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   n       = matrix->n;
   
   storage = STORAGE_COMPRESSED(tensor);
-  size    = storage->rn;
+  rn    = storage->rn;
   R       = storage->RO;
   C       = storage->CO;
   T       = storage->KO;
@@ -67,7 +67,7 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   
   DEBUG("\n");
   
-  for (r = 1; r < size; ++r) {
+  for (r = 1; r < rn; ++r) {
     r0    = r-1;
     i     = r0;
     start = R[r0];
@@ -107,7 +107,7 @@ void
 compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                       i, j, k;
-  uint                       size, nnz;
+  uint                       rn, nnz;
   uint                       start, end;
   uint                       c, r, r0, t, m, n;
   double                     **M;
@@ -127,7 +127,7 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   n       = matrix->n;
   
   storage = STORAGE_COMPRESSED(tensor);
-  size    = storage->rn;
+  rn      = storage->rn;
   R       = storage->RO;
   C       = storage->CO;
   T       = storage->KO;
@@ -145,7 +145,7 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   
   DEBUG("\n");
   
-  for (r = 1; r < size; ++r) {
+  for (r = 1; r < rn; ++r) {
     r0    = r-1;
     i     = r0;
     start = R[r0];
@@ -200,145 +200,39 @@ n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t con
   }
 }
 
+typedef void (*index_convert_t)(uint r, uint c, uint t, uint *i, uint *j, uint *k);
+
 void
-horizontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+converter_for_lateral(uint r, uint c, uint t, uint *i, uint *j, uint *k)
 {
-  uint                       i, j, k;
-  uint                       size, nnz;
-  uint                       start, end;
-  uint                       c, r, r0, t, m, n;
-  double                     **M;
-  double const               *p, *V;
-  uint const                 *R, *C;
-  tensor_storage_compressed_t const *storage;
-  
-  debug("horizontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  matrix_clear(matrix);
-  
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  m       = matrix->m;
-  n       = matrix->n;
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  size    = storage->rn;
-  R       = storage->RO;
-  C       = storage->CO;
-  
-  DEBUG("\nsize=%d, m=%d, n=%d\n", size, m, n);
-  
-  for (r = 1; r < size; ++r) {
-    r0    = r-1;
-    i     = r0 / n;
-    t     = r0 % n;
-    start = R[r0];
-    end   = R[r];
-    
-    cache_access(cache, &R[r0], cache_operation::read);
-    cache_access(cache, &R[r],  cache_operation::read);
-    
-    DEBUG("r0=%d, start=%d, end=%d\n", r0, start, end);
-    
-    for (k = start; k < end; ++k) {
-      c = C[k];
-      j = c;
-      
-      cache_access(cache, &C[k], cache_operation::read);
-      
-      DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
-      DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
-      
-      M[i][j] += p[t] * V[k];
-      
-      cache_access(cache, &V[k],    cache_operation::read);
-      cache_access(cache, &p[t],    cache_operation::read);
-      cache_access(cache, &M[i][j], cache_operation::read);
-      cache_access(cache, &M[i][j], cache_operation::write);
-      
-      cache_debug(cache);
-      
-      DEBUG("%2.0f\t", M[i][j]);
-      DEBUG("C[k=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, C[k], c, r, t, i, j);
-    }
-  }
+  *i = c;
+  *j = r;
+  *k = t;
 }
 
 void
-lateral_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+converter_for_horizontal(uint r, uint c, uint t, uint *i, uint *j, uint *k)
 {
-  uint                       i, j, k;
-  uint                       size, nnz;
-  uint                       start, end;
-  uint                       c, r, r0, t, m, n;
-  double                     **M;
-  double const               *p, *V;
-  uint const                 *R, *C;
-  tensor_storage_compressed_t const *storage;
-  
-  debug("lateral_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  matrix_clear(matrix);
-  
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  m       = matrix->m;
-  n       = matrix->n;
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  size    = storage->rn;
-  R       = storage->RO;
-  C       = storage->CO;
-  
-  DEBUG("\nsize=%d, m=%d, n=%d\n", size, m, n);
-  
-  for (r = 1; r < size; ++r) {
-    r0    = r-1;
-    start = R[r0];
-    end   = R[r];
-    
-    cache_access(cache, &R[r0], cache_operation::read);
-    cache_access(cache, &R[r],  cache_operation::read);
-    
-    DEBUG("r0=%d, start=%d, end=%d\n", r0, start, end);
-    
-    for (k = start; k < end; ++k) {
-      j = k / n;
-      t = k % n;
-      c = C[k];
-      i = c;
-      
-      cache_access(cache, &C[k], cache_operation::read);
-      
-      DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
-      DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
-      
-      M[i][j] += p[t] * V[k];
-      
-      cache_access(cache, &V[k],    cache_operation::read);
-      cache_access(cache, &p[t],    cache_operation::read);
-      cache_access(cache, &M[i][j], cache_operation::read);
-      cache_access(cache, &M[i][j], cache_operation::write);
-      
-      cache_debug(cache);
-      
-      DEBUG("%2.0f\t", M[i][j]);
-      DEBUG("C[k=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, C[k], c, r, t, i, j);
-    }
-  }
+  *i = r;
+  *j = c;
+  *k = t;
 }
 
 void
-frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+converter_for_frontal(uint r, uint c, uint t, uint *i, uint *j, uint *k)
 {
-  uint                       i, j, k;
-  uint                       size, nnz;
+  *i = c;
+  *j = t;
+  *k = r;
+}
+
+void
+compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, index_convert_t converter)
+{
+  uint                       i, j, k, kk;
+  uint                       rn, nnz;
   uint                       cstart, cend, rstart, rend;
-  uint                       c, c1, r, r0, t, m, n;
+  uint                       c, c0, cc, r, r0, rr, t, m, n;
   double                     **M;
   double const               *p, *V;
   uint const                 *R, *C, *K;
@@ -356,27 +250,16 @@ frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   n       = matrix->n;
   
   storage = STORAGE_COMPRESSED(tensor);
-  size    = storage->rn;
+  rn      = storage->rn;
   R       = storage->RO;
   C       = storage->CO;
   K       = storage->KO;
   
-  /*
-    Using frontal \emph{compressed slice storage} ($\FCSS$), this
-    tensor can be represented as:
-    
-           $k$   0   1   2    3   4   5   6    7   8   9   10   11  12
-     $\rowcss$   0   1   3    4   6   7   9   10  12  13
-      $\ctcss$   1   0   2    1   0   2   1    0   2   1    0    2   1
-     $\valcss$   1   2   3    4   5   6   7    8   9  10   11   12  13
-     
-  */
+  DEBUG("\nrn=%d, m=%d, n=%d\n", rn, m, n);
   
-  DEBUG("\nsize=%d, m=%d, n=%d\n", size, m, n);
-  
-  for (r = 1; r < size; ++r) {
+  for (r = 1; r < rn; ++r) {
     r0     = r-1;
-    t      = r0;
+    rr     = r0;
     rstart = R[r0];
     rend   = R[r];
     
@@ -386,20 +269,22 @@ frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
     DEBUG("* r0=%d, rstart=%d, rend=%d\n", r0, rstart, rend);
     
     for (c = rstart; c < rend; ++c) {
-      c1     = c+1;
-      cstart = C[c];
-      cend   = C[c1];
-      i      = c % n;
+      c0     = c-1;
+      cc     = c0 % n;
+      cstart = C[c0];
+      cend   = C[c];
       
+      cache_access(cache, &C[c0], cache_operation::read);
       cache_access(cache, &C[c],  cache_operation::read);
-      cache_access(cache, &C[c1], cache_operation::read);
       
-      DEBUG("** c=%d, c1=%d, cstart=%d, cend=%d\n", c, c1, cstart, cend);
+      DEBUG("** c0=%d, cstart=%d, cend=%d\n", c0, cstart, cend);
       
       for (k = cstart; k < cend; ++k) {
-	j = K[k];
+	kk = K[k];
 	
 	cache_access(cache, &K[k], cache_operation::read);
+	
+	converter(rr, cc, kk, &i, &j, &t);
 	
 	DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
 	DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
@@ -423,30 +308,36 @@ frontal_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 void
 n_mode_product_compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
+  index_convert_t converter;
+  
   debug("n_mode_product_compressed_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  
+  converter = NULL;
   
   switch (tensor->orientation) {
   case orientation::horizontal:
-    horizontal_slice(matrix, vector, tensor);
+    converter = &converter_for_horizontal;
     break;
   case orientation::lateral:
-    lateral_slice(matrix, vector, tensor);
+    converter = &converter_for_lateral;
     break;
   case orientation::frontal:
-    frontal_slice(matrix, vector, tensor);
+    converter = &converter_for_frontal;
     break;
   default:
     die("Tensor product for '%s' orientation is not currently supported.\n",
 	orientation_to_string(tensor->orientation));
     break;
   }
+  
+  compressed_slice(matrix, vector, tensor, converter);
 }
 
 void
 ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint                 i, j, k;
-  uint                 size, nnz;
+  uint                 rn, nnz;
   uint                 start, end;
   uint                 c, ck, r, r0, t, m, n;
   double               **M;
@@ -466,7 +357,7 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   n       = matrix->n;
   
   storage = STORAGE_EXTENDED(tensor);
-  size    = storage->rn;
+  rn      = storage->rn;
   R       = storage->RO;
   CK      = storage->CK;
   
@@ -482,7 +373,7 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   
   DEBUG("\n");
   
-  for (r = 1; r < size; ++r) {
+  for (r = 1; r < rn; ++r) {
     r0    = r-1;
     i     = r0;
     start = R[r0];
