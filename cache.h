@@ -47,12 +47,17 @@ typedef struct cache_line_lifetime_tag {
 } cache_line_lifetime_t;
 
 typedef struct {
-  size_t             entries, lines;
-  size_t             cache_size, cache_line_size;
-  cache_node_t       **nodes, *mru, *lru;
-  cache_statistics_t statistics;
-  uint               ticks;
-  hash_table_t       *addresses;
+  size_t               entries, lines;
+  size_t               cache_size, cache_line_size;
+  cache_node_t         **nodes, *mru, *lru;
+  cache_statistics_t   statistics;
+  uint                 ticks;
+  hash_table_t         *addresses;
+  hash_function_t      hasher;
+  hash_function_t      tagger;
+  compare_function_t   comparator;
+  duplicate_function_t duplicator;
+  free_function_t      freer; 
 } cache_t;
 
 cache_t* cache_malloc(size_t max_size, size_t line_size);

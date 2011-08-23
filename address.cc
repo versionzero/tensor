@@ -1,6 +1,9 @@
 
 #include "address.h"
 
+extern size_t hash_shift, tag_shift;
+
+#if 0
 /* Source: http://www.concentric.net/~ttwang/tech/addrhash.htm
    
    Fibonacci hash function.  The multiplier is the nearest prime to
@@ -13,6 +16,25 @@ memory_address_hash(void const *address)
   
   key = (size_t) address;
   return (key >> 3) * 2654435761;
+}
+#endif
+
+size_t
+memory_address_hash(void const *address)
+{
+  register size_t key;
+  
+  key = (size_t) address;
+  return (key >> hash_shift);
+}
+
+size_t
+memory_address_tag(void const *address)
+{
+  register size_t key;
+  
+  key = (size_t) address;
+  return (key >> tag_shift);
 }
 
 size_t
