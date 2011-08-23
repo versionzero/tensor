@@ -87,6 +87,7 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
   cache->cache_line_size = cache_line_size;
   cache->lines           = lines;
   cache->entries         = 0;
+  cache->ticks           = 0;
   cache->mru             = NULL;
   cache->lru             = NULL;
   
@@ -110,18 +111,34 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
 void
 cache_free(cache_t *cache)
 {
-  size_t       i;
-  cache_node_t *node, *next;
-  
+  size_t                i;
+  cache_node_t          *cnode, *cnext;
+  hash_table_node_t     *hnode, *hnext;
+  cache_line_lifetime_t *dnode, *dnext;
+
   debug("cache_free(cache=0x%x)\n", cache);
   
   for (i = 0; i < cache->lines; ++i) {
-    node = cache->nodes[i];
-    while (node) {
-      next = node->next;
-      cache_key_free(node->key);
-      safe_free(node);
-      node = next;
+    cnode = cache->nodes[i];
+    while (cnode) {
+      cnext = cnode->next;
+      cache_key_free(cnode->key);
+      safe_free(cnode);
+      cnode = cnext;
+    }
+  }
+  
+  for (i = 0; i < cache->addresses->max_size; ++i) {
+    hnode = cache->addresses->nodes[i];
+    while (hnode) {
+      hnext = hnode->next;
+      dnode = (cache_line_lifetime_t*) hnode->data;
+      while (dnode) {
+	dnext = dnode->next;
+	safe_free(dnode);
+	dnode = dnext;
+      }
+      hnode = hnext;
     }
   }
   
@@ -167,6 +184,45 @@ compute_cache_line_size(cache_t *cache, size_t hash)
   return size;
 }
 
+bool
+cache_line_lifetime_start(cache_t *cache, void const *key)
+{
+  bool                  existed;
+  hash_table_node_t     *node;
+  cache_line_lifetime_t *data;
+  
+  debug("cache_line_lifetime_start(cache=0x%x, key=0x%x)\n", cache, key);
+  
+  data        = MALLOC(cache_line_lifetime_t);
+  data->start = cache->ticks;
+  data->end   = 0;
+  data->next  = NULL;
+  existed     = false;
+  
+  if (NULL == (node = hash_table_find(cache->addresses, key))) {
+    node = hash_table_insert(cache->addresses, key, data);
+  } else {
+    existed    = true;
+    data->next = (cache_line_lifetime_t*) node->data;
+    hash_table_update(cache->addresses, node, data);
+  }
+
+  return existed;
+}
+
+void
+cache_line_lifetime_end(cache_t *cache, void const *key)
+{
+  hash_table_node_t     *node;
+  cache_line_lifetime_t *data;
+  
+  debug("cache_line_lifetime_start(cache=0x%x, key=0x%x)\n", cache, key);
+  
+  node      = hash_table_find(cache->addresses, key);
+  data      = (cache_line_lifetime_t*) node->data;
+  data->end = cache->ticks;
+}
+
 void
 cache_remove(cache_t *cache, void const *key)
 {
@@ -174,6 +230,9 @@ cache_remove(cache_t *cache, void const *key)
   size_t       hash, tag;
   
   debug("cache_remove(cache=0x%x, key=0x%x)\n", cache, key);
+  
+  /* we are evicting in new line, so end the lifetime */
+  cache_line_lifetime_end(cache, key);
   
   hash     = compute_cache_line_hash(cache, key);
   tag      = compute_cache_line_tag(cache, key);
@@ -330,12 +389,12 @@ cache_find(cache_t *cache, void const *key)
 void
 cache_miss(cache_t *cache, void const *key, cache_operation::type_t access)
 {
-  size_t hash, tag;
-  bool   existed, conflict;
+  size_t                hash, tag;
+  bool                  existed, conflict;
   
   debug("cache_miss(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   
-  existed  = hash_table_insert(cache->addresses, key, NULL);
+  existed  = cache_line_lifetime_start(cache, key);
   hash     = compute_cache_line_hash(cache, key);
   tag      = compute_cache_line_tag(cache, key);
   conflict = (NULL != cache->nodes[hash]);
@@ -399,6 +458,8 @@ cache_access(cache_t *cache, void const *key, cache_operation::type_t access)
     cache_hit(cache, key, access);
     cache_update(cache, node);
   }
+  
+  cache->ticks++;
 }
 
 void
@@ -442,53 +503,77 @@ cache_operation_to_string(cache_operation::type_t access)
 }
 
 void
-cache_print_statistics(cache_t *cache)
+cache_print_lifetimes(cache_t *cache)
+{
+  uint                  i;
+  hash_table_t          *addresses;
+  hash_table_node_t     *node;
+  cache_line_lifetime_t *data;
+  
+  debug("cache_print_lifetimes(cache=0x%x)\n", cache);
+  
+  addresses = cache->addresses;
+  
+  message("Cache-Line Lifetimes: (out of %d)\n", cache->ticks);
+  for (i = 0; i < addresses->max_size; ++i) {
+    node = addresses->nodes[i];
+    while (node) {
+      message("%4d/0x%x: ", i, node->key);
+      data = (cache_line_lifetime_t*) node->data;
+      while (data) {
+	if (0 == data->end) {
+	  data->end = cache->ticks;
+	}
+	message("%4d ", data->end - data->start);
+	data = data->next;
+      }
+      message("\n");
+      node = node->next;
+    }
+  }
+}
+
+void
+cache_print_profile(cache_t *cache)
 {
   ulong              accesses, compulsory, conflict, hits, misses;
-  ulong              ideal_accesses, ideal_misses;
+  ulong              nontrivial_accesses, nontrivial_misses;
   cache_statistics_t *statistics;
   
-  debug("cache_print_statistics(cache=0x%x)\n", cache);
+  debug("cache_print_profile(cache=0x%x)\n", cache);
   
-  statistics     = &cache->statistics;
-  hits           = statistics->read_hits + statistics->write_hits;
-  compulsory     = statistics->compulsory_read_misses + statistics->compulsory_write_misses;
-  conflict       = statistics->conflict_read_misses + statistics->conflict_write_misses;
-  misses         = statistics->read_misses + statistics->write_misses + compulsory + conflict;
-  accesses       = hits + misses;
-  ideal_accesses = accesses - compulsory;
-  ideal_misses   = misses - compulsory;
+  statistics          = &cache->statistics;
+  hits                = statistics->read_hits + statistics->write_hits;
+  compulsory          = statistics->compulsory_read_misses + statistics->compulsory_write_misses;
+  conflict            = statistics->conflict_read_misses + statistics->conflict_write_misses;
+  misses              = statistics->read_misses + statistics->write_misses + compulsory + conflict;
+  accesses            = hits + misses;
+  nontrivial_accesses = accesses - compulsory;
+  nontrivial_misses   = misses - compulsory;
   
   message("Cache Profile:\n");
-  message("accesses:                %d\n", accesses);
-  message("read hits:               %d\n", statistics->read_hits);
-  message("write hits:              %d\n", statistics->write_hits);
-  message("total hits:              %d\n", hits);
-  message("read misses:             %d\n", statistics->read_misses);
-  message("write misses:            %d\n", statistics->write_misses);
-  message("compulsory read misses:  %d\n", statistics->compulsory_read_misses);
-  message("compulsory write misses: %d\n", statistics->compulsory_write_misses);
-  message("total compulsory misses: %d\n", compulsory);
-  message("conflict read misses:    %d\n", statistics->conflict_read_misses);
-  message("conflict write misses:   %d\n", statistics->conflict_write_misses);
-  message("total conflict misses:   %d\n", conflict);
-  message("total misses:            %d\n", misses);
-  message("ideal misses:            %d\n", ideal_misses);
-  message("ideal / miss ratio:      %2.4f\n", (double) ideal_misses / (double) misses);
-  message("hit rate:                %2.4f\n", 1.0 - (double) misses / (double) accesses);
-  message("miss rate:               %2.4f\n", (double) misses / (double) accesses);
-  message("ideal hit rate:          %2.4f\n", 1.0 - (double) ideal_misses / (double) ideal_accesses);
-  message("ideal miss rate:         %2.4f\n", (double) ideal_misses / (double) ideal_accesses);
+  message("accesses:                  %d\n", accesses);
+  message("read hits:                 %d\n", statistics->read_hits);
+  message("write hits:                %d\n", statistics->write_hits);
+  message("total hits:                %d\n", hits);
+  message("read misses:               %d\n", statistics->read_misses);
+  message("write misses:              %d\n", statistics->write_misses);
+  message("compulsory read misses:    %d\n", statistics->compulsory_read_misses);
+  message("compulsory write misses:   %d\n", statistics->compulsory_write_misses);
+  message("total compulsory misses:   %d\n", compulsory);
+  message("conflict read misses:      %d\n", statistics->conflict_read_misses);
+  message("conflict write misses:     %d\n", statistics->conflict_write_misses);
+  message("total conflict misses:     %d\n", conflict);
+  message("total misses:              %d\n", misses);
+  message("non-trivial misses:        %d\n", nontrivial_misses);
+  message("non-trivial to miss ratio: %2.4f\n", (double) nontrivial_misses / (double) misses);
+  message("hit rate:                  %2.4f\n", 1.0 - (double) misses / (double) accesses);
+  message("miss rate:                 %2.4f\n", (double) misses / (double) accesses);
+  message("non-trivial hit rate:      %2.4f\n", 1.0 - (double) nontrivial_misses / (double) nontrivial_accesses);
+  message("non-trivial miss rate:     %2.4f\n", (double) nontrivial_misses / (double) nontrivial_accesses);
   
-#if 0
-  message("replace:   %d\n", replacements);
-  statistics->read_hits               = 0;
-  statistics->read_misses             = 0;
-  statistics->compulsory_read_misses  = 0;
-  statistics->write_hits              = 0;
-  statistics->write_misses            = 0;
-  statistics->compulsory_write_misses = 0;
-#endif
+  message("\n");
+  cache_print_lifetimes(cache);
 }
 
 void

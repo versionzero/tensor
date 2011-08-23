@@ -41,11 +41,17 @@ typedef struct {
   ulong replacements;
 } cache_statistics_t;
 
+typedef struct cache_line_lifetime_tag {
+  size_t                  start, end;
+  cache_line_lifetime_tag *next;
+} cache_line_lifetime_t;
+
 typedef struct {
   size_t             entries, lines;
   size_t             cache_size, cache_line_size;
   cache_node_t       **nodes, *mru, *lru;
   cache_statistics_t statistics;
+  uint               ticks;
   hash_table_t       *addresses;
 } cache_t;
 
@@ -54,7 +60,7 @@ void cache_free(cache_t *table);
 void cache_supported(cache_t *cache);
 void cache_access(cache_t *cache, void const *key, cache_operation::type_t access);
 char const* cache_operation_to_string(cache_operation::type_t access);
-void cache_print_statistics(cache_t *table);
+void cache_print_profile(cache_t *table);
 void cache_debug(cache_t *cache);
 
 #endif /* _CACHE_H_ */
