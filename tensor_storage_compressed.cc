@@ -97,7 +97,9 @@ tensor_storage_malloc_compressed(tensor_t const *tensor)
     callbacks->index_copy      = (index_copy_t) &copier_for_tube;
     break;
   default:
-    die("Unknown or unsupported orientation %d.\n", tensor->orientation);
+    die("tensor_storage_malloc_compressed: "
+	"unknown or unsupported orientation %d.\n", 
+	tensor->orientation);
     break;
   }
   
