@@ -29,6 +29,7 @@ tensor_storage_free(tensor_storage_compressed_t *storage)
   
   safe_free(storage->RO);
   safe_free(storage->CO);
+  safe_free(storage->TO);
   safe_free(storage->KO);
 }
 

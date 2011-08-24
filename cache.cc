@@ -571,8 +571,10 @@ cache_print_profile(cache_t *cache)
   message("non-trivial hit rate:      %2.4f\n", 1.0 - (double) nontrivial_misses / (double) nontrivial_accesses);
   message("non-trivial miss rate:     %2.4f\n", (double) nontrivial_misses / (double) nontrivial_accesses);
   
+#if 0
   message("\n");
   cache_print_lifetimes(cache);
+#endif
 }
 
 void
