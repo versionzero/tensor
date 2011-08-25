@@ -175,6 +175,8 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor)
   debug("tensor_fwrite_extended_compressed: strategy='%s'.\n", 
 	strategy_to_string(tensor->strategy));
   
+  tensor_initialize_typecode(&type, strategy::ekmr);
+  
   if (0 != (result = mm_write_banner(file, type))) {
     die("Could not write Tensor Market banner (%d).\n", result);
   }
