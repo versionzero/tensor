@@ -6,8 +6,7 @@ CACHE=${2:-1024}
 declare -a STRATEGIES=('compressed' 'compressed' 'slice' 'slice' 'slice' 'ekmr')
 declare -a ORIENTATIONS=('row' 'tube' 'lateral' 'horizontal' 'frontal' 'row')
 
-#for X in 10 50 100 150 300 400; do 
-for X in 100; do 
+for X in 10 50 100 150 300 400; do 
     printf "Processing: $X: "
     #for STRATEGY in ${STRATEGIES[@]}; do
     for i in {0..5}; do
