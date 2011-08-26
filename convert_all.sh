@@ -1,8 +1,11 @@
 #!/bin/bash
 
-declare -a STRATEGIES=('compressed' 'compressed' 'slice' 'slice' 'slice')
-declare -a ORIENTATIONS=('row' 'tube' 'lateral' 'horizontal' 'frontal')
+declare -a STRATEGIES=('compressed' 'compressed' 'slice' 'slice' 'slice' 'ekmr')
+declare -a ORIENTATIONS=('row' 'tube' 'lateral' 'horizontal' 'frontal' 'row')
 
-for i in {0..4}; do
-    ./tensor convert -s ${STRATEGIES[$i]} -o ${ORIENTATIONS[$i]} ieee-fig4.in ieee-fig4.${ORIENTATIONS[$i]}.in
+for k in {1..9}; do
+    FILE=input/tensor.100.$k.tsr
+    for i in {0..5}; do
+	./tensor convert -s ${STRATEGIES[$i]} -o ${ORIENTATIONS[$i]} ${FILE} ${FILE}.${STRATEGIES[$i]}.${ORIENTATIONS[$i]}.in
+    done
 done
