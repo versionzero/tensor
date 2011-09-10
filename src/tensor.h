@@ -6,6 +6,14 @@
 #include "types.h"
 #include <stdio.h>
 
+namespace format {
+  typedef enum {
+    unknown,
+    mmio,
+    matlab
+  } type_t;
+}
+
 namespace strategy {
   typedef enum {
     unknown,

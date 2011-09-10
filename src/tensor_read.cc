@@ -242,7 +242,8 @@ tensor_fread_mmio_data(FILE *file, MM_typecode type)
   strategy = typecode_to_strategy(type);
   tensor   = NULL;
   
-  debug("Reading strategy '%s' (%d)\n", strategy_to_string(strategy), strategy);
+  debug("tensor_fread_mmio_data: reading strategy '%s' (%d)\n",
+	strategy_to_string(strategy), strategy);
   
   switch (strategy) {
   case strategy::array:
@@ -334,23 +335,61 @@ tensor_fread_matlab(FILE *file)
   return tensor;
 }
 
+format::type_t
+detect_file_format(FILE *file)
+{
+  char           c;
+  format::type_t format;
+  
+  debug("detect_file_format(0x%x)\n", file);
+  
+  if (EOF != (c = peek(file))) {
+    if ('%' == c) {
+      format = format::mmio;
+    } else {
+      format = format::matlab;
+    }
+  }
+  
+  return format;
+}
+
+tensor_t*
+tensor_fread_file_format(FILE *file, format::type_t format)
+{
+  tensor_t *tensor;
+  
+  debug("tensor_fread_file_format(0x%x, %d)\n", file, format);
+  
+  tensor = NULL;
+  
+  switch (format) {
+  case format::mmio:
+    tensor = tensor_fread_mmio(file);
+    break;
+  case format::matlab:
+    tensor = tensor_fread_matlab(file);
+    break;
+  default:
+    die("tensor_fread_file_format: unknown file type %d.\n", format);
+    break;
+  }
+  
+  return tensor;
+}
+
 tensor_t*
 tensor_read(char const *filename)
 {
-  char     c;
-  FILE     *file;
-  tensor_t *tensor;
+  FILE           *file;
+  tensor_t       *tensor;
+  format::type_t format;
   
   debug("tensor_read('%s')\n", filename);
   
-  file = fopen_or_die(filename, "r");
-  if (EOF != (c = peek(file))) {
-    if ('%' == c) {
-      tensor = tensor_fread_mmio(file);
-    } else {
-      tensor = tensor_fread_matlab(file);
-    }
-  }
+  file   = fopen_or_die(filename, "r");
+  format = detect_file_format(file);
+  tensor = tensor_fread_file_format(file, format);
   fclose(file);
   
   return tensor;
