@@ -9,9 +9,9 @@ static char const *map_ownership_to_string[] = {
 };
 
 char const*
-ownership_to_string(ownership::type_t strategy)
+ownership_to_string(ownership::type_t ownership)
 {
-  return map_ownership_to_string[strategy];
+  return map_ownership_to_string[ownership];
 }
 
 void

@@ -29,7 +29,7 @@ namespace datatype {
   } type_t;
 }
 
-char const* ownership_to_string(ownership::type_t strategy);
+char const* ownership_to_string(ownership::type_t ownership);
 
 void datatype_read_typecode(FILE *file, MM_typecode *type);
 datatype::type_t typecode_to_datatype(MM_typecode type);
