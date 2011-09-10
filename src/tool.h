@@ -33,7 +33,7 @@ namespace tool {
 #define DEFAULT_SEED            1234
 
 #define DEFAULT_CACHE_SIZE      (2*1024)
-#define DEFAULT_CACHE_LINE_SIZE MINIMUM_CACHE_LINE_SIZE
+#define DEFAULT_CACHE_LINE_SIZE 32
 
 void convert_tool_main(int argc, char *argv[]);
 void generate_tool_main(int argc, char *argv[]);
