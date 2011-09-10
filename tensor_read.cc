@@ -227,12 +227,12 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
 }
 
 tensor_t*
-tensor_fread_data(FILE *file, MM_typecode type)
+tensor_fread_mmio_data(FILE *file, MM_typecode type)
 {
   tensor_t         *tensor;
   strategy::type_t strategy;
   
-  debug("tensor_fread_data(file=0x%x, type='%s')\n", 
+  debug("tensor_fread_mmio_data(file=0x%x, type='%s')\n", 
 	file, mm_typecode_to_str(type));
   
   if (!mm_is_tensor(type)) {
@@ -271,26 +271,86 @@ tensor_fread_data(FILE *file, MM_typecode type)
 }
 
 tensor_t*
-tensor_fread(FILE *file)
+tensor_fread_mmio(FILE *file)
 {
   MM_typecode type;
   
-  debug("tensor_fread(0x%x)\n", file);
+  debug("tensor_fread_mmio(0x%x)\n", file);
   
   datatype_read_typecode(file, &type);
-  return tensor_fread_data(file, type);
+  return tensor_fread_mmio_data(file, type);
+}
+
+tensor_t*
+tensor_fread_matlab(FILE *file)
+{
+  uint                 i, j, k;
+  int                  l, m, n, q, nnz;
+  int                  result;
+  double               d;
+  tensor_t             *tensor;
+  tensor_storage_coordinate_t *storage;
+  coordinate_tuple_t   *tuples;
+  
+  debug("tensor_fread_matlab(0x%x)\n", file);
+  
+  /* Read matlab sparse tensor files of the form:
+     
+     ^X is a sparse tensor of size 10 x 10 x 10 with 96 nonzeros$
+     ^	( 1, 1, 7)    0.3796$
+     ^	( 1, 2, 5)    0.3191$
+     ^	( 1, 3, 2)    0.9861$
+	...
+    
+    Where ^, $ are regular regex anchors (no pun intended).
+  */
+  
+  /* read a line of the form:
+     ^X is a sparse tensor of size 10 x 10 x 10 with 96 nonzeros$
+  */
+  if (4 != (result = fscanf(file, "%*[^1234567890]%d%*[ x]%d%*[ x]%d with %d nonzeros\n", &l, &m, &n, &nnz))) {
+    die("tensor_fread_matlab: failed to read tensor dimensions (%d).\n", result);
+  }
+  
+  tensor  = tensor_malloc(l, m, n, nnz, strategy::coordinate);
+  storage = STORAGE_COORIDINATE(tensor);
+  tuples  = storage->tuples;
+  
+  for (q = 0; q < nnz; ++q) {
+    /* read a line of the form:
+       ^  ( 1, 3, 2)    0.9861$
+    */
+    
+    if (4 != (result = fscanf(file, "%*[ (]%u%*[ ,]%u%*[ ,]%u%*[)]%lg\n", &k, &i, &j, &d))) {
+      die("tensor_fread_matlab: failed to process line %d of the input stream (%d).\n", q, result);
+    }
+    tuples[q].index   = q;
+    tuples[q].i       = i;
+    tuples[q].j       = j;
+    tuples[q].k       = k;
+    tensor->values[q] = d;
+  }
+  
+  return tensor;
 }
 
 tensor_t*
 tensor_read(char const *filename)
 {
+  char     c;
   FILE     *file;
   tensor_t *tensor;
   
   debug("tensor_read('%s')\n", filename);
   
   file = fopen_or_die(filename, "r");
-  tensor = tensor_fread(file);
+  if (EOF != (c = peek(file))) {
+    if ('%' == c) {
+      tensor = tensor_fread_mmio(file);
+    } else {
+      tensor = tensor_fread_matlab(file);
+    }
+  }
   fclose(file);
   
   return tensor;
