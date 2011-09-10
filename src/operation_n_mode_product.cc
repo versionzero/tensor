@@ -49,7 +49,7 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   n       = matrix->n;
   
   storage = STORAGE_COMPRESSED(tensor);
-  rn    = storage->rn;
+  rn      = storage->rn;
   R       = storage->RO;
   C       = storage->CO;
   T       = storage->KO;
@@ -69,7 +69,7 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   
   for (r = 1; r < rn; ++r) {
     r0    = r-1;
-    i     = r0;
+    i     = r0 % n;
     start = R[r0];
     end   = R[r];
     
@@ -147,7 +147,7 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   
   for (r = 1; r < rn; ++r) {
     r0    = r-1;
-    i     = r0;
+    i     = r0 % n;
     start = R[r0];
     end   = R[r];
     
@@ -259,7 +259,7 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
   
   for (r = 1; r < rn; ++r) {
     r0     = r-1;
-    rr     = r0;
+    rr     = r0 % n;
     rstart = R[r0];
     rend   = R[r];
     
@@ -375,7 +375,7 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   
   for (r = 1; r < rn; ++r) {
     r0    = r-1;
-    i     = r0;
+    i     = r0 % n;
     start = R[r0];
     end   = R[r];
     
