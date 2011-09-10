@@ -18,3 +18,17 @@ fopen_or_die(char const *filename, char const *mode)
   return file;  
 }
 
+char
+peek(FILE *file)
+{
+  char c;
+  
+  if (feof(file)) {
+    return EOF;
+  }
+
+  c = fgetc(file);
+  ungetc(c, file);
+  
+  return c;
+}

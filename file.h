@@ -6,6 +6,8 @@
 
 FILE* fopen_or_die(char const *filename, char const *mode);
 
+char peek(FILE *file);
+
 #endif
 
 /*
