@@ -323,9 +323,9 @@ tensor_fread_matlab(FILE *file)
       die("tensor_fread_matlab: failed to process line %d of the input stream (%d).\n", q, result);
     }
     tuples[q].index   = q;
-    tuples[q].i       = i;
-    tuples[q].j       = j;
-    tuples[q].k       = k;
+    tuples[q].i       = i-1;
+    tuples[q].j       = j-1;
+    tuples[q].k       = k-1;
     tensor->values[q] = d;
   }
   
