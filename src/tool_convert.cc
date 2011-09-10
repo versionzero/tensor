@@ -58,13 +58,13 @@ timed_tensor_convert(tensor_t *source, strategy::type_t strategy, orientation::t
   clock_t  t;
   tensor_t *tensor;
   
-  message("Converting from '%s' to '%s-%s' ... ", 
-	  strategy_to_string(source->strategy), 
+  progress("Converting from '%s' to '%s-%s' ... ",
+	  strategy_to_string(source->strategy),
 	  strategy_to_string(strategy),
 	  orientation_to_string(orientation));
   t = clock();
   tensor = tensor_convert(source, strategy, orientation);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
   
   return tensor;
 }
@@ -165,15 +165,15 @@ convert_tool_main(int argc, char *argv[])
   
   if (offset == argc) {
     file = stdout;
-    message("Writing stdout ... ");
+    progress("Writing stdout ... ");
   } else {
     name = argv[offset++];
     file = fopen_or_die(name, "w+");
-    message("Writing %s ... ", name);
+    progress("Writing %s ... ", name);
   }  
   t = clock();
   tensor_fwrite(file, result);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
   
   tensor_free(result);
   tensor_free(tensor);

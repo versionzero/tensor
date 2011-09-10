@@ -16,7 +16,7 @@ verror(uint levels, char const *format, va_list args)
   
   show = verbose || !(levels & (level::information | level::debug));
   if (show) {
-    if (!(levels & level::message)) {
+    if (!(levels & level::progress)) {
       fprintf(stderr, "%s: ", tool_name);
     }
     if (levels & level::information) {
@@ -36,12 +36,28 @@ verror(uint levels, char const *format, va_list args)
 }
 
 void
+vmessage(char const *format, va_list args)
+{
+  vfprintf(stdout, format, args);
+}
+
+void
 message(char const *format, ...)
 {
   va_list args;
   
   va_start(args, format);
-  verror(level::message, format, args);
+  vmessage(format, args);
+  va_end(args);
+}
+
+void
+progress(char const *format, ...)
+{
+  va_list args;
+
+  va_start(args, format);
+  verror(level::progress, format, args);
   va_end(args);
 }
 

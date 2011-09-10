@@ -63,16 +63,16 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
   
   if (offset == argc) {
     file = stdout;
-    message("Writing matrix to stdout ... ");
+    progress("Writing matrix to stdout ... ");
   } else {
     name = argv[offset];
     file = fopen_or_die(name, "w+");
-    message("Writing matrix to %s ... ", name);
+    progress("Writing matrix to %s ... ", name);
   }
   
   t = clock();
   matrix_fwrite(file, matrix, format::coordinate);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
   
   if (stdout != file) {
     fclose(file);
@@ -84,10 +84,10 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
 {
   clock_t  t;
   
-  message("Performing operation '%s' ... ", operation_to_description_string(operation::n_mode_product));
+  progress("Performing operation '%s' ... ", operation_to_description_string(operation::n_mode_product));
   t = clock();
   operation_n_mode_product_inplace(matrix, vector, tensor);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
 }
 
 void

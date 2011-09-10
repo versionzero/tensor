@@ -18,11 +18,12 @@ namespace verbosity {
 namespace level {
   typedef enum {
     message     = 1,
-    information = (1 << 1),
-    debug       = (1 << 2),
-    warning     = (1 << 3),
-    error       = (1 << 4),
-    fatal       = (1 << 5)
+    progress    = (1 << 1),
+    information = (1 << 2),
+    debug       = (1 << 3),
+    warning     = (1 << 4),
+    error       = (1 << 5),
+    fatal       = (1 << 6)
   } type_t;
 }
 
@@ -33,6 +34,7 @@ namespace level {
 #endif 
 
 void message(char const *format, ...);
+void progress(char const *format, ...);
 void information(char const *format, ...);
 void debug(char const *format, ...);
 void debug(verbosity::type_t verbosity, char const *format, ...);

@@ -23,10 +23,10 @@ timed_vector_read(char const *name)
   clock_t  t;
   vector_t *vector;
   
-  message("Reading vector %s ... ", name);
+  progress("Reading vector %s ... ", name);
   t = clock();
   vector = vector_read(name);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
 
   return vector;
 }
@@ -37,10 +37,10 @@ timed_matrix_read(char const *name)
   clock_t  t;
   matrix_t *matrix;
   
-  message("Reading matrix %s ... ", name);
+  progress("Reading matrix %s ... ", name);
   t = clock();
   matrix = matrix_read(name);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
   
   return matrix;
 }
@@ -51,10 +51,10 @@ timed_tensor_read(char const *name)
   clock_t  t;
   tensor_t *tensor;
   
-  message("Reading tensor %s ... ", name);
+  progress("Reading tensor %s ... ", name);
   t = clock();
   tensor = tensor_read(name);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  progress("done [%lf]\n", SECONDS_SINCE(t));
   
   return tensor;
 }
