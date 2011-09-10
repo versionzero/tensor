@@ -46,9 +46,7 @@ matrix_read_coordinate(FILE *f)
   
   while (nnz--) {
     fscanf(f, "%u %u %lg\n", &i, &j, &d);
-    i--; j--;                   /* adjust from 1-based to 0-based */
-    mr->data[i][j] = d;
-    fprintf(f, "%d %d %10.32g\n", i+1, j+1, mr->data[i][j]);
+    mr->data[i-1][j-1] = d;     /* adjust from 1-based to 0-based */
   }
 
   return mr;
