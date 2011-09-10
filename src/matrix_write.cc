@@ -3,6 +3,7 @@
 #include "file.h"
 #include "matrix.h"
 #include "mmio.h"
+#include "utility.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +58,7 @@ matrix_fwrite_coordinate(FILE *file, matrix_t const *matrix)
   nnz = 0;
   for (i = 0; i < matrix->m; ++i) {
     for (j = 0; j < matrix->n; ++j) {
-      if (0.0 != matrix->data[i][j]) {
+      if (!might_as_well_be_zero(matrix->data[i][j])) {
 	nnz++;
       }
     }
@@ -69,7 +70,7 @@ matrix_fwrite_coordinate(FILE *file, matrix_t const *matrix)
 
   for (i = 0; i < matrix->m; ++i) {
     for (j = 0; j < matrix->n; ++j) {
-      if (0.0 != matrix->data[i][j]) {
+      if (!might_as_well_be_zero(matrix->data[i][j])) {
 	fprintf(file, "%d %d %10.32g\n", i+1, j+1, matrix->data[i][j]);
       }
     }
