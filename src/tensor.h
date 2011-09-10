@@ -6,7 +6,7 @@
 #include "types.h"
 #include <stdio.h>
 
-namespace format {
+namespace file_format {
   typedef enum {
     unknown,
     mmio,

@@ -335,19 +335,19 @@ tensor_fread_matlab(FILE *file)
   return tensor;
 }
 
-format::type_t
+file_format::type_t
 detect_file_format(FILE *file)
 {
-  char           c;
-  format::type_t format;
+  char                c;
+  file_format::type_t format;
   
   debug("detect_file_format(0x%x)\n", file);
   
   if (EOF != (c = peek(file))) {
     if ('%' == c) {
-      format = format::mmio;
+      format = file_format::mmio;
     } else {
-      format = format::matlab;
+      format = file_format::matlab;
     }
   }
   
@@ -355,7 +355,7 @@ detect_file_format(FILE *file)
 }
 
 tensor_t*
-tensor_fread_file_format(FILE *file, format::type_t format)
+tensor_fread_file_format(FILE *file, file_format::type_t format)
 {
   tensor_t *tensor;
   
@@ -364,10 +364,10 @@ tensor_fread_file_format(FILE *file, format::type_t format)
   tensor = NULL;
   
   switch (format) {
-  case format::mmio:
+  case file_format::mmio:
     tensor = tensor_fread_mmio(file);
     break;
-  case format::matlab:
+  case file_format::matlab:
     tensor = tensor_fread_matlab(file);
     break;
   default:
@@ -381,9 +381,9 @@ tensor_fread_file_format(FILE *file, format::type_t format)
 tensor_t*
 tensor_read(char const *filename)
 {
-  FILE           *file;
-  tensor_t       *tensor;
-  format::type_t format;
+  FILE                *file;
+  tensor_t            *tensor;
+  file_format::type_t format;
   
   debug("tensor_read('%s')\n", filename);
   
