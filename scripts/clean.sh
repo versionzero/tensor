@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=${1:-`dirname $0`}
+DIR=${1:-`dirname $0`/../examples}
 
 declare -a STRATEGIES=('compressed' 'compressed' 'slice' 'slice' 'slice' 'ekmr')
 declare -a ORIENTATIONS=('row' 'tube' 'lateral' 'horizontal' 'frontal' 'row')
