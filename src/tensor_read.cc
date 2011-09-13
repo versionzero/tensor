@@ -303,13 +303,14 @@ tensor_fread_matlab(FILE *file)
      ^	( 1, 3, 2)    0.9861$
 	...
     
-    Where ^, $ are regular regex anchors (no pun intended).
+    Where ^ and $ are regular regex anchors (no pun intended).  Note
+    that we intentionally skip the first word before starting to look
+    for numeric characters.  We do this because matlab variables can
+    have numbers in them, which would break the assumption that the
+    first number to occur in the sentence was the first dimension.
   */
   
-  /* read a line of the form:
-     ^X is a sparse tensor of size 10 x 10 x 10 with 96 nonzeros$
-  */
-  if (4 != (result = fscanf(file, "%*[^1234567890]%d%*[ x]%d%*[ x]%d with %d nonzeros\n", &l, &m, &n, &nnz))) {
+  if (4 != (result = fscanf(file, "%*[^ ]%*[^1234567890]%d%*[ x]%d%*[ x]%d with %d nonzeros\n", &l, &m, &n, &nnz))) {
     die("tensor_fread_matlab: failed to read tensor dimensions (%d).\n", result);
   }
   
@@ -318,10 +319,6 @@ tensor_fread_matlab(FILE *file)
   tuples  = storage->tuples;
   
   for (q = 0; q < nnz; ++q) {
-    /* read a line of the form:
-       ^  ( 1, 3, 2)    0.9861$
-    */
-    
     if (4 != (result = fscanf(file, "%*[ (]%u%*[ ,]%u%*[ ,]%u%*[)]%lg\n", &k, &i, &j, &d))) {
       die("tensor_fread_matlab: failed to process line %d of the input stream (%d).\n", q, result);
     }
