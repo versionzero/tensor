@@ -111,12 +111,12 @@ tensor_storage_index_encode(uint *indices, coordinate_tuple_t const *tuple, uint
 {
   uint size, index, current, previous;
   
-  size     = 0;
-  previous = 0;
+  debug("tensor_storage_index_encode(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
   
-  debug("tensor_storage_index_encode(indices=0x%x, tuple=0x%x)\n", indices, tuple);
-  
+  size            = 0;
+  previous        = encoder(&tuple[0]);
   indices[size++] = 0;
+  
   for (current = 0; current < nnz; ++current) {
     DEBUG("i=%u, j=%u, k=%u, index=%u\n", 
 	  tuple[current].i, tuple[current].j, 
