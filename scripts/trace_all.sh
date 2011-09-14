@@ -10,6 +10,9 @@ declare -a ORIENTATIONS=('row' 'tube' 'lateral' 'horizontal' 'frontal' 'row')
 
 for i in {0..4}; do
     NAME=${TENSOR}.${STRATEGIES[$i]}.${ORIENTATIONS[$i]}
-    ./tensor effectuate -s -l ${LINE} -m ${CACHE} -o n-mode -w ${VECTOR}.in ${NAME}.in ${NAME}.out \
+    #./tensor effectuate -s -l ${LINE} -m ${CACHE} -o n-mode -w ${VECTOR}.in ${NAME}.in ${NAME}.out \
+    #	>${NAME}.results 2>${NAME}.error
+    
+    ./tensor effectuate -o n-mode -w ${VECTOR}.in ${NAME}.in ${NAME}.out \
 	>${NAME}.results 2>${NAME}.error
 done
