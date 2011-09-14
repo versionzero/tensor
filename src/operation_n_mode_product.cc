@@ -200,30 +200,30 @@ n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t con
   }
 }
 
-typedef void (*index_convert_t)(uint r, uint c, uint t, uint *i, uint *j, uint *k);
+typedef void (*index_convert_t)(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t);
 
 void
-converter_for_lateral(uint r, uint c, uint t, uint *i, uint *j, uint *k)
+converter_for_lateral(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t)
 {
-  *i = c;
-  *j = r;
-  *k = t;
+  *i = cc;
+  *j = rr;
+  *t = kk;
 }
 
 void
-converter_for_horizontal(uint r, uint c, uint t, uint *i, uint *j, uint *k)
+converter_for_horizontal(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t)
 {
-  *i = r;
-  *j = c;
-  *k = t;
+  *i = rr;
+  *j = cc;
+  *t = kk;
 }
 
 void
-converter_for_frontal(uint r, uint c, uint t, uint *i, uint *j, uint *k)
+converter_for_frontal(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t)
 {
-  *i = c;
-  *j = t;
-  *k = r;
+  *i = cc;
+  *j = kk;
+  *t = rr;
 }
 
 void
@@ -266,18 +266,18 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
     cache_access(cache, &R[r0], cache_operation::read);
     cache_access(cache, &R[r],  cache_operation::read);
     
-    DEBUG("* r0=%d, rstart=%d, rend=%d\n", r0, rstart, rend);
+    DEBUG("* r0=%d, rr=%d, rstart=%d, rend=%d\n", r0, rr, rstart, rend);
     
     for (c = rstart; c < rend; ++c) {
       c0     = c-1;
-      cc     = c0 % n;
+      cc     = c0 / n;
       cstart = C[c0];
       cend   = C[c];
       
       cache_access(cache, &C[c0], cache_operation::read);
       cache_access(cache, &C[c],  cache_operation::read);
       
-      DEBUG("** c0=%d, cstart=%d, cend=%d\n", c0, cstart, cend);
+      DEBUG("** c0=%d, cc=%d, cstart=%d, cend=%d\n", c0, cc, cstart, cend);
       
       for (k = cstart; k < cend; ++k) {
 	kk = K[k];

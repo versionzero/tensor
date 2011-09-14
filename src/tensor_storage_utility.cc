@@ -119,7 +119,7 @@ tensor_storage_index_encode(uint *indices, coordinate_tuple_t const *tuple, uint
   
   for (current = 0; current < nnz; ++current) {
     DEBUG("i=%u, j=%u, k=%u, index=%u\n", 
-	  tuple[current].i, tuple[current].j, 
+	  tuple[current].i, tuple[current].j,
 	  tuple[current].k, tuple[current].index);
     index = encoder(&tuple[current]);
     if (previous != index) {

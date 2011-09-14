@@ -53,22 +53,25 @@ tensor_storage_convert_from_coordinate_to_compressed_slice_inplace(tensor_t *des
     DEBUG("i=%u, j=%u, k=%u, index=%u\n", 
 	  tuples[current].i, tuples[current].j, 
 	  tuples[current].k, tuples[current].index);
-    index = base->callbacks->index_c_encoder(&tuples[current]);
+    index = r_encoder(&tuples[current]);
+    if (prev_ri != index) {
+      DEBUG("R[size=%u]=%u\n", rn-1, R[rn-1]);
+      R[rn++] = cn;
+      prev_ri = index;
+      DEBUG("C[size=%u]=%u\n", cn-1, current);
+      C[cn++] = current;
+      prev_ci = c_encoder(&tuples[current]);
+    }
+    index = c_encoder(&tuples[current]);
     if (prev_ci != index) {
-      DEBUG("C[size=%u]=%u\n", cn, current);
+      DEBUG("C[size=%u]=%u\n", cn-1, current);
       C[cn++] = current;
       prev_ci = index;
     }
-    index = base->callbacks->index_r_encoder(&tuples[current]);
-    if (prev_ri != index) {
-      DEBUG("R[size=%u]=%u\n", rn, current);
-      R[rn++] = cn;
-      prev_ri = index;
-    }
   }
   
-  DEBUG("C[size=%u]=%u\n", cn, nnz);
-  DEBUG("R[size=%u]=%u\n", rn, cn);
+  DEBUG("final C[size=%u]=%u\n", cn, nnz);
+  DEBUG("final R[size=%u]=%u\n", rn, cn);
   
   C[cn++] = nnz;
   R[rn++] = cn;
@@ -97,7 +100,7 @@ tensor_storage_malloc_compressed_slice(tensor_t const *tensor)
   storage->CO = MALLOC_N(uint, storage->cn);
   storage->KO = MALLOC_N(uint, storage->kn);
   
-  debug("tensor_storage_malloc_compressed_slice: rn=%d, cn=%d, kn=%d\n", 
+  debug("tensor_storage_malloc_compressed_slice: rn=%d, cn=%d, kn=%d\n",
 	storage->rn, storage->cn, storage->kn);
   
   callbacks                  = MALLOC(conversion_callbacks_t);
