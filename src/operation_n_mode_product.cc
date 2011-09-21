@@ -299,7 +299,7 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
       cache_debug(cache);
       
       DEBUG("%2.0f\t", M[i][j]);
-      DEBUG("K[k=%d]=%d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, K[k], c, r, t, i, j);
+      DEBUG("K[k=%d]=%d => r=%d, k=%d, i=%d, j=%d, t=%d\n", k, K[k], r, k, i, j, t);
     }
   }
 }
