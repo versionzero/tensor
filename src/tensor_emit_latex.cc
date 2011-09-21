@@ -73,9 +73,12 @@ tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
   for_each_fprintf(file, "%d%s", storage->RO, storage->rn, " & ", " \\\\\n");
   print_hline(file, storage->cn);
   fprintf(file, "$\\col_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CO, storage->cn,  " & ", " \\\\\n");
-  print_hline(file, storage->kn);
+  for_each_fprintf(file, "%d%s", storage->CO, storage->cn,  " & ", " \\\\\n");  
+  print_hline(file, storage->tn);
   fprintf(file, "$\\tube_{\\%s}$ & ", macro);
+  for_each_fprintf(file, "%d%s", storage->TO, storage->tn,  " & ", " \\\\\n");  
+  print_hline(file, storage->kn);
+  fprintf(file, "$KO_{\\%s}$ & ", macro);
   for_each_fprintf(file, "%d%s", storage->KO, storage->kn,  " & ", " \\\\\n");
   print_hline(file, nnz);
   fprintf(file, "$\\val_{\\%s}$ & ", macro);

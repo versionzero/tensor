@@ -158,6 +158,7 @@ tensor_fread_compressed_slice(FILE *file)
   storage->cn    = cn;
   storage->kn    = kn;
   storage->RO    = MALLOC_N(uint, storage->rn);
+  storage->CO    = MALLOC_N(uint, storage->cn);
   
   for (i = 0; i < storage->rn; ++i) {
     if (1 != (result = fscanf(file, "%u\n", &j))) {
@@ -172,7 +173,7 @@ tensor_fread_compressed_slice(FILE *file)
     }
     storage->CO[i] = j;
   }
-    
+  
   for (i = 0; i < storage->kn; ++i) {
     if (2 != (result = fscanf(file, "%u %lg\n", &j, &d))) {
       die("Failed to process line %d of the input stream (%d).\n", i, result);

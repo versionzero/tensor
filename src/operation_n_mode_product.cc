@@ -231,8 +231,8 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
 {
   uint                       i, j, k, kk;
   uint                       rn, nnz;
-  uint                       cstart, cend, rstart, rend;
-  uint                       c, c0, cc, r, r0, rr, t, m, n;
+  uint                       cstart, cend, current, offset;
+  uint                       c, c1, cc, cn, r, rr, t, m, n;
   double                     **M;
   double const               *p, *V;
   uint const                 *R, *C, *K;
@@ -257,6 +257,61 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
   
   DEBUG("\nrn=%d, m=%d, n=%d\n", rn, m, n);
   
+  current = 0;
+  offset  = 0;
+  
+  for (r = 0; r < rn; ++r) {
+    rr = r;
+    cn = R[r];
+    
+    cache_access(cache, &R[r], cache_operation::read);
+    
+    DEBUG("* r=%d, cn=%d\n", r, cn);
+    
+    for (c = 0; c < cn; ++c) {
+      c1     = c + 1;
+      cc     = C[c];
+      cstart = C[c];
+      cend   = C[c1];
+      
+      cache_access(cache, &C[c], cache_operation::read);
+      cache_access(cache, &C[c1],  cache_operation::read);
+      
+      DEBUG("** c=%d, c1=%d, cstart=%d, cend=%d\n", c, c1, cstart, cend);
+      
+      for (k = offset + cstart; k < offset + cend; ++k) {
+	kk = K[current];
+	
+	cache_access(cache, &K[k], cache_operation::read);
+	
+	//converter(rr, cc, kk, &i, &j, &t);
+	i = rr;
+	j = cc;
+	t = kk;
+	
+	DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
+	DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[current], p[t] * V[current]);
+	
+	M[i][j] += p[t] * V[current];
+	
+	cache_access(cache, &V[current],    cache_operation::read);
+	cache_access(cache, &p[t],    cache_operation::read);
+	cache_access(cache, &M[i][j], cache_operation::read);
+	cache_access(cache, &M[i][j], cache_operation::write);
+	
+	cache_debug(cache);
+	
+	DEBUG("%2.0f\t", M[i][j]);
+	DEBUG("K[current=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", current, K[current], c, r, t, i, j);
+	
+	current++;
+      }
+    }
+    
+    offset += R[r];
+  }
+  
+#if 0
   for (r = 1; r < rn; ++r) {
     r0     = r-1;
     rr     = r0 % n;
@@ -303,6 +358,8 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
       }
     }
   }
+#endif
+
 }
 
 void
