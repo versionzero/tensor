@@ -8,11 +8,11 @@ if ~exist('name','var')
 end
 
 if (nz == 0)
-    fprintf(fd,'%s is an all-zero sparse tensor of size %s\n',...
+    fprintf('%s is an all-zero sparse tensor of size %s\n',...
         name, tt_size2str(X.size));
     return;
 else
-    fprintf(fd,'%s is a sparse tensor of size %s with %d nonzeros\n',...
+    fprintf(fd, '%s is a sparse tensor of size %s with %d nonzeros\n',...
         name, tt_size2str(X.size), nz);
 end
 
