@@ -13,6 +13,6 @@ for i in {0..4}; do
     #./tensor effectuate -s -l ${LINE} -m ${CACHE} -o n-mode -w ${VECTOR}.in ${NAME}.in ${NAME}.out \
     #	>${NAME}.results 2>${NAME}.error
     
-    ./tensor effectuate -o n-mode -w ${VECTOR}.in ${NAME}.in ${NAME}.out \
+    ./tensor effectuate -s -l ${LINE} -m ${CACHE} -o n-mode -w ${VECTOR}.in ${NAME}.in ${NAME}.out \
 	>${NAME}.results 2>${NAME}.error
 done
