@@ -10,7 +10,7 @@ main(int argc, char *argv[])
   n = (argc > 1) ? atoi(argv[1]) : 3;
   m = 1;
   
-  printf("%%MatrixMarket tensor coordinate real    general            \n");
+  printf("%%%%MatrixMarket tensor coordinate real    general            \n");
   printf("%d %d %d %d\n", n, n, n, n*n*n);
   
   for (i = 0; i < n; ++i) {
