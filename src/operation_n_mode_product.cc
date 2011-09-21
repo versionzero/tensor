@@ -200,29 +200,29 @@ n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t con
   }
 }
 
-typedef void (*index_convert_t)(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t);
+typedef void (*index_convert_t)(uint rr, uint kk, uint n, uint *i, uint *j, uint *t);
 
 void
-converter_for_lateral(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t)
+converter_for_lateral(uint rr, uint kk, uint n, uint *i, uint *j, uint *t)
 {
-  *i = cc;
+  *i = kk / n;
   *j = rr;
-  *t = kk;
+  *t = kk % n;
 }
 
 void
-converter_for_horizontal(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t)
+converter_for_horizontal(uint rr, uint kk, uint n, uint *i, uint *j, uint *t)
 {
   *i = rr;
-  *j = cc;
-  *t = kk;
+  *j = kk / n;
+  *t = kk % n;
 }
 
 void
-converter_for_frontal(uint rr, uint cc, uint kk, uint *i, uint *j, uint *t)
+converter_for_frontal(uint rr, uint kk, uint n, uint *i, uint *j, uint *t)
 {
-  *i = cc;
-  *j = kk;
+  *i = kk / n;
+  *j = kk % n;
   *t = rr;
 }
 
@@ -231,14 +231,14 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
 {
   uint                       i, j, k, kk;
   uint                       rn, nnz;
-  uint                       cstart, cend, current, offset;
-  uint                       c, c1, cc, cn, r, rr, t, m, n;
+  uint                       start, end;
+  uint                       r, rr, r0, t, m, n;
   double                     **M;
   double const               *p, *V;
-  uint const                 *R, *C, *K;
+  uint const                 *R, *K;
   tensor_storage_compressed_t const *storage;
   
-  debug("frontal_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("compressed_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
@@ -252,114 +252,56 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
   storage = STORAGE_COMPRESSED(tensor);
   rn      = storage->rn;
   R       = storage->RO;
-  C       = storage->CO;
   K       = storage->KO;
   
-  DEBUG("\nrn=%d, m=%d, n=%d\n", rn, m, n);
+  /*
+    Using \emph{compressed row storage} ($\CRS$), this tensor can be
+    represented as:
+    
+           $k$   0   1   2    3   4   5   6    7   8   9   10   11
+     $\rowcrs$ & 0 & 4 & 8 & 12
+     $\colcrs$ & 1 & 3 & 0 &  2 & 0 & 2 & 1 &  2 & 1 & 2 &  0 &  3
+    $\tubecrs$ & 0 & 0 & 1 &  1 & 0 & 0 & 1 &  1 & 0 & 0 &  1 &  1
+     $\valcrs$ & 1 & 2 & 7 &  8 & 3 & 4 & 9 & 10 & 5 & 6 & 11 & 12
+  */
   
-  current = 0;
-  offset  = 0;
+  DEBUG("\n");
   
-  for (r = 0; r < rn; ++r) {
-    rr = r;
-    cn = R[r];
-    
-    cache_access(cache, &R[r], cache_operation::read);
-    
-    DEBUG("* r=%d, cn=%d\n", r, cn);
-    
-    for (c = 0; c < cn; ++c) {
-      c1     = c + 1;
-      cc     = C[c];
-      cstart = C[c];
-      cend   = C[c1];
-      
-      cache_access(cache, &C[c], cache_operation::read);
-      cache_access(cache, &C[c1],  cache_operation::read);
-      
-      DEBUG("** c=%d, c1=%d, cstart=%d, cend=%d\n", c, c1, cstart, cend);
-      
-      for (k = offset + cstart; k < offset + cend; ++k) {
-	kk = K[current];
-	
-	cache_access(cache, &K[k], cache_operation::read);
-	
-	//converter(rr, cc, kk, &i, &j, &t);
-	i = rr;
-	j = cc;
-	t = kk;
-	
-	DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
-	DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[current], p[t] * V[current]);
-	
-	M[i][j] += p[t] * V[current];
-	
-	cache_access(cache, &V[current],    cache_operation::read);
-	cache_access(cache, &p[t],    cache_operation::read);
-	cache_access(cache, &M[i][j], cache_operation::read);
-	cache_access(cache, &M[i][j], cache_operation::write);
-	
-	cache_debug(cache);
-	
-	DEBUG("%2.0f\t", M[i][j]);
-	DEBUG("K[current=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", current, K[current], c, r, t, i, j);
-	
-	current++;
-      }
-    }
-    
-    offset += R[r];
-  }
-  
-#if 0
   for (r = 1; r < rn; ++r) {
-    r0     = r-1;
-    rr     = r0 % n;
-    rstart = R[r0];
-    rend   = R[r];
+    r0    = r-1;
+    rr    = r0;
+    start = R[r0];
+    end   = R[r];
     
     cache_access(cache, &R[r0], cache_operation::read);
     cache_access(cache, &R[r],  cache_operation::read);
     
-    DEBUG("* r0=%d, rr=%d, rstart=%d, rend=%d\n", r0, rr, rstart, rend);
+    DEBUG("start=%d, end=%d\n", start, end);
     
-    for (c = rstart; c < rend; ++c) {
-      c0     = c-1;
-      cc     = c0 / n;
-      cstart = C[c0];
-      cend   = C[c];
+    for (k = start; k < end; ++k) {
+      kk = K[k];
       
-      cache_access(cache, &C[c0], cache_operation::read);
-      cache_access(cache, &C[c],  cache_operation::read);
+      cache_access(cache, &K[k], cache_operation::read);
       
-      DEBUG("** c0=%d, cc=%d, cstart=%d, cend=%d\n", c0, cc, cstart, cend);
+      converter(rr, kk, n, &i, &j, &t);
       
-      for (k = cstart; k < cend; ++k) {
-	kk = K[k];
-	
-	cache_access(cache, &K[k], cache_operation::read);
-	
-	converter(rr, cc, kk, &i, &j, &t);
-	
-	DEBUG("(M[i=%2d][j=%2d]=%2.0f += ", i, j, M[i][j]);
-	DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
-	
-	M[i][j] += p[t] * V[k];
-	
-	cache_access(cache, &V[k],    cache_operation::read);
-	cache_access(cache, &p[t],    cache_operation::read);
-	cache_access(cache, &M[i][j], cache_operation::read);
-	cache_access(cache, &M[i][j], cache_operation::write);
-	
-	cache_debug(cache);
-	
-	DEBUG("%2.0f\t", M[i][j]);
-	DEBUG("C[k=%2d]=%2d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, C[k], c, r, t, i, j);
-      }
+      DEBUG("(M[i=%2d][j=%2d]=", i, j);
+      DEBUG("%2.0f += ", M[i][j]);
+      DEBUG("(p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f)=", t, p[t], k, V[k], p[t] * V[k]);
+      
+      M[i][j] += p[t] * V[k];
+      
+      cache_access(cache, &V[k],    cache_operation::read);
+      cache_access(cache, &p[t],    cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::read);
+      cache_access(cache, &M[i][j], cache_operation::write);
+      
+      cache_debug(cache);
+      
+      DEBUG("%2.0f\t", M[i][j]);
+      DEBUG("K[k=%d]=%d => c=%d, r=%d, t=%d, i=%d, j=%d\n", k, K[k], c, r, t, i, j);
     }
   }
-#endif
-
 }
 
 void

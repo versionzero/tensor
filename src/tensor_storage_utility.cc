@@ -128,6 +128,7 @@ tensor_storage_index_encode(uint *indices, coordinate_tuple_t const *tuple, uint
       previous        = index;
     }
   }
+  
   DEBUG("indices[size=%u]=%u\n", size, nnz);
   indices[size++] = nnz;
   DEBUG("size=%u\n", size);

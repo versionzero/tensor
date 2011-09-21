@@ -144,7 +144,7 @@ tensor_fwrite_compressed_slice(FILE *file, tensor_t const *tensor)
      should not be too difficult, but it may take some time to ensure
      the re-indexing is correct. */
   
-  if (0 != (result = mm_write_tensor_compressed_slice_size(file, l, m, n, nnz, name, rn, cn, kn))) {
+  if (0 != (result = mm_write_tensor_compressed_slice_size(file, l, m, n, nnz, name, rn))) {
     die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
   }
   

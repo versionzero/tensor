@@ -64,13 +64,16 @@ tensor_storage_malloc_compressed(tensor_t const *tensor)
   
   superfluous("tensor_storage_malloc_compressed(tensor=0x%x)\n", tensor);
   
-  storage                  = MALLOC(tensor_storage_compressed_t);
-  storage->rn              = 0;
-  storage->cn              = tensor->nnz;
-  storage->kn              = tensor->nnz;
-  storage->CO              = MALLOC_N(uint, storage->cn);
-  storage->KO              = MALLOC_N(uint, storage->kn);
-  storage->RO              = NULL;
+  storage     = MALLOC(tensor_storage_compressed_t);
+  storage->rn = 0;
+  storage->cn = tensor->nnz;
+  storage->kn = tensor->nnz;
+  storage->RO = NULL;
+  storage->CO = MALLOC_N(uint, storage->cn);
+  storage->TO = MALLOC_N(uint, storage->cn);
+  storage->KO = MALLOC_N(uint, storage->kn);
+  
+  debug("tensor_storage_malloc_compressed: rn=%d, kn=%d\n", storage->rn, storage->kn);
   
   callbacks                  = MALLOC(conversion_callbacks_t);
   callbacks->index_compare   = NULL;

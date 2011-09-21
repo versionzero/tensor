@@ -74,7 +74,7 @@ typedef struct {
 
 typedef struct {
   tensor_storage_base_t base;
-  uint                  rn, cn, tn, kn;
+  uint                  n, rn, cn, tn, kn;
   uint                  *RO, *CO, *TO, *KO;
 } tensor_storage_compressed_t;
 
