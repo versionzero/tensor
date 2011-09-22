@@ -20,6 +20,7 @@
 extern cache_t           *cache;
 extern uint              cache_size;
 extern uint              cache_line_size;
+extern bool              emit_latex;
 extern uint              iterations;
 extern char              *tool_name;
 extern tool::type_t      tool_type;
@@ -27,7 +28,6 @@ extern bool              simulate;
 extern bool              verbose;
 extern verbosity::type_t noisiness;
 extern bool              write_results;
-extern bool              emit_latex;
 
 void
 convert_tool_usage() 
@@ -137,15 +137,18 @@ convert_tool_main(int argc, char *argv[])
   if (noisiness > DEFAULT_VERBOSITY) {
     verbose = true;
   }
-
-  debug("main: emit_latex=%s\n", bool_to_string(emit_latex));
-  debug("main: strategy=%s\n", strategy_to_string(strategy));
   
   /* count the number of remaining arguments */
   if (argc-optind < 1) {
     convert_tool_usage();
   }
   
+  /* print program options, for debugging purposes */
+  print_tool_options();
+  debug("convert_tool_main: orientation='%s'\n", orientation_to_string(orientation));
+  debug("convert_tool_main: strategy='%s'\n", strategy_to_string(strategy));
+  
+  /* parse the remaining command line options */
   offset = optind;
   name   = argv[offset++];
   tensor = timed_tensor_read(name);

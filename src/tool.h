@@ -50,7 +50,8 @@ char const* string_from_tool(tool::type_t tool);
 
 void print_tool_banner();
 void print_tools_with_descriptions(char const *format);
- 
+void print_tool_options();
+
 #endif /* _UTILITY_H_ */
 
 /*

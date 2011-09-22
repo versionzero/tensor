@@ -97,7 +97,8 @@ timed_generation(int argc, char *argv[])
 void
 generate_tool_main(int argc, char *argv[])
 {
-  int      c;
+  int  c;
+  uint seed;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -143,6 +144,10 @@ generate_tool_main(int argc, char *argv[])
     generate_tool_usage();
   }
   
+  /* print program options, for debugging purposes */
+  print_tool_options();
+  debug("generate_tool_main: seed=%d\n", seed);
+    
   /* seed the random number generator */
   random_seed(seed);
   

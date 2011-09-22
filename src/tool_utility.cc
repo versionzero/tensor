@@ -5,8 +5,17 @@
 #include "utility.h"
 #include <math.h>
 
-extern char         *tool_name;
-extern tool::type_t tool_type;
+extern uint              cache_size;
+extern uint              cache_line_size;
+extern bool              emit_latex;
+extern uint              iterations;
+extern char              *tool_name;
+extern tool::type_t      tool_type;
+extern bool              simulate;
+extern bool              tracing;
+extern bool              verbose;
+extern verbosity::type_t noisiness;
+extern bool              write_results;
 
 #define TENSOR_DESCRIPTION     "A tool for working with tensors."
 #define CONVERT_DESCRIPTION    "A tool for converting between th-order tensor storage strategies."
@@ -70,4 +79,18 @@ print_tools_with_descriptions(char const *format)
   for (i = 2; i < COUNT_OF(map_tool_to_string); ++i) {
     message(format, map_tool_to_string[i], map_tools_to_description[i]);
   }
+}
+
+void
+print_tool_options()
+{
+  debug("main: cache_size=%d\n", cache_size);
+  debug("main: cache_line_size=%d\n", cache_line_size);
+  debug("main: emit_latex='%s'\n", bool_to_string(emit_latex));
+  debug("main: iterations=%d\n", iterations);
+  debug("main: simulate='%s'\n", bool_to_string(simulate));
+  debug("main: tracing='%s'\n", bool_to_string(tracing));
+  debug("main: verbose='%s'\n", bool_to_string(verbose));
+  debug("main: noisiness=%d\n", noisiness);
+  debug("main: write_results='%s'\n", bool_to_string(write_results));
 }

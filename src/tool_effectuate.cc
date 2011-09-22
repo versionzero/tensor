@@ -234,6 +234,10 @@ effectuate_tool_main(int argc, char *argv[])
     effectuate_tool_usage();
   }
   
+  /* print program options, for debugging purposes */
+  print_tool_options();
+  debug("effectuate_tool_main: operation='%s'\n", operation_to_string(operation));
+  
   /* if we are just running a simulation, then we only do one
      iteration; otherwise, it would be really slow */
   if (simulate) {
