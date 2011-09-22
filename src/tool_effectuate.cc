@@ -24,6 +24,7 @@ extern uint              iterations;
 extern char              *tool_name;
 extern tool::type_t      tool_type;
 extern bool              simulate;
+extern bool              tracing;
 extern bool              verbose;
 extern verbosity::type_t noisiness;
 extern bool              write_results;
@@ -42,6 +43,7 @@ effectuate_tool_usage()
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
+  message("\t-t\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
@@ -157,14 +159,7 @@ effectuate_tool_main(int argc, char *argv[])
   operation::type_t operation;
   
   /* set the program's defaults */
-  cache_size      = DEFAULT_CACHE_SIZE;
-  cache_line_size = DEFAULT_CACHE_LINE_SIZE;
-  iterations      = DEFAULT_ITERATIONS;
-  operation       = DEFAULT_OPERATION;
-  simulate        = DEFAULT_SIMULATE;
-  verbose         = DEFAULT_VERBOSE;
-  noisiness       = DEFAULT_VERBOSITY;
-  write_results   = DEFAULT_WRITE_RESULTS;
+  operation = DEFAULT_OPERATION;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -202,6 +197,9 @@ effectuate_tool_main(int argc, char *argv[])
       break;
     case 's':
       simulate = !simulate;
+      break;
+    case 't':
+      tracing = !tracing;
       break;
     case 'v': 
       verbose = !verbose;

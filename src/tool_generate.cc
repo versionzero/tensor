@@ -99,11 +99,6 @@ generate_tool_main(int argc, char *argv[])
 {
   int      c;
   
-  /* set the program's defaults */
-  verbose     = DEFAULT_VERBOSE;
-  noisiness   = DEFAULT_VERBOSITY;
-  seed        = DEFAULT_SEED;
-  
   /* we will privide our own error messages */
   opterr = 0;
   

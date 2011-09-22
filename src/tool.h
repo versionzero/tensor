@@ -26,6 +26,7 @@ namespace tool {
 #define DEFAULT_ORIENTATION     orientation::row
 #define DEFAULT_SIMULATE        false
 #define DEFAULT_STRATEGY        strategy::compressed
+#define DEFAULT_TRACING         false
 #define DEFAULT_VERBOSE         false
 #define DEFAULT_VERBOSITY       verbosity::low
 #define DEFAULT_WRITE_RESULTS   false

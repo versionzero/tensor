@@ -86,9 +86,6 @@ convert_tool_main(int argc, char *argv[])
   /* set the program's defaults */
   orientation = DEFAULT_ORIENTATION;
   strategy    = DEFAULT_STRATEGY;
-  verbose     = DEFAULT_VERBOSE;
-  noisiness   = DEFAULT_VERBOSITY;
-  emit_latex  = DEFAULT_EMIT_LATEX;
   
   /* we will privide our own error messages */
   opterr = 0;
