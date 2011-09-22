@@ -25,6 +25,7 @@ uint              iterations;
 uint              seed;
 char              *tool_name;
 tool::type_t      tool_type;
+bool              tracing;
 bool              simulate;
 bool              verbose;
 verbosity::type_t noisiness;
@@ -85,6 +86,19 @@ main(int argc, char *argv[])
   if (tool::unknown == tool_type) {
     die("The name '%s' does not match any known tool name.\n", tool_name);
   }
+  
+  /* set the program's defaults */
+  cache           = NULL;
+  cache_size      = DEFAULT_CACHE_SIZE;
+  cache_line_size = DEFAULT_CACHE_LINE_SIZE;
+  emit_latex      = DEFAULT_EMIT_LATEX;
+  iterations      = DEFAULT_ITERATIONS;
+  seed            = DEFAULT_SEED;
+  simulate        = DEFAULT_SIMULATE;
+  tracing         = DEFAULT_TRACING;
+  verbose         = DEFAULT_VERBOSE;
+  noisiness       = DEFAULT_VERBOSITY;
+  write_results   = DEFAULT_WRITE_RESULTS;
   
   /* run the tool the user requested */
   entrypoints[tool_type].main(argc, argv);
