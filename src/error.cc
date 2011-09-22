@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 extern char              *tool_name;
+extern bool              tracing;
 extern bool              verbose;
 extern verbosity::type_t noisiness;
 
@@ -76,9 +77,11 @@ trace(char const *format, ...)
 {
   va_list args;
   
-  va_start(args, format);
-  verror(level::trace, format, args);
-  va_end(args);
+  if (tracing) {
+    va_start(args, format);
+    verror(level::trace, format, args);
+    va_end(args);
+  }
 }
 
 
