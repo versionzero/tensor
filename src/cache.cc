@@ -58,13 +58,41 @@
 
 extern bool verbose;
 extern bool simulate;
+extern uint cache_size;
+extern uint cache_line_size;
 size_t      hash_shift, tag_shift;
+
+size_t
+cache_line_hash(void const *address)
+{
+  register size_t key;
   
+  key = (size_t) address;
+  return (key % cache_size) / cache_line_size;
+}
+
+size_t
+cache_line_compare(void const *a, void const *b)
+{
+  register size_t x, y;
+  
+  x = cache_line_hash(a);
+  y = cache_line_hash(b);
+  
+  if (x < y) {
+    return -1;
+  } else if (x > y) {
+    return 1;
+  }
+  return 0;
+}
+
 cache_t*
 cache_malloc(size_t cache_size, size_t cache_line_size)
 {
-  uint    i, lines;
-  cache_t *cache;
+  uint         i, lines;
+  cache_t      *cache;
+  hash_table_t *addresses;
   
   debug("cache_malloc(cache_size=%d, cache_line_size=%d)\n", cache_size, cache_line_size);
   
@@ -89,6 +117,11 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
   cache->comparator      = &memory_address_compare;
   cache->duplicator      = &memory_address_duplicate;
   cache->freer           = &memory_address_free;
+  
+  addresses              = hash_table_malloc(cache_size);
+  addresses->hasher      = &cache_line_hash;
+  addresses->comparator  = &cache_line_compare;
+  cache->addresses       = addresses;
   
   for (i = 0; i < lines; ++i) {
     cache->nodes[i] = NULL;
@@ -132,6 +165,7 @@ cache_free(cache_t *cache)
     while (hnode) {
       hnext = hnode->next;
       dnode = (cache_line_lifetime_t*) hnode->data;
+      safe_free(dnode->name);
       while (dnode) {
 	dnext = dnode->next;
 	safe_free(dnode);
@@ -183,16 +217,18 @@ compute_cache_line_size(cache_t *cache, size_t hash)
   return size;
 }
 
-bool
-cache_line_lifetime_start(cache_t *cache, void const *key)
+void
+cache_line_lifetime_start(cache_t *cache, void const *key, char const *name)
 {
   hash_table_node_t     *node;
   cache_line_lifetime_t *data;
+  size_t                hash;
   bool                  existed;
   
-  debug("cache_line_lifetime_start(cache=0x%x, key=0x%x)\n", cache, key);
+  debug("cache_line_lifetime_start(cache=0x%x, key=0x%x, name='%s')\n", cache, key, name);
   
   data        = MALLOC(cache_line_lifetime_t);
+  data->name  = strdup(name);
   data->start = cache->ticks;
   data->end   = 0;
   data->next  = NULL;
@@ -201,12 +237,12 @@ cache_line_lifetime_start(cache_t *cache, void const *key)
   if (NULL == (node = hash_table_find(cache->addresses, key))) {
     node = hash_table_insert(cache->addresses, key, data);
   } else {
-    existed    = true;
     data->next = (cache_line_lifetime_t*) node->data;
     hash_table_update(cache->addresses, node, data);
   }
-
-  return existed;
+  
+  hash = compute_cache_line_hash(cache, key);
+  trace("%s\t%s (key=0x%x, hash=%d)\n", (existed ? "updated:" : "added:\t"), data->name, key, hash);
 }
 
 void
@@ -214,12 +250,16 @@ cache_line_lifetime_end(cache_t *cache, void const *key)
 {
   hash_table_node_t     *node;
   cache_line_lifetime_t *data;
+  size_t                hash;
   
-  debug("cache_line_lifetime_start(cache=0x%x, key=0x%x)\n", cache, key);
+  debug("cache_line_lifetime_end(cache=0x%x, key=0x%x)\n", cache, key);
   
   node      = hash_table_find(cache->addresses, key);
   data      = (cache_line_lifetime_t*) node->data;
   data->end = cache->ticks;
+  
+  hash = compute_cache_line_hash(cache, key);
+  trace("evicted:\t%s (key=0x%x, hash=%d, lifetime=%d)\n", data->name, key, hash, data->end - data->start);
 }
 
 void
@@ -254,6 +294,7 @@ cache_remove(cache_t *cache, void const *key)
 	cache->nodes[hash] = node->next;
       }
       cache->freer(node->key);
+      safe_free(node->name);
       safe_free(node);
       cache->entries--;
       return;
@@ -266,11 +307,11 @@ cache_remove(cache_t *cache, void const *key)
 }
 
 void
-cache_update(cache_t *cache, cache_node_t *node)
+cache_update(cache_t *cache, cache_node_t *node, char const *name)
 {
   cache_node_t *older, *newer;
   
-  debug("cache_update(cache=0x%x, node=0x%x)\n", cache, node);
+  debug("cache_update(cache=0x%x, node=0x%x, name='%s')\n", cache, node, name);
   
   older = node->older;
   newer = node->newer;
@@ -296,10 +337,10 @@ cache_update(cache_t *cache, cache_node_t *node)
 }
 
 void
-cache_insert(cache_t *cache, void const *key)
+cache_insert(cache_t *cache, void const *key, char const *name)
 {
   cache_node_t *node, *previous;
-  size_t       hash, tag;
+  size_t       hash;
   
   debug("cache_insert(cache=0x%x, key=0x%x)\n", cache, key);
   
@@ -313,26 +354,12 @@ cache_insert(cache_t *cache, void const *key)
     cache_remove(cache, previous->key);
   }
   
-  hash = compute_cache_line_hash(cache, key);
-  tag  = compute_cache_line_tag(cache, key);
-  node = cache->nodes[hash];
-  
-  debug("cache_insert: hash=%d, tag=%d ~> node=0x%x\n", hash, tag, node);
-  
-  /* search within the bucket */
-  while (node) {
-    if (tag == node->tag) {
-      /* found */
-      debug("cache_insert: hash=%d => node=0x%x\n", hash, node);
-      return;
-    }
-    node = node->next;
-  }
-  
   /* create new data node */
+  hash        = compute_cache_line_hash(cache, key);
   node        = MALLOC(cache_node_t);
   node->key   = cache->duplicator(key);
-  node->tag   = tag;
+  node->tag   = compute_cache_line_tag(cache, key);
+  node->name  = strdup(name);
   node->next  = cache->nodes[hash];
   node->older = NULL;
   node->newer = NULL;
@@ -353,6 +380,9 @@ cache_insert(cache_t *cache, void const *key)
   } else if (!cache->lru->newer) {
     cache->lru->newer = cache->mru;
   }
+  
+  /* begin the cache-line's life */
+  cache_line_lifetime_start(cache, key, name);
   
   debug("cache_insert: hash=%d => node=0x%x\n", hash, node);
 }
@@ -386,20 +416,22 @@ cache_find(cache_t *cache, void const *key)
 }
 
 void
-cache_miss(cache_t *cache, void const *key, cache_operation::type_t access)
+cache_miss(cache_t *cache, void const *key, cache_operation::type_t access, char const *name)
 {
-  size_t                hash, tag;
-  bool                  existed, conflict;
+  size_t hash;
+  bool   existed, conflict;
   
   debug("cache_miss(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   
-  existed  = cache_line_lifetime_start(cache, key);
-  hash     = compute_cache_line_hash(cache, key);
-  tag      = compute_cache_line_tag(cache, key);
+  hash = compute_cache_line_hash(cache, key);
+  
+  trace("miss:\t\t%s (key=0x%x, hash=%d)\n", name, key, hash);
+  
+  existed  = (NULL != hash_table_find(cache->addresses, key));
   conflict = (NULL != cache->nodes[hash]);
   
-  debug("cache_miss: key=0x%x, existed='%s', hash=%d, tag=%d, conflict='%s'\n",
-	key, bool_to_string(existed), hash, tag, bool_to_string(conflict));
+  debug("cache_miss: key=0x%x, name='%s', existed='%s', hash=%d, conflict='%s'\n",
+	key, name, bool_to_string(existed), hash, bool_to_string(conflict));
   
   if (cache_operation::read == access) {
     if (existed) {
@@ -425,9 +457,15 @@ cache_miss(cache_t *cache, void const *key, cache_operation::type_t access)
 }
 
 void
-cache_hit(cache_t *cache, void const *key, cache_operation::type_t access)
+cache_hit(cache_t *cache, void const *key, cache_operation::type_t access, char const *name)
 {
+  size_t hash;
+    
   debug("cache_hit(cache=0x%x, access='%s')\n", cache, cache_operation_to_string(access));
+  
+  hash = compute_cache_line_hash(cache, key);
+  
+  trace("hit:\t\t%s (key=0x%x, hash=%d)\n", name, key, hash);
   
   switch (access) {
   case cache_operation::read:
@@ -440,8 +478,10 @@ cache_hit(cache_t *cache, void const *key, cache_operation::type_t access)
 }
 
 void
-cache_access(cache_t *cache, void const *key, cache_operation::type_t access)
+cache_access(cache_t *cache, void const *key, cache_operation::type_t access, char const *format, ...)
 {
+  va_list      args;
+  char         name[100];
   cache_node_t *node;
   
   if (!simulate) {
@@ -450,12 +490,18 @@ cache_access(cache_t *cache, void const *key, cache_operation::type_t access)
   
   debug("cache_access(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   
+  va_start(args, format);
+  vsprintf(name, format, args);
+  va_end(args);
+  
+  debug("cache_access: name='%s'\n", name);
+  
   if (NULL == (node = cache_find(cache, key))) {
-    cache_miss(cache, key, access);
-    cache_insert(cache, key);
+    cache_miss(cache, key, access, name);
+    cache_insert(cache, key, name);
   } else {
-    cache_hit(cache, key, access);
-    cache_update(cache, node);
+    cache_hit(cache, key, access, name);
+    cache_update(cache, node, name);
   }
   
   cache->ticks++;
@@ -505,20 +551,17 @@ void
 cache_print_lifetimes(cache_t *cache)
 {
   uint                  i;
-  hash_table_t          *addresses;
   hash_table_node_t     *node;
   cache_line_lifetime_t *data;
-  
+    
   debug("cache_print_lifetimes(cache=0x%x)\n", cache);
   
-  addresses = cache->addresses;
-  
   message("Cache-Line Lifetimes: (out of %d)\n", cache->ticks);
-  for (i = 0; i < addresses->max_size; ++i) {
-    node = addresses->nodes[i];
+  for (i = 0; i < cache->addresses->max_size; ++i) {
+    node = cache->addresses->nodes[i];
     while (node) {
-      message("%4d/0x%x: ", i, node->key);
       data = (cache_line_lifetime_t*) node->data;
+      message("%5d:0x%0.8x: %15s: ", i, node->key, data->name);
       while (data) {
 	if (0 == data->end) {
 	  data->end = cache->ticks;
@@ -551,6 +594,9 @@ cache_print_profile(cache_t *cache)
   nontrivial_misses   = misses - compulsory;
   
   message("Cache Profile:\n");
+  message("cache size:                %d\n", cache->cache_size);
+  message("cache-line size:           %d\n", cache->cache_line_size);
+  message("number of cache-lines:     %d\n", cache->lines);
   message("accesses:                  %d\n", accesses);
   message("read hits:                 %d\n", statistics->read_hits);
   message("write hits:                %d\n", statistics->write_hits);
@@ -571,10 +617,8 @@ cache_print_profile(cache_t *cache)
   message("non-trivial hit rate:      %2.4f\n", 1.0 - (double) nontrivial_misses / (double) nontrivial_accesses);
   message("non-trivial miss rate:     %2.4f\n", (double) nontrivial_misses / (double) nontrivial_accesses);
   
-#if 0
   message("\n");
   cache_print_lifetimes(cache);
-#endif
 }
 
 void

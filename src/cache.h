@@ -26,6 +26,7 @@ namespace miss {
 typedef struct cache_node_tag {
   size_t         tag;
   void           *key;
+  char           *name;
   cache_node_tag *next, *older, *newer;
 } cache_node_t;
 
@@ -43,6 +44,7 @@ typedef struct {
 
 typedef struct cache_line_lifetime_tag {
   size_t                  start, end;
+  char                    *name;
   cache_line_lifetime_tag *next;
 } cache_line_lifetime_t;
 
@@ -63,7 +65,7 @@ typedef struct {
 cache_t* cache_malloc(size_t max_size, size_t line_size);
 void cache_free(cache_t *table);
 void cache_supported(cache_t *cache);
-void cache_access(cache_t *cache, void const *key, cache_operation::type_t access);
+void cache_access(cache_t *cache, void const *key, cache_operation::type_t access, char const *format, ...);
 char const* cache_operation_to_string(cache_operation::type_t access);
 void cache_print_profile(cache_t *table);
 void cache_debug(cache_t *cache);
