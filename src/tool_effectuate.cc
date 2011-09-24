@@ -165,7 +165,7 @@ effectuate_tool_main(int argc, char *argv[])
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:svV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:stvV:w"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
