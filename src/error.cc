@@ -17,7 +17,7 @@ verror(uint levels, char const *format, va_list args)
   
   show = verbose || !(levels & (level::information | level::debug));
   if (show) {
-    if (!(levels & (level::progress & level::trace))) {
+    if (!(levels & (level::progress | level::trace))) {
       fprintf(stderr, "%s: ", tool_name);
     }
     if (levels & level::information) {
