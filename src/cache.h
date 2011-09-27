@@ -55,11 +55,6 @@ typedef struct {
   cache_statistics_t   statistics;
   uint                 ticks;
   hash_table_t         *addresses;
-  hash_function_t      hasher;
-  hash_function_t      tagger;
-  compare_function_t   comparator;
-  duplicate_function_t duplicator;
-  free_function_t      freer; 
 } cache_t;
 
 cache_t* cache_malloc(size_t max_size, size_t line_size);

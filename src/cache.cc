@@ -98,7 +98,7 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
   
   lines      = cache_size / cache_line_size;
   hash_shift = log2(cache_line_size);
-  tag_shift  = log2(cache_line_size) + log2(cache_size);
+  tag_shift  = log2(cache_size);
   
   debug("cache_malloc: lines=%d, hash_shift=%d, tag_shift=%d\n", lines, hash_shift, tag_shift);
   
@@ -112,15 +112,12 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
   cache->ticks           = 0;
   cache->mru             = NULL;
   cache->lru             = NULL;
-  cache->hasher          = &memory_address_hash;
-  cache->tagger          = &memory_address_tag;
-  cache->comparator      = &memory_address_compare;
-  cache->duplicator      = &memory_address_duplicate;
-  cache->freer           = &memory_address_free;
   
   addresses              = hash_table_malloc(cache_size);
+#if 0
   addresses->hasher      = &cache_line_hash;
   addresses->comparator  = &cache_line_compare;
+#endif
   cache->addresses       = addresses;
   
   for (i = 0; i < lines; ++i) {
@@ -154,7 +151,7 @@ cache_free(cache_t *cache)
     cnode = cache->nodes[i];
     while (cnode) {
       cnext = cnode->next;
-      cache->freer(cnode->key);
+      /* cache->freer(cnode->key); */
       safe_free(cnode);
       cnode = cnext;
     }
@@ -223,7 +220,6 @@ cache_line_lifetime_start(cache_t *cache, void const *key, char const *name)
   hash_table_node_t     *node;
   cache_line_lifetime_t *data;
   size_t                hash;
-  bool                  existed;
   
   debug("cache_line_lifetime_start(cache=0x%x, key=0x%x, name='%s')\n", cache, key, name);
   
@@ -232,7 +228,6 @@ cache_line_lifetime_start(cache_t *cache, void const *key, char const *name)
   data->start = cache->ticks;
   data->end   = 0;
   data->next  = NULL;
-  existed     = false;
   
   if (NULL == (node = hash_table_find(cache->addresses, key))) {
     node = hash_table_insert(cache->addresses, key, data);
@@ -242,7 +237,7 @@ cache_line_lifetime_start(cache_t *cache, void const *key, char const *name)
   }
   
   hash = compute_cache_line_hash(cache, key);
-  trace("%s\t%s (key=0x%x, hash=%d)\n", (existed ? "updated:" : "added:\t"), data->name, key, hash);
+  trace("added:\t\t%s (key=0x%x, hash=%d)\n", data->name, key, hash);
 }
 
 void
@@ -293,7 +288,7 @@ cache_remove(cache_t *cache, void const *key)
       } else {
 	cache->nodes[hash] = node->next;
       }
-      cache->freer(node->key);
+      /* cache->freer(node->key); */
       safe_free(node->name);
       safe_free(node);
       cache->entries--;
@@ -357,7 +352,7 @@ cache_insert(cache_t *cache, void const *key, char const *name)
   /* create new data node */
   hash        = compute_cache_line_hash(cache, key);
   node        = MALLOC(cache_node_t);
-  node->key   = cache->duplicator(key);
+  node->key   = (void*) key; /* cache->duplicator(key); */
   node->tag   = compute_cache_line_tag(cache, key);
   node->name  = strdup(name);
   node->next  = cache->nodes[hash];
