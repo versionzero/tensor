@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 VECTOR=${1:-vector3}
 TENSOR=${2:-example7}
