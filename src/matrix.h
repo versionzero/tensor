@@ -27,6 +27,14 @@ typedef struct {
   double            **data;
 } matrix_t;
 
+typedef struct {
+  uint              m, n, rn;
+  ownership::type_t owner;
+  scheme::type_t    scheme;
+  uint              *RO, *CO;
+  double            *values;
+} smatrix_t;
+
 matrix_t *matrix_malloc(uint m, uint n, ownership::type_t owner = ownership::creator);
 void matrix_free(matrix_t *m);
 void matrix_clear(matrix_t *m1);

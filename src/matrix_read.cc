@@ -13,13 +13,13 @@ matrix_read_array(FILE *f)
   int      m, n, result;
   uint     i, j;
   matrix_t *mr;
-
+  
   if (0 != (result = mm_read_matrix_array_size(f, &m, &n))) {
     die("Failed to read matrix size (%d).\n", result);
   }
   
   mr = matrix_malloc(m, n);
-
+  
   for (i = 0; i < mr->m; ++i) {
     for (j = 0; j < mr->n; ++j) {
       fscanf(f, "%lg\n", &mr->data[i][j]);
