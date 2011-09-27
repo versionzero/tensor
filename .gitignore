@@ -1,6 +1,8 @@
 tensor
 convert
 effectuate
+dense
+examples/
 *.xcodeproj
 *.dSYM
 *.plist
