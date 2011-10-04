@@ -27,6 +27,7 @@ char              *tool_name;
 tool::type_t      tool_type;
 bool              tracing;
 bool              simulate;
+bool              human_readable;
 bool              verbose;
 verbosity::type_t noisiness;
 bool              write_results;
@@ -93,6 +94,7 @@ main(int argc, char *argv[])
   cache_line_size = DEFAULT_CACHE_LINE_SIZE;
   emit_latex      = DEFAULT_EMIT_LATEX;
   iterations      = DEFAULT_ITERATIONS;
+  human_readable  = DEFAULT_HUMAN_READABLE;
   seed            = DEFAULT_SEED;
   simulate        = DEFAULT_SIMULATE;
   tracing         = DEFAULT_TRACING;

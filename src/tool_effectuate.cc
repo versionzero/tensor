@@ -21,6 +21,7 @@ extern cache_t           *cache;
 extern uint              cache_size;
 extern uint              cache_line_size;
 extern uint              iterations;
+extern bool              human_readable;
 extern char              *tool_name;
 extern tool::type_t      tool_type;
 extern bool              simulate;
@@ -165,7 +166,7 @@ effectuate_tool_main(int argc, char *argv[])
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:stvV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:stuvV:w"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
@@ -200,6 +201,9 @@ effectuate_tool_main(int argc, char *argv[])
       break;
     case 't':
       tracing = !tracing;
+      break;
+    case 'u':
+      human_readable = !human_readable;
       break;
     case 'v': 
       verbose = !verbose;
