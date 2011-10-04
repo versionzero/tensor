@@ -56,22 +56,23 @@
 
 #define FULL_CACHE_DEBUG_WOULD_BE_TOO_VERBOSE 10
 
-extern bool verbose;
-extern bool simulate;
+extern bool human_readable;
 extern uint cache_size;
 extern uint cache_line_size;
+extern bool simulate;
+extern bool verbose;
 size_t      hash_shift, tag_shift;
 
-size_t
+static size_t
 cache_line_hash(void const *address)
 {
   register size_t key;
   
   key = (size_t) address;
-  return (key % cache_size) / cache_line_size;
+  return ((key >> hash_shift) << hash_shift);
 }
 
-size_t
+static size_t
 cache_line_compare(void const *a, void const *b)
 {
   register size_t x, y;
@@ -90,21 +91,23 @@ cache_line_compare(void const *a, void const *b)
 cache_t*
 cache_malloc(size_t cache_size, size_t cache_line_size)
 {
-  uint         i, lines;
-  cache_t      *cache;
-  hash_table_t *addresses;
+  uint               i, lines;
+  cache_t            *cache;
+  hash_table_t       *addresses;
+  cache_statistics_t *statistics;
   
   debug("cache_malloc(cache_size=%d, cache_line_size=%d)\n", cache_size, cache_line_size);
   
-  lines      = cache_size / cache_line_size;
-  hash_shift = log2(cache_line_size);
-  tag_shift  = log2(cache_size);
+  lines           = cache_size / cache_line_size;
+  cache_size      *= 8;
+  cache_line_size *= 8;
+  hash_shift      = log2(cache_line_size);
+  tag_shift       = log2(cache_size);
   
   debug("cache_malloc: lines=%d, hash_shift=%d, tag_shift=%d\n", lines, hash_shift, tag_shift);
   
   cache                  = MALLOC(cache_t);
   cache->nodes           = MALLOC_N(cache_node_t*, lines);
-  cache->addresses       = hash_table_malloc(cache_size);
   cache->cache_size      = cache_size;
   cache->cache_line_size = cache_line_size;
   cache->lines           = lines;
@@ -113,24 +116,27 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
   cache->mru             = NULL;
   cache->lru             = NULL;
   
-  addresses              = hash_table_malloc(cache_size);
-#if 0
+  addresses              = hash_table_malloc(lines);
   addresses->hasher      = &cache_line_hash;
   addresses->comparator  = &cache_line_compare;
-#endif
   cache->addresses       = addresses;
   
   for (i = 0; i < lines; ++i) {
     cache->nodes[i] = NULL;
   }
   
-  cache->statistics.read_hits               = 0;
-  cache->statistics.read_misses             = 0;
-  cache->statistics.compulsory_read_misses  = 0;
-  cache->statistics.write_hits              = 0;
-  cache->statistics.write_misses            = 0;
-  cache->statistics.compulsory_write_misses = 0;
-  cache->statistics.replacements            = 0;
+  for (i = 'A'; i < 'Z'; ++i) {
+    cache->has_statistics[i-'A']        = false;
+    statistics                          = &cache->statistics[i-'A'];
+    statistics->read_hits               = 0;
+    statistics->read_misses             = 0;
+    statistics->compulsory_read_misses  = 0;
+    statistics->conflict_read_misses    = 0;
+    statistics->write_hits              = 0;
+    statistics->write_misses            = 0;
+    statistics->compulsory_write_misses = 0;
+    statistics->conflict_write_misses   = 0;
+  }
   
   debug("cache_malloc: cache=0x%x\n", cache);
   
@@ -413,12 +419,16 @@ cache_find(cache_t *cache, void const *key)
 void
 cache_miss(cache_t *cache, void const *key, cache_operation::type_t access, char const *name)
 {
-  size_t hash;
-  bool   existed, conflict;
+  size_t             hash;
+  bool               existed, conflict;
+  cache_statistics_t *statistics;
   
   debug("cache_miss(cache=0x%x, key=0x%x, access='%s')\n", cache, key, cache_operation_to_string(access));
   
-  hash = compute_cache_line_hash(cache, key);
+  hash       = compute_cache_line_hash(cache, key);
+  statistics = &cache->statistics[name[0]-'A'];
+  
+  cache->has_statistics[name[0]-'A'] = true;
   
   trace("miss:\t\t%s (key=0x%x, hash=%d)\n", name, key, hash);
   
@@ -431,22 +441,22 @@ cache_miss(cache_t *cache, void const *key, cache_operation::type_t access, char
   if (cache_operation::read == access) {
     if (existed) {
       if (conflict) {
-	cache->statistics.conflict_read_misses++;
+	statistics->conflict_read_misses++;
       } else {
-	cache->statistics.read_misses++;
+	statistics->read_misses++;
       }
     } else {
-      cache->statistics.compulsory_read_misses++;
+      statistics->compulsory_read_misses++;
     }
   } else {
     if (existed) {
       if (conflict) {
-	cache->statistics.conflict_write_misses++;
+	statistics->conflict_write_misses++;
       } else {
-	cache->statistics.write_misses++;
+	statistics->write_misses++;
       }
     } else {
-      cache->statistics.compulsory_write_misses++;
+      statistics->compulsory_write_misses++;
     }
   }
 }
@@ -454,20 +464,24 @@ cache_miss(cache_t *cache, void const *key, cache_operation::type_t access, char
 void
 cache_hit(cache_t *cache, void const *key, cache_operation::type_t access, char const *name)
 {
-  size_t hash;
+  size_t             hash;
+  cache_statistics_t *statistics;
     
   debug("cache_hit(cache=0x%x, access='%s')\n", cache, cache_operation_to_string(access));
   
-  hash = compute_cache_line_hash(cache, key);
+  hash       = compute_cache_line_hash(cache, key);
+  statistics = &cache->statistics[name[0]-'A'];
+  
+  cache->has_statistics[name[0]-'A'] = true;
   
   trace("hit:\t\t%s (key=0x%x, hash=%d)\n", name, key, hash);
   
   switch (access) {
   case cache_operation::read:
-    cache->statistics.read_hits++;
+    statistics->read_hits++;
     break;
   case cache_operation::write:
-    cache->statistics.write_hits++;
+    statistics->write_hits++;
     break;
   }
 }
@@ -571,15 +585,13 @@ cache_print_lifetimes(cache_t *cache)
 }
 
 void
-cache_print_profile(cache_t *cache)
+cache_print_human_readable_statistics(cache_t *cache, cache_statistics_t *statistics, char const *name)
 {
   ulong              accesses, compulsory, conflict, hits, misses;
   ulong              nontrivial_accesses, nontrivial_misses;
-  cache_statistics_t *statistics;
   
-  debug("cache_print_profile(cache=0x%x)\n", cache);
+  debug("cache_print_human_readable_statistics(statistics=0x%x, name='%s')\n", statistics, name);
   
-  statistics          = &cache->statistics;
   hits                = statistics->read_hits + statistics->write_hits;
   compulsory          = statistics->compulsory_read_misses + statistics->compulsory_write_misses;
   conflict            = statistics->conflict_read_misses + statistics->conflict_write_misses;
@@ -588,7 +600,7 @@ cache_print_profile(cache_t *cache)
   nontrivial_accesses = accesses - compulsory;
   nontrivial_misses   = misses - compulsory;
   
-  message("Cache Profile:\n");
+  message("Statistics for %s:\n", name);
   message("cache size:                %d\n", cache->cache_size);
   message("cache-line size:           %d\n", cache->cache_line_size);
   message("number of cache-lines:     %d\n", cache->lines);
@@ -611,9 +623,117 @@ cache_print_profile(cache_t *cache)
   message("miss rate:                 %2.4f\n", (double) misses / (double) accesses);
   message("non-trivial hit rate:      %2.4f\n", 1.0 - (double) nontrivial_misses / (double) nontrivial_accesses);
   message("non-trivial miss rate:     %2.4f\n", (double) nontrivial_misses / (double) nontrivial_accesses);
+}
+
+void
+cache_print_raw_statistics(cache_t *cache, cache_statistics_t *statistics, char const *name)
+{
+  ulong              accesses, compulsory, conflict, hits, misses;
+  ulong              nontrivial_accesses, nontrivial_misses;
   
+  debug("cache_print_raw_statistics(statistics=0x%x, name='%s')\n", statistics, name);
+  
+  hits                = statistics->read_hits + statistics->write_hits;
+  compulsory          = statistics->compulsory_read_misses + statistics->compulsory_write_misses;
+  conflict            = statistics->conflict_read_misses + statistics->conflict_write_misses;
+  misses              = statistics->read_misses + statistics->write_misses + compulsory + conflict;
+  accesses            = hits + misses;
+  nontrivial_accesses = accesses - compulsory;
+  nontrivial_misses   = misses - compulsory;
+  
+  message("%s\t", name);
+  message("%d\t", cache->cache_size);
+  message("%d\t", cache->cache_line_size);
+  message("%d\t", cache->lines);
+  message("%d\t", accesses);
+  message("%d\t", statistics->read_hits);
+  message("%d\t", statistics->write_hits);
+  message("%d\t", hits);
+  message("%d\t", statistics->read_misses);
+  message("%d\t", statistics->write_misses);
+  message("%d\t", statistics->compulsory_read_misses);
+  message("%d\t", statistics->compulsory_write_misses);
+  message("%d\t", compulsory);
+  message("%d\t", statistics->conflict_read_misses);
+  message("%d\t", statistics->conflict_write_misses);
+  message("%d\t", conflict);
+  message("%d\t", misses);
+  message("%d\t", nontrivial_misses);
+  message("%2.4f\t", (double) nontrivial_misses / (double) misses);
+  message("%2.4f\t", 1.0 - (double) misses / (double) accesses);
+  message("%2.4f\t", (double) misses / (double) accesses);
+  message("%2.4f\t", 1.0 - (double) nontrivial_misses / (double) nontrivial_accesses);
+  message("%2.4f\n", (double) nontrivial_misses / (double) nontrivial_accesses);
+}
+
+void
+cache_print_statistics_header()
+{
+  message("# name\tcache size\tcache-line size\tnumber of cache-lines\taccesses\tread hits\twrite hits\ttotal hits\tread misses\twrite misses\tcompulsory read misses\tcompulsory write misses\ttotal compulsory misses\tconflict read misses\tconflict write misses\ttotal conflict misses\ttotal misses\tnon-trivial misses\tnon-trivial to miss ratio\thit rate\tmiss rate\tnon-trivial hit rate\tnon-trivial miss rate");
+}
+
+void
+cache_print_statistics(cache_t *cache, cache_statistics_t *statistics, char const *name)
+{
+  if (human_readable) {
+    cache_print_human_readable_statistics(cache, statistics, name);
+  } else {
+    cache_print_raw_statistics(cache, statistics, name);
+  }
+}
+
+void
+add_statistics(cache_statistics_t *destination, cache_statistics_t *source)
+{
+  debug("add_statistics(destination=0x%x, source=0x%x)\n", destination, source);
+  
+  destination->read_hits               += source->read_hits;
+  destination->write_hits              += source->write_hits;
+  destination->read_misses             += source->read_misses;
+  destination->write_misses            += source->write_misses;
+  destination->compulsory_read_misses  += source->compulsory_read_misses;
+  destination->compulsory_write_misses += source->compulsory_write_misses;
+  destination->conflict_read_misses    += source->conflict_read_misses;
+  destination->conflict_write_misses   += source->conflict_write_misses;
+}
+
+void
+cache_print_profile(cache_t *cache)
+{
+  uint               i;
+  char               name[10];
+  cache_statistics_t totals, *statistics;
+  
+  totals.read_hits               = 0;
+  totals.write_hits              = 0;
+  totals.read_misses             = 0;
+  totals.write_misses            = 0;
+  totals.compulsory_read_misses  = 0;
+  totals.compulsory_write_misses = 0;
+  totals.conflict_read_misses    = 0;
+  totals.conflict_write_misses   = 0;
+  
+  if (!human_readable) {
+    cache_print_statistics_header();
+  }
+  
+  for (i = 'A'; i < 'Z'; ++i) {
+    if (cache->has_statistics[i-'A']) {
+      statistics = &cache->statistics[i-'A'];
+      add_statistics(&totals, statistics);
+      sprintf(name, "%c", i);
+      cache_print_statistics(cache, statistics, name);
+      message("\n");
+    }
+  }
+  
+  sprintf(name, "total");
+  cache_print_statistics(cache, &totals, name);
+  
+#if 0
   message("\n");
   cache_print_lifetimes(cache);
+#endif
 }
 
 void

@@ -39,7 +39,6 @@ typedef struct {
   ulong write_misses;
   ulong compulsory_write_misses;
   ulong conflict_write_misses;
-  ulong replacements;
 } cache_statistics_t;
 
 typedef struct cache_line_lifetime_tag {
@@ -49,12 +48,13 @@ typedef struct cache_line_lifetime_tag {
 } cache_line_lifetime_t;
 
 typedef struct {
-  size_t               entries, lines;
-  size_t               cache_size, cache_line_size;
-  cache_node_t         **nodes, *mru, *lru;
-  cache_statistics_t   statistics;
-  uint                 ticks;
-  hash_table_t         *addresses;
+  size_t             entries, lines;
+  size_t             cache_size, cache_line_size;
+  cache_node_t       **nodes, *mru, *lru;
+  uint               ticks;
+  hash_table_t       *addresses;
+  cache_statistics_t statistics[26];
+  bool               has_statistics[26];
 } cache_t;
 
 cache_t* cache_malloc(size_t max_size, size_t line_size);
