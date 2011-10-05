@@ -669,7 +669,7 @@ cache_print_raw_statistics(cache_t *cache, cache_statistics_t *statistics, char 
 void
 cache_print_statistics_header()
 {
-  message("# name\tcache size\tcache-line size\tnumber of cache-lines\taccesses\tread hits\twrite hits\ttotal hits\tread misses\twrite misses\tcompulsory read misses\tcompulsory write misses\ttotal compulsory misses\tconflict read misses\tconflict write misses\ttotal conflict misses\ttotal misses\tnon-trivial misses\tnon-trivial to miss ratio\thit rate\tmiss rate\tnon-trivial hit rate\tnon-trivial miss rate");
+  message("# name\tcache size\tcache-line size\tnumber of cache-lines\taccesses\tread hits\twrite hits\ttotal hits\tread misses\twrite misses\tcompulsory read misses\tcompulsory write misses\ttotal compulsory misses\tconflict read misses\tconflict write misses\ttotal conflict misses\ttotal misses\tnon-trivial misses\tnon-trivial to miss ratio\thit rate\tmiss rate\tnon-trivial hit rate\tnon-trivial miss rate\n");
 }
 
 void
