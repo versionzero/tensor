@@ -4,6 +4,57 @@
 #include "utility.h"
 #include <string.h>
 
+static char const *map_permutation_heuristics_to_string[] = {
+  "none",
+  "naive-greedy"
+};
+
+static char const *map_permutation_heuristics_to_description[] = { 
+  "none",
+  "re-order tensor layout based on intra-slice proximity"
+};
+
+char const*
+permutation_heuristic_to_string(permutation_heuristic::type_t heuristic)
+{
+  return map_permutation_heuristics_to_string[heuristic];
+}
+
+permutation_heuristic::type_t
+string_to_permutation_heuristic(char const *name)
+{
+  uint i;
+  
+  for (i = 0; i < COUNT_OF(map_permutation_heuristics_to_string); ++i) {
+    if (0 == strcmp(name, map_permutation_heuristics_to_string[i])) {
+      return (permutation_heuristic::type_t) i;
+    }
+  }
+  
+  return permutation_heuristic::none;
+}
+
+void
+print_permutation_heuristics(char const *format)
+{
+  uint i;
+  
+  for (i = 1; i < COUNT_OF(map_permutation_heuristics_to_string); ++i) {
+    message(format, map_permutation_heuristics_to_string[i]);
+  }
+}
+
+void
+print_permutation_heuristics_with_descriptions(char const *format)
+{
+  uint i;
+  
+  for (i = 1; i < COUNT_OF(map_permutation_heuristics_to_string); ++i) {
+    message(format, map_permutation_heuristics_to_string[i], 
+	    map_permutation_heuristics_to_description[i]);
+  }
+}
+
 static char const *map_strategy_to_string[] = {
   "unknown",
   "array",
