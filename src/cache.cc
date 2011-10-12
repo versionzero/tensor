@@ -99,8 +99,8 @@ cache_malloc(size_t cache_size, size_t cache_line_size)
   debug("cache_malloc(cache_size=%d, cache_line_size=%d)\n", cache_size, cache_line_size);
   
   lines           = cache_size / cache_line_size;
-  cache_size      *= 8;
-  cache_line_size *= 8;
+  cache_size      *= 64;
+  cache_line_size *= 64;
   hash_shift      = log2(cache_line_size);
   tag_shift       = log2(cache_size);
   
