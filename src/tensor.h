@@ -4,7 +4,15 @@
 
 #include "mmio.h"
 #include "types.h"
+#include "vector.h"
 #include <stdio.h>
+
+namespace permutation_heuristic {
+  typedef enum {
+    none,
+    naive_greedy
+  } type_t;
+}
 
 namespace file_format {
   typedef enum {
@@ -106,6 +114,9 @@ void tensor_clear(tensor_t *tensor);
 void tensor_convert_inplace(tensor_t *destination, tensor_t *source);
 tensor_t *tensor_convert(tensor_t *tensor, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
 
+void tensor_find_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic);
+vector_t* tensor_find_permutation(tensor_t *tensor, permutation_heuristic::type_t heuristic);
+
 tensor_t *tensor_read(char const *filename);
 tensor_t *tensor_fread(FILE *file);
 tensor_t *tensor_fread_data(FILE *file, MM_typecode type);
@@ -119,14 +130,18 @@ void tensor_validate(tensor_t const *tensor);
 char const* strategy_to_string(strategy::type_t strategy);
 char const* orientation_to_string(orientation::type_t orientation);
 char const* orientation_to_latex_macro(orientation::type_t orientation);
+char const* permutation_heuristic_to_string(permutation_heuristic::type_t heuristic);
 strategy::type_t string_to_strategy(char const *name);
 orientation::type_t string_to_orientation(char const *name);
+permutation_heuristic::type_t string_to_permutation_heuristic(char const *name);
 strategy::type_t typecode_to_strategy(MM_typecode type);
 void strategy_to_typecode(MM_typecode *type, strategy::type_t strategy);
 void print_strategies(char const *format);
 void print_orientations(char const *format);
 void print_operations(char const *format);
 void print_operations_with_descriptions(char const *format);
+void print_permutation_heuristics(char const *format);
+void print_permutation_heuristics_with_descriptions(char const *format);
 
 #if 0
 void tensor_add_inplace(tensor_t *t1, tensor_t const *t2);

@@ -30,6 +30,9 @@ extern bool              verbose;
 extern verbosity::type_t noisiness;
 extern bool              write_results;
 
+static operation::type_t             optcode;
+static permutation_heuristic::type_t heuristic;
+
 void
 effectuate_tool_usage() 
 {
@@ -43,6 +46,8 @@ effectuate_tool_usage()
   message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
+  message("\t-p\tpermutation heuristic (default: %s)\n", permutation_heuristic_to_string(DEFAULT_PERMUTATION_HEURISTIC));
+  print_permutation_heuristics_with_descriptions("\t\t- %s : %s\n");
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
   message("\t-t\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
@@ -75,7 +80,7 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
   
   t = clock();
   matrix_fwrite(file, matrix, format::coordinate);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
   
   if (stdout != file) {
     fclose(file);
@@ -87,10 +92,26 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
 {
   clock_t  t;
   
-  progress("Performing operation '%s' ... ", operation_to_description_string(operation::n_mode_product));
+  progress("Performing operation '%s' ... ", 
+	   operation_to_description_string(operation::n_mode_product));
   t = clock();
   operation_n_mode_product_inplace(matrix, vector, tensor);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
+}
+
+vector_t*
+timed_find_permutation(tensor_t *tensor)
+{
+  clock_t  t;
+  vector_t *vector;
+  
+  progress("Performing permutation using the '%s' heuristic ... ",
+	   permutation_heuristic_to_string(heuristic));
+  t = clock();
+  vector = tensor_find_permutation(tensor, heuristic);
+  print_elapsed_time(t);
+  
+  return vector;
 }
 
 void
@@ -99,7 +120,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   uint     i;
   int      offset;
   char     *name;
-  vector_t *vector;
+  vector_t *vector, *permutation;
   matrix_t *matrix;
   tensor_t *tensor;
   
@@ -122,6 +143,11 @@ timed_operation_n_mode_product(int argc, char *argv[])
     cache_supported(cache);
   }
   
+  if (heuristic != permutation_heuristic::none) {
+    permutation = tensor_find_permutation(tensor, heuristic);
+    debug("timed_operation_n_mode_product: permutation=0x%x\n", permutation);
+  }
+  
   for (i = 0; i < iterations; ++i) {
     timed_operation_n_mode_product(matrix, vector, tensor);
   }
@@ -130,25 +156,33 @@ timed_operation_n_mode_product(int argc, char *argv[])
     timed_matrix_write(argc, argv, offset, matrix);
   }
   
+  /* if we are not printing times for each procedure out in a human
+     consumable way, then we need to terminate the line containing all
+     the timings for this instance */
+  if (!human_readable) {
+    message("\n");
+  }
+  
   if (simulate) {
     cache_print_profile(cache);
     cache_free(cache);
   }
   
   vector_free(vector);
+  vector_free(permutation);
   matrix_free(matrix);
   tensor_free(tensor);
 }
 
 void
-timed_operation(operation::type_t operation, int argc, char *argv[])
+timed_operation(int argc, char *argv[])
 {
-  switch (operation) {
+  switch (optcode) {
   case operation::n_mode_product:
     timed_operation_n_mode_product(argc, argv);
     break;
   default:
-    die("Operation '%d' not currently supported.\n", operation);
+    die("Operation '%d' not currently supported.\n", optcode);
     break;
   }
 }
@@ -156,17 +190,17 @@ timed_operation(operation::type_t operation, int argc, char *argv[])
 void
 effectuate_tool_main(int argc, char *argv[])
 {
-  int               c;
-  operation::type_t operation;
+  int c;
   
   /* set the program's defaults */
-  operation = DEFAULT_OPERATION;
+  optcode   = DEFAULT_OPERATION;
+  heuristic = DEFAULT_PERMUTATION_HEURISTIC;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:stuvV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:p:stuvV:w"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
@@ -191,9 +225,16 @@ effectuate_tool_main(int argc, char *argv[])
       break;
     case 'o': 
       if (isdigit(optarg[0])) {
-	operation = (operation::type_t) atoi(optarg);
+	optcode = (operation::type_t) atoi(optarg);
       } else {
-	operation = string_to_operation(optarg);
+	optcode = string_to_operation(optarg);
+      }
+      break;
+    case 'p': 
+      if (isdigit(optarg[0])) {
+	heuristic = (permutation_heuristic::type_t) atoi(optarg);
+      } else {
+	heuristic = string_to_permutation_heuristic(optarg);
       }
       break;
     case 's':
@@ -240,7 +281,8 @@ effectuate_tool_main(int argc, char *argv[])
   
   /* print program options, for debugging purposes */
   print_tool_options();
-  debug("effectuate_tool_main: operation='%s'\n", operation_to_string(operation));
+  debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
+  debug("effectuate_tool_main: heuristic='%s'\n", permutation_heuristic_to_string(heuristic));
   
   /* if we are just running a simulation, then we only do one
      iteration; otherwise, it would be really slow */
@@ -249,6 +291,6 @@ effectuate_tool_main(int argc, char *argv[])
   }
   
   /* pass control over to some naive timing procedures */
-  timed_operation(operation, argc, argv);
+  timed_operation(argc, argv);
 }
 
