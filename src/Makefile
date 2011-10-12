@@ -1,13 +1,12 @@
 CXX=g++
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
-DEPENDENCIES=-MM -MF $(patsubst %.o,%.d,$@)
 ifdef DEBUG
 	EXTRA_DEBUG=-g
 else
 	EXTRA_DEBUG=-g -DNODEBUG
 endif
-EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) #$(DEPENDENCIES)
+EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
@@ -54,6 +53,9 @@ ASSEMBLER=$(SOURCES:.cc=.s)
 OBJECTS=$(ASSEMBLER:.s=.o)
 EXECUTABLE=tensor
 
+default: dependencies
+	make -j4 all
+
 all: $(HEADERS) $(SOURCES) $(EXECUTABLE)
 
 asm: $(HEADERS) $(ASSEMBLER) $(OBJECTS)
@@ -70,8 +72,9 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 	dsymutil $@
 
 .cc.o: $(HEADERS)
-	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -MM -MF $(patsubst %.o,%.d,$@) $<
 	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -o $@ $<
+
+#$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -MM -MF $(patsubst %.o,%.d,$@) $<
 
 .cc.s: $(HEADERS)
 	$(CXX) $(CXXFLAGS) -S $<
@@ -91,11 +94,16 @@ clean:
 		$(EXECUTABLE) *.o *.d annotate.*.h cache.*.dat a.out	\
 		*.plist;
 
--include $(OBJECTS:.o=.d)
+dependencies:
+	touch Makefile.d
+	makedepend -I/usr/llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include -fMakefile.d -- $(EXTRA_CXXFLAGS) $(CXXFLAGS) -- $(SOURCES)
+
+-include Makefile.d
 
 ##
 # Local Variables:
 # mode: Makefile
 # End:
 ##
-# DO NOT DELETE
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
