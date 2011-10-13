@@ -5,4 +5,5 @@ examples/
 *.dSYM
 *.plist
 *.d
+*.bak
 
