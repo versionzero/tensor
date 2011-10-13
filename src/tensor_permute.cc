@@ -10,52 +10,41 @@
 
 typedef uint (*slice_distance_t)(tensor_t *tensor, uint i, uint j);
 
-bool
-is_nonzero(tensor_t *tensor, uint cc, uint kk, uint slice)
-{
-  uint c, i, k;
-  uint start, end;
-  uint const                        *R, *C, *K;
-  tensor_storage_compressed_t const *storage;
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  R       = storage->RO;
-  C       = storage->CO;
-  K       = storage->KO;
-  
-  start  = R[slice-1];
-  end    = R[slice];
-  
-  for (i = start; i < end; ++k) {
-      c = C[i];
-      k = K[i];
-      if (cc == c && kk == k) {
-	return true;
-      }
-  }
-  
-  return false;
-}
-
 uint
 slice_distance_for_compressed_tube(tensor_t *tensor, uint s1, uint s2)
 {
-  uint i, j;
-  uint n;
-  uint distance;
+  uint                              i, j, c1, c2, k1, k2;
+  uint                              distance;
+  uint const                        *R, *C, *K;
+  tensor_storage_compressed_t const *storage;
   
-  superfluous("slice_distance_for_compressed_tube(vector=0x%x, i=%d, j=%d)\n", tensor, s1, s2);
+  superfluous("slice_distance_for_compressed_tube(vector=0x%x, s1=%d, s2=%d)\n", tensor, s1, s2);
   
-  n        = tensor->n;
   distance = 0;
+  storage  = STORAGE_COMPRESSED(tensor);
+  R        = storage->RO;
+  C        = storage->CO;
+  K        = storage->KO;
   
-  for (i = 0; i < n; ++i) {
-    for (j = 0; j < n; ++j) {
-      if (is_nonzero(tensor, i, j, s1) != is_nonzero(tensor, i, j, s2)) {
-	distance++;
+  for (i = R[s1], j = R[s2]; i < R[s1+1] && j < R[s2+1];) {
+    c1 = C[i]; k1 = K[i]; 
+    c2 = C[j]; k2 = K[j];
+    DEBUG("%d ?= %d == %s, %d ?= %d == %s\n",
+	  c1, c2, c1 == c2 ? "YES" : "NO",
+	  k1, k2, k1 == k2 ? "YES" : "NO");
+    if (c1 != c2 || k1 != k2) {
+      distance++;
+      if (c1 < c2 || k1 < k2) {
+	i++;
+      } else if (c2 < c1 || k2 < k1) {
+	j++;
       }
+    } else {
+      i++; j++;
     }
   }
+  
+  DEBUG("slice_distance_for_compressed_tube: distance=%d\n", distance);
   
   return distance;
 }
@@ -65,29 +54,36 @@ tensor_find_slice_permutation_inplace(vector_t *vector, tensor_t *tensor, permut
 {
   uint     i, j;
   uint     n;
+  uint     best, si, sj;
   matrix_t *matrix;
   double   **M;
   
-  superfluous("tensor_find_slice_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s', distance=0x%x)\n", 
-	      vector, tensor, permutation_heuristic_to_string(heuristic), distance);
+  debug("tensor_find_slice_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s', distance=0x%x)\n", 
+	vector, tensor, permutation_heuristic_to_string(heuristic), distance);
   
   n      = tensor->n;
   matrix = matrix_malloc(n, n);
   M      = matrix->data;
   
+  best   = n*n+1;
+  xi     = 0;
+  xj     = 0;
+  
   matrix_clear(matrix);
   
-  for (i = 1; i < n; ++i) {
+  for (i = 0; i < n; ++i) {
     for (j = i+1; j < n; ++j) {
       M[i][j] = (*distance)(tensor, i, j);
     }
   }
+  
+  matrix_fwrite(stdout, matrix, format::coordinate);
 }
 
 void
 permutation_supported(tensor_t *tensor)
 {
-  superfluous("permutation_supported(tensor=0x%x)\n", tensor);
+  debug("permutation_supported(tensor=0x%x)\n", tensor);
   
   if (tensor->strategy != strategy::compressed && tensor->orientation != orientation::tube) {
     die("permutation_supported: the combination of tensor strategy '%s' and '%s' orientation is not supported.\n", 
@@ -100,8 +96,8 @@ tensor_find_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_
 {
   slice_distance_t distance;
   
-  superfluous("tensor_find_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s')\n",
-	      vector, tensor, permutation_heuristic_to_string(heuristic));
+  debug("tensor_find_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s')\n",
+	vector, tensor, permutation_heuristic_to_string(heuristic));
   
   permutation_supported(tensor);
   
@@ -115,8 +111,8 @@ tensor_find_permutation(tensor_t *tensor, permutation_heuristic::type_t heuristi
 {
   vector_t *vector;
   
-  superfluous("tensor_find_permutation(tensor=0x%x, heuristic='%s')\n",
-	      tensor, permutation_heuristic_to_string(heuristic));
+  debug("tensor_find_permutation(tensor=0x%x, heuristic='%s')\n",
+	tensor, permutation_heuristic_to_string(heuristic));
   
   vector = vector_malloc(tensor->n);
   tensor_find_permutation_inplace(vector, tensor, heuristic);
