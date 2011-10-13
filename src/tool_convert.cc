@@ -64,7 +64,7 @@ timed_tensor_convert(tensor_t *source, strategy::type_t strategy, orientation::t
 	  orientation_to_string(orientation));
   t = clock();
   tensor = tensor_convert(source, strategy, orientation);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
   
   return tensor;
 }
@@ -173,7 +173,7 @@ convert_tool_main(int argc, char *argv[])
   }  
   t = clock();
   tensor_fwrite(file, result);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
   
   tensor_free(result);
   tensor_free(tensor);

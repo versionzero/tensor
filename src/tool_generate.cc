@@ -61,7 +61,7 @@ timed_tensor_write(int argc, char *argv[], int const offset, tensor_t const *ten
   
   t = clock();
   tensor_fwrite(file, tensor);
-  message("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
   
   if (stdout != file) {
     fclose(file);

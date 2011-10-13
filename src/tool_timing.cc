@@ -17,6 +17,22 @@
 #include <ctype.h>
 #include <unistd.h>
 
+extern bool human_readable;
+
+void
+print_elapsed_time(clock_t t)
+{
+  double elapsed;
+  
+  elapsed = SECONDS_SINCE(t);
+  
+  if (human_readable) {
+    progress("done [%lf]\n", elapsed);
+  } else {
+    message("%lf ", elapsed);
+  }
+}
+
 vector_t*
 timed_vector_read(char const *name)
 {
@@ -26,7 +42,7 @@ timed_vector_read(char const *name)
   progress("Reading vector %s ... ", name);
   t = clock();
   vector = vector_read(name);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
 
   return vector;
 }
@@ -40,7 +56,7 @@ timed_matrix_read(char const *name)
   progress("Reading matrix %s ... ", name);
   t = clock();
   matrix = matrix_read(name);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
   
   return matrix;
 }
@@ -54,7 +70,7 @@ timed_tensor_read(char const *name)
   progress("Reading tensor %s ... ", name);
   t = clock();
   tensor = tensor_read(name);
-  progress("done [%lf]\n", SECONDS_SINCE(t));
+  print_elapsed_time(t);
   
   return tensor;
 }

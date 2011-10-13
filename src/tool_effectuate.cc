@@ -144,7 +144,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   }
   
   if (heuristic != permutation_heuristic::none) {
-    permutation = tensor_find_permutation(tensor, heuristic);
+    permutation = timed_find_permutation(tensor);
     debug("timed_operation_n_mode_product: permutation=0x%x\n", permutation);
   }
   
