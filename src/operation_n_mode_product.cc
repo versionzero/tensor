@@ -174,7 +174,7 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
       M[i][j] += p[c] * V[k];
       
       cache_access(cache, &V[k],    cache_operation::read,  "V[k=%d]", k);
-      cache_access(cache, &p[t],    cache_operation::read,  "P[t=%d]", t);
+      cache_access(cache, &p[c],    cache_operation::read,  "P[c=%d]", t);
       cache_access(cache, &M[i][j], cache_operation::read,  "M[i=%d][j=%d]", i, j);
       cache_access(cache, &M[i][j], cache_operation::write, "M[i=%d][j=%d]", i, j);
       
