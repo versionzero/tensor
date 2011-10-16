@@ -52,11 +52,13 @@ slice_distance_for_compressed_tube(tensor_t *tensor, uint s1, uint s2)
 void
 tensor_find_slice_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic, slice_distance_t distance)
 {
-  uint     i, j;
+  uint     i, j, k;
   uint     n;
-  uint     best, si, sj;
+  uint     best;
   matrix_t *matrix;
   double   **M;
+  uint     *V;
+  bool     *seen;
   
   debug("tensor_find_slice_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s', distance=0x%x)\n", 
 	vector, tensor, permutation_heuristic_to_string(heuristic), distance);
@@ -65,19 +67,45 @@ tensor_find_slice_permutation_inplace(vector_t *vector, tensor_t *tensor, permut
   matrix = matrix_malloc(n, n);
   M      = matrix->data;
   
-  best   = n*n+1;
-  xi     = 0;
-  xj     = 0;
-  
   matrix_clear(matrix);
+  
+  best = n*n+1;
+  V    = vector->data;
   
   for (i = 0; i < n; ++i) {
     for (j = i+1; j < n; ++j) {
       M[i][j] = (*distance)(tensor, i, j);
+      if (best > M[i][j]) {
+	best = M[i][j];
+	V[0] = i;
+	V[1] = j;
+      }
     }
   }
   
-  matrix_fwrite(stdout, matrix, format::coordinate);
+  debug("tensor_find_slice_permutation_inplace: best=%d, V[0]=%lf, V[1]=%lf\n", best, V[0], V[1]);
+  
+  k            = 0;
+  seen         = MALLOC_N(bool, n);
+  seen[V[k++]] = true;
+  seen[V[k++]] = true;
+  
+  for (i = k; i < n; ++i) {
+    for (j = 0; j < n; ++j) {
+      if (!seen[j]) {
+	if (best > M[i][j]) {
+	  best = M[i][j];
+	  V[i] = j;
+	}
+      }
+    }
+    seen[V[i]] = true;
+  }
+  
+  safe_free(seen);
+  
+  //matrix_fwrite(stdout, matrix, format::coordinate);
+  vector_fwrite(stdout, vector);
 }
 
 void

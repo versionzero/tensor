@@ -20,7 +20,7 @@ vector_read_array(FILE *f)
   v = vector_malloc(n);
 
   for (i = 0; i < v->n; ++i) {
-    fscanf(f, "%lg\n", &v->data[i]);
+    fscanf(f, "%u\n", &v->data[i]);
   }
 
   return v;
@@ -32,7 +32,7 @@ vector_fread_data(FILE *file, MM_typecode type)
   debug("vector_fread_data(file=0x%x, type='%s')\n", 
 	file, mm_typecode_to_str(type));
   
-  if (!mm_is_vector(type) || !mm_is_real(type)) {
+  if (!mm_is_vector(type) || !mm_is_integer(type)) {
     die("No support for vector type: [%s]\n", mm_typecode_to_str(type));
   }
   

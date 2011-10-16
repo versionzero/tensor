@@ -8,7 +8,7 @@
 typedef struct {
   uint              n;
   ownership::type_t owner;
-  double            *data;
+  uint              *data;
 } vector_t;
 
 vector_t* vector_malloc(uint n, ownership::type_t owner = ownership::creator);

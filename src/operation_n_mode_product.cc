@@ -34,8 +34,8 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   uint                       start, end;
   uint                       c, r, r0, t, m, n;
   double                     **M;
-  double const               *p, *V;
-  uint const                 *R, *C, *T;
+  double const               *V;
+  uint const                 *p, *R, *C, *T;
   tensor_storage_compressed_t const *storage;
   
   debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
@@ -90,7 +90,7 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
       cache_access(cache, &C[k], cache_operation::read, "C[k=%d]", k);
       cache_access(cache, &T[k], cache_operation::read, "T[k=%d]", k);
       
-      trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
+      trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
 	    i, j, M[i][j], t, p[t], k, V[k], p[t] * V[k], M[i][j] + p[t] * V[k]);
       
       M[i][j] += p[t] * V[k];
@@ -113,8 +113,8 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   uint                       start, end;
   uint                       c, r, r0, t, m, n;
   double                     **M;
-  double const               *p, *V;
-  uint const                 *R, *C, *T;
+  double const               *V;
+  uint const                 *p, *R, *C, *T;
   tensor_storage_compressed_t const *storage;
   
   debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
@@ -168,13 +168,13 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
       cache_access(cache, &C[k], cache_operation::read, "C[k=%d]", k);
       cache_access(cache, &T[k], cache_operation::read, "T[k=%d]", k);
       
-      trace("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
+      trace("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
 	    i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k], M[i][j] + p[c] * V[k]);
       
       M[i][j] += p[c] * V[k];
       
       cache_access(cache, &V[k],    cache_operation::read,  "V[k=%d]", k);
-      cache_access(cache, &p[c],    cache_operation::read,  "P[c=%d]", t);
+      cache_access(cache, &p[c],    cache_operation::read,  "P[c=%d]", c);
       cache_access(cache, &M[i][j], cache_operation::read,  "M[i=%d][j=%d]", i, j);
       cache_access(cache, &M[i][j], cache_operation::write, "M[i=%d][j=%d]", i, j);
       
@@ -236,8 +236,8 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
   uint                       start, end;
   uint                       r, rr, r0, t, m, n;
   double                     **M;
-  double const               *p, *V;
-  uint const                 *R, *K;
+  double const               *V;
+  uint const                 *p, *R, *K;
   tensor_storage_compressed_t const *storage;
   
   debug("compressed_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
@@ -288,7 +288,7 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
       
       cache_access(cache, &K[k], cache_operation::read, "K[k=%d]", k);
       
-      trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
+      trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
 	    i, j, M[i][j], t, p[t], k, V[k], p[t] * V[k], M[i][j] + p[t] * V[k]);
       
       M[i][j] += p[t] * V[k];
@@ -339,8 +339,8 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   uint                 start, end;
   uint                 c, ck, r, r0, t, m, n;
   double               **M;
-  double const         *p, *V;
-  uint const           *R, *CK;
+  double const         *V;
+  uint const           *p, *R, *CK;
   tensor_storage_extended_t const *storage;
   
   debug("ekmr_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
@@ -392,7 +392,7 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
       
       cache_access(cache, &CK[k], cache_operation::read, "CK[k=%d]", k);
       
-      trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2.0f * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
+      trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", 
 	    i, j, M[i][j], t, p[t], k, V[k], p[t] * V[k], M[i][j] + p[t] * V[k]);
       
       M[i][j] += p[t] * V[k];

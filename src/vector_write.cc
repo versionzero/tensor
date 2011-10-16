@@ -11,7 +11,7 @@ vector_initialize_type(MM_typecode *type)
 {
   mm_initialize_typecode(type);
   mm_set_vector(type);
-  mm_set_real(type);
+  mm_set_integer(type);
 }
 
 void
@@ -33,24 +33,24 @@ vector_write_array(FILE *f, vector_t const *v)
   }
 
   for (i = 0; i < v->n; ++i) {
-    fprintf(f, "%10.32g\n", v->data[i]);
+    fprintf(f, "%d\n", v->data[i]);
   }
 }
 
 
 void
-vector_fwrite(FILE *f, vector_t const *v, bool coordinate)
+vector_fwrite(FILE *f, vector_t const *v)
 {
   vector_write_array(f, v);
 }
 
 void
-vector_write(char const *filename, vector_t const *v, bool coordinate)
+vector_write(char const *filename, vector_t const *v)
 {
   FILE *f;
 
   f = fopen_or_die(filename, "w+");
-  vector_fwrite(f, v, coordinate);
+  vector_fwrite(f, v);
   fclose(f);
 }
 
