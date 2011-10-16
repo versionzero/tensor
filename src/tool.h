@@ -21,7 +21,7 @@ namespace tool {
 #define OPTION_MESSAGE(x,a,b)   (x ? a:b)
 #define DEFAULT_ON_OR_OFF(x)    OPTION_MESSAGE(x, "on", "off")
 
-#define DEFAULT_HUMAN_READABLE        false
+#define DEFAULT_HUMAN_READABLE        true
 #define DEFAULT_ITERATIONS            1
 #define DEFAULT_OPERATION             operation::n_mode_product
 #define DEFAULT_ORIENTATION           orientation::row
