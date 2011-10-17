@@ -51,6 +51,13 @@ slice_distance_for_compressed_tube(tensor_t *tensor, uint s1, uint s2)
   return distance;
 }
 
+/*
+ * The following code is public domain.
+ * Algorithm by Torben Mogensen, implementation by N. Devillard.
+ * This code in public domain.
+ *
+ * Source: http://ndevilla.free.fr/median/median/src/
+ */
 uint
 non_destructive_median(double m[], uint n, uint skip) 
 {
@@ -132,7 +139,9 @@ naive_median_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_dista
   }
   
   DEBUG("permutation_inplace: best=%d, V[0]=%d, V[1]=%d\n", best, V[0], V[1]);
+#if 0
   //matrix_fwrite(stdout, matrix, format::coordinate);
+#endif
   
   seen = MALLOC_N(bool, n);
   for (i = 0; i < n; ++i) {
@@ -148,7 +157,7 @@ naive_median_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_dista
     for (i = 0; i < n; ++i) {
       if (!seen[i] && i != j) {
 	difference = fabs(D[i][j]-M[i]);
-	DEBUG("permutation_inplace: looking-at(%d, %d)=%lf (deviation=%lf)\n", i, j, D[i][j], fabs(D[i][j]-M[i]));
+	DEBUG("permutation_inplace: looking-at(%d, %d)=%lf (difference=%lf)\n", i, j, D[i][j], difference);
 	if (best > difference) {
 	  best = difference;
 	  k    = i;
@@ -179,15 +188,22 @@ naive_minimum_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_dist
   double   **D;
   uint     *V;
   bool     *seen;
+  uint const                        *R, *C, *K;
+  tensor_storage_compressed_t const *storage;
   
   debug("naive_greedy_permutation_inplace(vector=0x%x, tensor=0x%x, distance=0x%x)\n", 
 	vector, tensor, distance);
   
-  n      = tensor->n;
-  matrix = matrix_malloc(n, n);
-  D      = matrix->data;
-  V      = vector->data;
+  storage  = STORAGE_COMPRESSED(tensor);
+  R        = storage->RO;
+  C        = storage->CO;
+  K        = storage->KO;
   
+  n        = tensor->n;
+  matrix   = matrix_malloc(n, n);
+  D        = matrix->data;
+  V        = vector->data;
+    
   matrix_clear(matrix);
   
   for (j = 0; j < n; ++j) {
@@ -221,7 +237,7 @@ naive_minimum_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_dist
     k    = 0;
     for (i = 0; i < n; ++i) {
       if (!seen[i] && i != j) {
-	DEBUG("permutation_inplace: looking-at(%d, %d)=%lf (deviation=%lf)\n", i, j, D[i][j], fabs(D[i][j]-M[i]));
+	DEBUG("permutation_inplace: looking-at(%d, %d)=%lf\n", i, j, D[i][j]);
 	if (best > D[i][j]) {
 	  best = D[i][j];
 	  k    = i;
@@ -236,9 +252,10 @@ naive_minimum_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_dist
   }
   
   safe_free(seen);
+  vector_fwrite(stdout, vector);
 #if 0  
   vector_fwrite(stdout, mean);
-  vector_fwrite(stdout, vector);
+  
 #endif
 }
 
@@ -299,7 +316,7 @@ tensor_t*
 tensor_apply_permutation(tensor_t *source, vector_t *vector)
 {
   uint                              i, i1, i2, r0, r;
-  uint                              n, nnz;
+  uint                              n, nnz, offset;
   uint const                        *R1, *C1, *K1, *V;
   uint                              *R2, *C2, *K2;
   tensor_storage_compressed_t const *storage;
@@ -325,18 +342,26 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
   K2          = storage->KO;
   V2          = destination->values;
   
-  for (i = 1; i < n; ++i) {
-    r0 = R1[V[i-1]];
-    r  = R1[V[i]];
-    message("r0 = %d, r = %d\n", r0, r);
-    for (i1 = r0, i2 = 0; i1 < r, i2 < n; ++i1, ++i2) {
+  offset      = 0;
+  
+  for (i = 0; i < n; ++i) {
+    r0 = R1[V[i]];
+    r  = R1[V[i]+1];
+    message("> r0=R1[V[i=%d]  =%d]=%d\n", i, V[i], r0);
+    message("> r =R1[V[i=%d]+1=%d]=%d\n", i, V[i]+1, r);
+    for (i1 = r0, i2 = 0; i1 < r || i2 < n; ++i1, ++i2) {
       C2[i2] = C1[i1];
       K2[i2] = K1[i1];
       V2[i2] = V1[i1];
-      message("C2[i2] = %d; C1[i1] = %d; K2[i2] = %d; K1[i1] = %d; V2[i2] = %d; V1[i1] = %d;\n", 
-	      C2[i2], C1[i1], K2[i2], K1[i1], V2[i2], V1[i1]);
+#if 0
+      message("C2[i2=%d]=%d; C1[i1=%d]=%d\n",   i2, C2[i2], i1, C1[i1]);
+      message("K2[i2=%d]=%d; K1[i1=%d]=%d\n",   i2, K2[i2], i1, K1[i1]);
+      message("V2[i2=%d]=%lf; V1[i1=%d]=%lf\n", i2, V2[i2], i1, V1[i1]);
+#endif
     }
-    R2[i-1] = r - r0;
+    R2[i] = offset + r - r0;
+    message("< R2[i=%d]=%d+%d-%d=%d\n", i, offset, r, r0, R2[i]);
+    offset = R2[i];
   }
   
   tensor_fwrite(stdout, destination);
