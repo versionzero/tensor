@@ -32,13 +32,13 @@ SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
 	matrix_malloc.cc matrix_partition.cc matrix_supported.cc	\
 	matrix_read.cc matrix_write.cc
-SOURCES_STORAGE=tensor_storage_convert.cc				\
-	tensor_storage_compressed.cc					\
-	tensor_storage_compressed_slice.cc				\
-	tensor_storage_matrix_slice.cc tensor_emit_latex.cc		\
-	tensor_storage_ekmr.cc tensor_storage_compressed_fiber.cc	\
-	tensor_storage_gundersen.cc tensor_storage_malloc.cc		\
-	tensor_storage_utility.cc tensor_storage_zzekmr.cc
+SOURCES_STORAGE=tensor_storage_convert.cc			\
+	 tensor_storage_compressed.cc				\
+	 tensor_storage_compressed_slice.cc			\
+	 tensor_storage_matrix_slice.cc tensor_emit_latex.cc	\
+	 tensor_storage_ekmr.cc tensor_storage_gundersen.cc	\
+	tensor_storage_malloc.cc tensor_storage_utility.cc	\
+	tensor_storage_zzekmr.cc
 SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
 	tensor_free.cc tensor_malloc.cc tensor_permute.cc		\
 	tensor_supported.cc tensor_read.cc tensor_write.cc		\
@@ -83,16 +83,13 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 debug:
 	make -j4 DEBUG=1
 
-redebug: clean
-	make debug
-
 rebuild: clean
 	make -j4 all
 
 clean:
 	rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
 		$(EXECUTABLE) *.o *.d annotate.*.h cache.*.dat a.out	\
-		*.plist;
+		*.plist *.bak;
 
 dependencies:
 	touch Makefile.d

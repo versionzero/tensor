@@ -12,15 +12,15 @@ void
 vector_free(vector_t *v)
 {
   debug("vector_free(vector=0x%x)\n", v);
-  assert(NULL != v);
   
-  if (ownership::creator == v->owner) {    
-    assert(NULL != v->data);
+  if (!v) {
+    return;
+  }
+  
+  if (ownership::creator == v->owner) {
     safe_free(v->data);
   }
   
-  if (NULL != v) {
-    safe_free(v);
-  }
+  safe_free(v);
 }
 

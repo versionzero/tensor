@@ -168,8 +168,11 @@ timed_operation_n_mode_product(int argc, char *argv[])
     cache_free(cache);
   }
   
+  if (heuristic != permutation_heuristic::none) {
+    vector_free(permutation);
+  }
+ 
   vector_free(vector);
-  vector_free(permutation);
   matrix_free(matrix);
   tensor_free(tensor);
 }

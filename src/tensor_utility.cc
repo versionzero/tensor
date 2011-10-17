@@ -6,12 +6,14 @@
 
 static char const *map_permutation_heuristics_to_string[] = {
   "none",
-  "naive-greedy"
+  "naive-minimum",
+  "naive-median"
 };
 
 static char const *map_permutation_heuristics_to_description[] = { 
   "none",
-  "re-order tensor layout based on intra-slice proximity"
+  "re-order tensor layout based on minimum intra-slice proximity"
+  "re-order tensor layout based on median intra-slice proximity"
 };
 
 char const*

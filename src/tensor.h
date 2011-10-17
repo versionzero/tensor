@@ -10,7 +10,8 @@
 namespace permutation_heuristic {
   typedef enum {
     none,
-    naive_greedy
+    naive_minimum,
+    naive_median
   } type_t;
 }
 

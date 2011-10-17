@@ -7,8 +7,10 @@
 #include "vector.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef uint (*slice_distance_t)(tensor_t *tensor, uint i, uint j);
+typedef void (*slice_permutation_t)(vector_t *vector, tensor_t *tensor, slice_distance_t distance);
 
 uint
 slice_distance_for_compressed_tube(tensor_t *tensor, uint s1, uint s2)
@@ -44,68 +46,200 @@ slice_distance_for_compressed_tube(tensor_t *tensor, uint s1, uint s2)
     }
   }
   
-  DEBUG("slice_distance_for_compressed_tube: distance=%d\n", distance);
+  DEBUG("slice_distance_for_compressed_tube: distance(%d, %d)=%d\n", s1, s2, distance);
   
   return distance;
 }
 
+uint
+non_destructive_median(double m[], uint n, uint skip) 
+{
+  uint i, less, greater, equal;
+  double min, max, guess, maxltguess, mingtguess;
+  min = max = m[0] ;
+  for (i=1 ; i<n ; i++) {
+    if (i != skip) {
+      if (m[i]<min) min=m[i];
+      if (m[i]>max) max=m[i];
+    }
+  }
+  while (1) {
+    guess = (min+max)/2;
+    less = 0; greater = 0; equal = 0; 
+    maxltguess = min ;
+    mingtguess = max ;
+    for (i=0; i<n; i++) {
+      if (i != skip) {
+	if (m[i]<guess) {
+	  less++;
+	  if (m[i]>maxltguess) maxltguess = m[i] ; } 
+	else if (m[i]>guess) {
+	  greater++;
+	  if (m[i]<mingtguess) mingtguess = m[i] ; } 
+	else equal++;
+      }
+    }
+    if (less <= (n+1)/2 && greater <= (n+1)/2) break ; 
+    else if (less>greater) max = maxltguess ;
+    else min = mingtguess;
+  }
+  if (less >= (n+1)/2) return maxltguess;
+  else if (less+equal >= (n+1)/2) return guess; 
+  else return mingtguess;
+}
+
 void
-tensor_find_slice_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic, slice_distance_t distance)
+naive_median_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_distance_t distance)
+{
+  uint     i, j, k;
+  uint     n;
+  uint     best, difference;
+  matrix_t *matrix;
+  vector_t *mean;
+  double   **D;
+  uint     *V, *M;
+  bool     *seen;
+  
+  debug("naive_median_permutation_inplace(vector=0x%x, tensor=0x%x, distance=0x%x)\n", 
+	vector, tensor, distance);
+  
+  n      = tensor->n;
+  matrix = matrix_malloc(n, n);
+  mean   = vector_malloc(n);
+  D      = matrix->data;
+  V      = vector->data;
+  M      = mean->data;
+  
+  matrix_clear(matrix);
+  
+  for (j = 0; j < n; ++j) {
+    best = n*n+1;
+    for (i = 0; i < n; ++i) {
+      if (i != j) {
+	D[i][j] = (*distance)(tensor, i, j);
+	if (best > D[i][j]) {
+	  best = D[i][j];
+	  V[0] = i;
+	  V[1] = j;
+	  DEBUG("permutation_inplace: best(%d, %d)=%d\n", i, j, best);
+	}
+      }
+    }
+  }
+  
+  for (i = 0; i < n; ++i) {
+    M[i] = non_destructive_median(D[i], n, i);
+  }
+  
+  DEBUG("permutation_inplace: best=%d, V[0]=%d, V[1]=%d\n", best, V[0], V[1]);
+  //matrix_fwrite(stdout, matrix, format::coordinate);
+  
+  seen = MALLOC_N(bool, n);
+  for (i = 0; i < n; ++i) {
+    seen[i] = false;
+  }
+  
+  seen[V[0]] = true;
+  seen[V[1]] = true;
+  
+  for (j = 2; j < n; ++j) {
+    best = n*n+1;
+    k    = 0;
+    for (i = 0; i < n; ++i) {
+      if (!seen[i] && i != j) {
+	difference = fabs(D[i][j]-M[i]);
+	DEBUG("permutation_inplace: looking-at(%d, %d)=%lf (deviation=%lf)\n", i, j, D[i][j], fabs(D[i][j]-M[i]));
+	if (best > difference) {
+	  best = difference;
+	  k    = i;
+	  DEBUG("permutation_inplace: best(%d, %d)=%d\n", i, j, best);
+	}
+      }
+    }
+    V[j]       = k;
+    seen[V[j]] = true;
+    DEBUG("permutation_inplace: best=%d, V[%d]=%d, V[%d]=%d\n", best, j, V[j-1], j, V[j]);
+    DEBUG("permutation_inplace: seen=%d\n", k);
+  }
+  
+  safe_free(seen);
+#if 0  
+  vector_fwrite(stdout, mean);
+  vector_fwrite(stdout, vector);
+#endif
+}
+
+void
+naive_minimum_permutation_inplace(vector_t *vector, tensor_t *tensor, slice_distance_t distance)
 {
   uint     i, j, k;
   uint     n;
   uint     best;
   matrix_t *matrix;
-  double   **M;
+  double   **D;
   uint     *V;
   bool     *seen;
   
-  debug("tensor_find_slice_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s', distance=0x%x)\n", 
-	vector, tensor, permutation_heuristic_to_string(heuristic), distance);
+  debug("naive_greedy_permutation_inplace(vector=0x%x, tensor=0x%x, distance=0x%x)\n", 
+	vector, tensor, distance);
   
   n      = tensor->n;
   matrix = matrix_malloc(n, n);
-  M      = matrix->data;
+  D      = matrix->data;
+  V      = vector->data;
   
   matrix_clear(matrix);
   
-  best = n*n+1;
-  V    = vector->data;
-  
-  for (i = 0; i < n; ++i) {
-    for (j = i+1; j < n; ++j) {
-      M[i][j] = (*distance)(tensor, i, j);
-      if (best > M[i][j]) {
-	best = M[i][j];
-	V[0] = i;
-	V[1] = j;
-      }
-    }
-  }
-  
-  debug("tensor_find_slice_permutation_inplace: best=%d, V[0]=%lf, V[1]=%lf\n", best, V[0], V[1]);
-  
-  k            = 0;
-  seen         = MALLOC_N(bool, n);
-  seen[V[k++]] = true;
-  seen[V[k++]] = true;
-  
-  for (i = k; i < n; ++i) {
-    for (j = 0; j < n; ++j) {
-      if (!seen[j]) {
-	if (best > M[i][j]) {
-	  best = M[i][j];
-	  V[i] = j;
+  for (j = 0; j < n; ++j) {
+    best = n*n+1;
+    for (i = 0; i < n; ++i) {
+      if (i != j) {
+	D[i][j] = (*distance)(tensor, i, j);
+	if (best > D[i][j]) {
+	  best = D[i][j];
+	  V[0] = i;
+	  V[1] = j;
+	  DEBUG("permutation_inplace: best(%d, %d)=%d\n", i, j, best);
 	}
       }
     }
-    seen[V[i]] = true;
+  }
+  
+  DEBUG("permutation_inplace: best=%d, V[0]=%d, V[1]=%d\n", best, V[0], V[1]);
+  //matrix_fwrite(stdout, matrix, format::coordinate);
+  
+  seen = MALLOC_N(bool, n);
+  for (i = 0; i < n; ++i) {
+    seen[i] = false;
+  }
+  
+  seen[V[0]] = true;
+  seen[V[1]] = true;
+  
+  for (j = 2; j < n; ++j) {
+    best = n*n+1;
+    k    = 0;
+    for (i = 0; i < n; ++i) {
+      if (!seen[i] && i != j) {
+	DEBUG("permutation_inplace: looking-at(%d, %d)=%lf (deviation=%lf)\n", i, j, D[i][j], fabs(D[i][j]-M[i]));
+	if (best > D[i][j]) {
+	  best = D[i][j];
+	  k    = i;
+	  DEBUG("permutation_inplace: best(%d, %d)=%d\n", i, j, best);
+	}
+      }
+    }
+    V[j]       = k;
+    seen[V[j]] = true;
+    DEBUG("permutation_inplace: best=%d, V[%d]=%d, V[%d]=%d\n", best, j, V[j-1], j, V[j]);
+    DEBUG("permutation_inplace: seen=%d\n", k);
   }
   
   safe_free(seen);
-  
-  //matrix_fwrite(stdout, matrix, format::coordinate);
+#if 0  
+  vector_fwrite(stdout, mean);
   vector_fwrite(stdout, vector);
+#endif
 }
 
 void
@@ -122,7 +256,8 @@ permutation_supported(tensor_t *tensor)
 void
 tensor_find_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic)
 {
-  slice_distance_t distance;
+  slice_distance_t    distance;
+  slice_permutation_t permutation;
   
   debug("tensor_find_permutation_inplace(vector=0x%x, tensor=0x%x, heuristic='%s')\n",
 	vector, tensor, permutation_heuristic_to_string(heuristic));
@@ -131,7 +266,19 @@ tensor_find_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_
   
   distance = &slice_distance_for_compressed_tube;
   
-  tensor_find_slice_permutation_inplace(vector, tensor, heuristic, distance);
+  switch (heuristic) {
+  case permutation_heuristic::naive_minimum:
+    permutation = &naive_minimum_permutation_inplace;
+    break;
+  case permutation_heuristic::naive_median:
+    permutation = &naive_median_permutation_inplace;
+    break;
+  default:
+    die("Heuristic '%d' is not supported.\n", heuristic);
+    break;
+  }
+  
+  (*permutation)(vector, tensor, distance);
 }
 
 vector_t*

@@ -45,7 +45,7 @@ matrix_malloc(uint m, uint n, ownership::type_t owner)
   uint     i;
   matrix_t *mr;
   
-  superfluous("matrix_malloc(m=%d, n=%d, strategy='%s', owner='%s')\n", m, n, ownership_to_string(owner));
+  superfluous("matrix_malloc(m=%d, n=%d, owner='%s')\n", m, n, ownership_to_string(owner));
   
   mr           = MALLOC(matrix_t);
   mr->m        = m;

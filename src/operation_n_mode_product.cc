@@ -117,7 +117,7 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   uint const                 *p, *R, *C, *T;
   tensor_storage_compressed_t const *storage;
   
-  debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("compressed_tube(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   matrix_clear(matrix);
   
