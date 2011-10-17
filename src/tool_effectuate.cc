@@ -4,6 +4,7 @@
 #include "error.h"
 #include "file.h"
 #include "matrix.h"
+#include "memory.h"
 #include "operation.h"
 #include "tensor.h"
 #include "tool.h"
@@ -105,8 +106,7 @@ timed_find_permutation(tensor_t *tensor)
   clock_t  t;
   vector_t *vector;
   
-  progress("Performing permutation using the '%s' heuristic ... ",
-	   permutation_heuristic_to_string(heuristic));
+  progress("Permuting tensor ... ");
   t = clock();
   vector = tensor_find_permutation(tensor, heuristic);
   print_elapsed_time(t);
@@ -114,8 +114,22 @@ timed_find_permutation(tensor_t *tensor)
   return vector;
 }
 
+tensor_t*
+timed_apply_permutation(tensor_t *tensor, vector_t *vector)
+{
+  clock_t  t;
+  tensor_t *permuted;
+
+  progress("Permutation the tensor ... ");
+  t = clock();
+  permuted = tensor_apply_permutation(tensor, vector);
+  print_elapsed_time(t);
+  
+  return permuted;
+}
+
 void
-timed_operation_n_mode_product(int argc, char *argv[])
+  timed_operation_n_mode_product(int argc, char *argv[])
 {
   uint     i;
   int      offset;
@@ -145,6 +159,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   
   if (heuristic != permutation_heuristic::none) {
     permutation = timed_find_permutation(tensor);
+    tensor      = tensor_apply_permutation(tensor, permutation);
     debug("timed_operation_n_mode_product: permutation=0x%x\n", permutation);
   }
   
@@ -296,4 +311,3 @@ effectuate_tool_main(int argc, char *argv[])
   /* pass control over to some naive timing procedures */
   timed_operation(argc, argv);
 }
-

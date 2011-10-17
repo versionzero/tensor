@@ -117,6 +117,7 @@ tensor_t *tensor_convert(tensor_t *tensor, strategy::type_t strategy, orientatio
 
 void tensor_find_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic);
 vector_t* tensor_find_permutation(tensor_t *tensor, permutation_heuristic::type_t heuristic);
+tensor_t* tensor_apply_permutation(tensor_t *source, vector_t *vector);
 
 tensor_t *tensor_read(char const *filename);
 tensor_t *tensor_fread(FILE *file);

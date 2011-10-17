@@ -286,11 +286,60 @@ tensor_find_permutation(tensor_t *tensor, permutation_heuristic::type_t heuristi
 {
   vector_t *vector;
   
-  debug("tensor_find_permutation(tensor=0x%x, heuristic='%s')\n",
+  superfluous("tensor_find_permutation(tensor=0x%x, heuristic='%s')\n",
 	tensor, permutation_heuristic_to_string(heuristic));
   
   vector = vector_malloc(tensor->n);
   tensor_find_permutation_inplace(vector, tensor, heuristic);
   
   return vector;
+}
+
+tensor_t*
+tensor_apply_permutation(tensor_t *source, vector_t *vector)
+{
+  uint                              i, i1, i2, r0, r;
+  uint                              n, nnz;
+  uint const                        *R1, *C1, *K1, *V;
+  uint                              *R2, *C2, *K2;
+  tensor_storage_compressed_t const *storage;
+  tensor_t                          *destination;
+  double                            *V1, *V2;
+  
+  superfluous("tensor_apply_permutation_inplace(vector=0x%x, vector=%0x%x)\n", source, vector);
+  
+  V           = vector->data;
+  
+  storage     = STORAGE_COMPRESSED(source);
+  R1          = storage->RO;
+  C1          = storage->CO;
+  K1          = storage->KO;
+  V1          = source->values;
+  
+  n           = source->n;
+  nnz         = source->nnz;
+  destination = tensor_malloc(n, n, n, nnz, strategy::compressed, orientation::row);
+  storage     = STORAGE_COMPRESSED(destination);
+  R2          = storage->RO;
+  C2          = storage->CO;
+  K2          = storage->KO;
+  V2          = destination->values;
+  
+  for (i = 1; i < n; ++i) {
+    r0 = R1[V[i-1]];
+    r  = R1[V[i]];
+    message("r0 = %d, r = %d\n", r0, r);
+    for (i1 = r0, i2 = 0; i1 < r, i2 < n; ++i1, ++i2) {
+      C2[i2] = C1[i1];
+      K2[i2] = K1[i1];
+      V2[i2] = V1[i1];
+      message("C2[i2] = %d; C1[i1] = %d; K2[i2] = %d; K1[i1] = %d; V2[i2] = %d; V1[i1] = %d;\n", 
+	      C2[i2], C1[i1], K2[i2], K1[i1], V2[i2], V1[i1]);
+    }
+    R2[i-1] = r - r0;
+  }
+  
+  tensor_fwrite(stdout, destination);
+  
+  return destination;
 }
