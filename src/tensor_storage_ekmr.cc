@@ -27,7 +27,7 @@ index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
 }
 
 void
-tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_coordinate_to_ekmr(tensor_t *destination, tensor_t *source)
 {
   int                         nnz;
   tensor_storage_base_t       *base;
@@ -39,7 +39,7 @@ tensor_storage_convert_from_coordinate_to_ekmr_inplace(tensor_t *destination, te
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_EXTENDED(destination);
   
-  debug("tensor_storage_convert_from_coordinate_to_ekmr_inplace(destination=0x%x, source=0x%x)\n", d, s);
+  debug("tensor_storage_convert_from_coordinate_to_ekmr(destination=0x%x, source=0x%x)\n", d, s);
   
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;

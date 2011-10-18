@@ -30,7 +30,7 @@ copier_for_tube(tensor_storage_compressed_t *destination, tensor_storage_coordin
 }
 
 void
-tensor_storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_coordinate_to_compressed(tensor_t *destination, tensor_t *source)
 {
   int                         nnz;
   tensor_storage_base_t       *base;
@@ -42,7 +42,7 @@ tensor_storage_convert_from_coordinate_to_compressed_inplace(tensor_t *destinati
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_COMPRESSED(destination);
   
-  debug("tensor_storage_convert_from_coordinate_to_compressed_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_from_coordinate_to_compressed(destination=0x%x, source=0x%x)\n", destination, source);
   
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;

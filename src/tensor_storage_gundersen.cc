@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 void
-tensor_storage_convert_from_coordinate_to_gundersen_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_coordinate_to_gundersen(tensor_t *destination, tensor_t *source)
 {
   uint                        nnz;
   uint                        rn, cn, index, current, prev_ri, prev_ci;
@@ -21,7 +21,7 @@ tensor_storage_convert_from_coordinate_to_gundersen_inplace(tensor_t *destinatio
   uint                        *R, *C, *K;
   index_encoder_t             r_encoder, c_encoder;
   
-  debug("tensor_storage_convert_from_coordinate_to_gundersen_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_from_coordinate_to_gundersen(destination=0x%x, source=0x%x)\n", destination, source);
   
   nnz       = source->nnz;
   values    = source->values;
