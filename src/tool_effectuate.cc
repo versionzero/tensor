@@ -106,7 +106,8 @@ timed_find_permutation(tensor_t *tensor)
   clock_t  t;
   vector_t *vector;
   
-  progress("Permuting tensor ... ");
+  progress("Searching for permutation vector using the '%s' heuristic ... ", 
+	   permutation_heuristic_to_string(heuristic));
   t = clock();
   vector = tensor_find_permutation(tensor, heuristic);
   print_elapsed_time(t);
@@ -120,7 +121,7 @@ timed_apply_permutation(tensor_t *tensor, vector_t *vector)
   clock_t  t;
   tensor_t *permuted;
 
-  progress("Permutation the tensor ... ");
+  progress("Applying permutation to the tensor ... ");
   t = clock();
   permuted = tensor_apply_permutation(tensor, vector);
   print_elapsed_time(t);
@@ -129,7 +130,7 @@ timed_apply_permutation(tensor_t *tensor, vector_t *vector)
 }
 
 void
-  timed_operation_n_mode_product(int argc, char *argv[])
+timed_operation_n_mode_product(int argc, char *argv[])
 {
   uint     i;
   int      offset;
@@ -159,7 +160,7 @@ void
   
   if (heuristic != permutation_heuristic::none) {
     permutation = timed_find_permutation(tensor);
-    tensor      = tensor_apply_permutation(tensor, permutation);
+    tensor      = timed_apply_permutation(tensor, permutation);
     debug("timed_operation_n_mode_product: permutation=0x%x\n", permutation);
   }
   

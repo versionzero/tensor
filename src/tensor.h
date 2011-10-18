@@ -112,11 +112,11 @@ void tensor_free(tensor_t *tensor);
 
 void tensor_clear(tensor_t *tensor);
 
-void tensor_convert_inplace(tensor_t *destination, tensor_t *source);
 tensor_t *tensor_convert(tensor_t *tensor, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
+void tensor_convert(tensor_t *destination, tensor_t *source);
 
-void tensor_find_permutation_inplace(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic);
 vector_t* tensor_find_permutation(tensor_t *tensor, permutation_heuristic::type_t heuristic);
+void tensor_find_permutation(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic);
 tensor_t* tensor_apply_permutation(tensor_t *source, vector_t *vector);
 
 tensor_t *tensor_read(char const *filename);

@@ -64,7 +64,7 @@ tensor_storage_index_copy_for_zzekmr_row(void *destination, void const *source, 
 }
 
 void
-tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_coordinate_to_zzekmr(tensor_t *destination, tensor_t *source)
 {
   int                  i, nnz;
   tensor_storage_base_t       *base;
@@ -76,7 +76,7 @@ tensor_storage_convert_from_coordinate_to_zzekmr_inplace(tensor_t *destination, 
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_EXTENDED(destination);
   
-  debug("tensor_storage_convert_from_coordinate_to_zzekmr_inplace(destination=0x%x, source=0x%x)\n", d, s);
+  debug("tensor_storage_convert_from_coordinate_to_zzekmr(destination=0x%x, source=0x%x)\n", d, s);
   
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
