@@ -8,7 +8,7 @@ fi
 N=$1
 M=${2:--1}
 
-echo "%%MatrixMarket vector array real    general            "
+echo "%%MatrixMarket vector array integer    general            "
 echo $N
 
 for (( i=1; i<=N; i++ )); do
