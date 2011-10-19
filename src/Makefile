@@ -1,12 +1,13 @@
-CXX=g++
+CXX=clang
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
+CPPX11=-std=c++0x -stdlib=libc++
 ifdef DEBUG
 	EXTRA_DEBUG=-g
 else
 	EXTRA_DEBUG=-g -DNODEBUG
 endif
-EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
+EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
@@ -93,7 +94,7 @@ clean:
 
 dependencies:
 	touch Makefile.d
-	makedepend -I/usr/llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include -fMakefile.d -- $(EXTRA_CXXFLAGS) $(CXXFLAGS) -- $(SOURCES)
+	makedepend -I/usr/Llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include -fMakefile.d -- $(EXTRA_CXXFLAGS) $(CXXFLAGS) -- $(SOURCES)
 
 -include Makefile.d
 
