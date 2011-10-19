@@ -41,9 +41,10 @@ SOURCES_STORAGE=tensor_storage_convert.cc				\
 	tensor_storage_gundersen.cc tensor_storage_malloc.cc		\
 	tensor_storage_utility.cc tensor_storage_zzekmr.cc
 SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
-	tensor_free.cc tensor_malloc.cc tensor_permute.cc		\
-	tensor_supported.cc tensor_read.cc tensor_write.cc		\
-	tensor_utility.cc tensor_validate.cc
+	tensor_copy.cc tensor_free.cc tensor_malloc.cc			\
+	tensor_ownership.cc tensor_permute.cc tensor_supported.cc	\
+	tensor_read.cc tensor_write.cc tensor_utility.cc		\
+	tensor_validate.cc
 SOURCES_VECTOR=vector_clear.cc vector_free.cc vector_malloc.cc	\
 	vector_read.cc vector_write.cc
 SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_GENERATE)	\

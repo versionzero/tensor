@@ -15,11 +15,13 @@ convert_from_compressed_to_coordinate(tensor_t *destination, tensor_t *source)
   
   switch (destination->orientation) {
   case orientation::row:
+    tensor_storage_convert_from_compressed_to_coordinate(destination, source);
+    break;
+#if 0
   case orientation::column:
   case orientation::tube:
     tensor_storage_convert_from_compressed_to_coordinate(destination, source);
     break;
-#if 0
   case orientation::lateral:
   case orientation::horizontal:
   case orientation::frontal:

@@ -421,10 +421,10 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
   K2          = storage->KO;
   V2          = destination->values;
   
+#if 0
   offset      = 0;
   R2[0]       = 0;
   
-#if 0
   for (i = 0; i < n; ++i) {
     r0 = R1[V[i]];
     r  = R1[V[i]+1];
@@ -442,9 +442,11 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
     DEBUG("< R2[i=%d]=%d+%d-%d=%d\n", i, offset, r, r0, R2[i+1]);
     offset = R2[i+1];
   }
-#endif
   
   R2[i] = nnz;
+#endif
+  
+  
   
 #if 0
   tensor_fwrite(stdout, destination);

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 tensor_t*
-tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation)
+tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation, ownership::type_t owner)
 {
   tensor_t *tensor;
   
@@ -23,8 +23,13 @@ tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orien
   tensor->nnz         = nnz;
   tensor->strategy    = strategy;
   tensor->orientation = orientation;
+  tensor->owner       = owner;
   tensor->values      = NULL;
   tensor->storage     = NULL;
+  
+  if (ownership::viewer == owner) {
+    return tensor;
+  }
   
   if (nnz > 0) {
     tensor->values  = MALLOC_N(double, nnz);
@@ -43,5 +48,5 @@ tensor_malloc_from_template(tensor_t const *tensor)
 {
   superfluous("tensor_malloc_from_template(tensor=0x%x)\n", tensor);
   
-  return tensor_malloc(tensor->l, tensor->m, tensor->n, tensor->nnz, tensor->strategy, tensor->orientation);
+  return tensor_malloc(tensor->l, tensor->m, tensor->n, tensor->nnz, tensor->strategy, tensor->orientation, tensor->owner);
 }

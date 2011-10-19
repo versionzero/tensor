@@ -52,6 +52,7 @@ typedef struct {
   uint                l, m, n, nnz;
   strategy::type_t    strategy;
   orientation::type_t orientation;
+  ownership::type_t   owner;
   void                *storage;
   double              *values;
 } tensor_t;
@@ -106,9 +107,15 @@ typedef struct {
 #define STORAGE_COMPRESSED(x) ((tensor_storage_compressed_t*)x->storage)
 #define STORAGE_EXTENDED(x) ((tensor_storage_extended_t*)x->storage)
 
-tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
+tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, 
+			orientation::type_t orientation = orientation::unknown,
+			ownership::type_t owner = ownership::creator);
 tensor_t* tensor_malloc_from_template(tensor_t const *tensor);
 void tensor_free(tensor_t *tensor);
+
+tensor_t* tensor_copy_shallow(tensor_t *source);
+void tensor_copy_shallow(tensor_t *destination, tensor_t *source);
+void tensor_transfer_ownership(tensor_t *destination, tensor_t *source);
 
 void tensor_clear(tensor_t *tensor);
 
@@ -117,7 +124,7 @@ void tensor_convert(tensor_t *destination, tensor_t *source);
 
 vector_t* tensor_find_permutation(tensor_t *tensor, permutation_heuristic::type_t heuristic);
 void tensor_find_permutation(vector_t *vector, tensor_t *tensor, permutation_heuristic::type_t heuristic);
-tensor_t* tensor_apply_permutation(tensor_t *source, vector_t *vector);
+tensor_t* tensor_apply_permutation(tensor_t *tensor, vector_t *vector);
 
 tensor_t *tensor_read(char const *filename);
 tensor_t *tensor_fread(FILE *file);

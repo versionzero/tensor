@@ -82,8 +82,11 @@ tensor_free(tensor_t *tensor)
     return;
   }
   
-  safe_free(tensor->values);
-  tensor_storage_free(tensor);
+  if (ownership::creator == tensor->owner) {
+    safe_free(tensor->values);
+    tensor_storage_free(tensor);
+  }
+  
   safe_free(tensor);
 }
 
