@@ -153,10 +153,6 @@ tensor_fwrite_compressed_slice(FILE *file, tensor_t const *tensor)
     fprintf(file, "%d\n", storage->RO[i]);
   }
   
-  for (i = 0; i < cn; ++i) {
-    fprintf(file, "%d\n", storage->CO[i]);
-  }
-  
   for (i = 0; i < nnz; ++i) {
     fprintf(file, "%d %10.32g\n", storage->KO[i], tensor->values[i]);
   }

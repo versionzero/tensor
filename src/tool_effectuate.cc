@@ -100,30 +100,16 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
   print_elapsed_time(t);
 }
 
-vector_t*
-timed_find_permutation(tensor_t *tensor)
-{
-  clock_t  t;
-  vector_t *vector;
-  
-  progress("Searching for permutation vector using the '%s' heuristic ... ", 
-	   permutation_heuristic_to_string(heuristic));
-  t = clock();
-  vector = tensor_find_permutation(tensor, heuristic);
-  print_elapsed_time(t);
-  
-  return vector;
-}
-
 tensor_t*
-timed_apply_permutation(tensor_t *tensor, vector_t *vector)
+timed_tensor_permute(tensor_t *tensor)
 {
   clock_t  t;
   tensor_t *permuted;
 
-  progress("Applying permutation to the tensor ... ");
+  progress("Permuting tensor using the '%s' heuristic ... ", 
+	   permutation_heuristic_to_string(heuristic));
   t = clock();
-  permuted = tensor_apply_permutation(tensor, vector);
+  permuted = tensor_permute(tensor, heuristic);
   print_elapsed_time(t);
   
   return permuted;
@@ -135,9 +121,9 @@ timed_operation_n_mode_product(int argc, char *argv[])
   uint     i;
   int      offset;
   char     *name;
-  vector_t *vector, *permutation;
+  vector_t *vector;
   matrix_t *matrix;
-  tensor_t *tensor;
+  tensor_t *tensor, *permuted;
   
   offset = optind;
   name   = argv[offset++];
@@ -159,9 +145,10 @@ timed_operation_n_mode_product(int argc, char *argv[])
   }
   
   if (heuristic != permutation_heuristic::none) {
-    permutation = timed_find_permutation(tensor);
-    tensor      = timed_apply_permutation(tensor, permutation);
-    debug("timed_operation_n_mode_product: permutation=0x%x\n", permutation);
+    permuted = timed_tensor_permute(tensor);
+    tensor_free(tensor);
+    tensor = permuted;
+    debug("timed_operation_n_mode_product: permutation=0x%x\n", permuted);
   }
   
   for (i = 0; i < iterations; ++i) {
@@ -184,10 +171,6 @@ timed_operation_n_mode_product(int argc, char *argv[])
     cache_free(cache);
   }
   
-  if (heuristic != permutation_heuristic::none) {
-    vector_free(permutation);
-  }
- 
   vector_free(vector);
   matrix_free(matrix);
   tensor_free(tensor);

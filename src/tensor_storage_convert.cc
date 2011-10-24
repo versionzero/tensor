@@ -13,13 +13,15 @@ convert_from_compressed_to_coordinate(tensor_t *destination, tensor_t *source)
 {
   debug("convert_from_compressed_to_coordinate(destination=0x%x, source=0x%x)\n", destination, source);
   
+  tensor_storage_convert_from_compressed_to_coordinate(destination, source);
+  
+#if 0
   switch (destination->orientation) {
-  case orientation::row:
+  case orientation::tube:
     tensor_storage_convert_from_compressed_to_coordinate(destination, source);
     break;
-#if 0
+  case orientation::row:
   case orientation::column:
-  case orientation::tube:
     tensor_storage_convert_from_compressed_to_coordinate(destination, source);
     break;
   case orientation::lateral:
@@ -27,13 +29,12 @@ convert_from_compressed_to_coordinate(tensor_t *destination, tensor_t *source)
   case orientation::frontal:
     tensor_storage_convert_from_compressed_slice_to_coordinate(destination, source);
     break;
-#endif
-
   default:
-    die("Conversion to orientation '%s' is not currently supported.\n",
-	orientation_to_string(destination->orientation));
+    die("Conversion to orientation '%s' (%d) is not currently supported.\n",
+	orientation_to_string(destination->orientation), destination->orientation);
     break;
   }
+#endif
 }
 
 void

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 void
-tensor_storage_convert_from_compressed_to_coordinate(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_compressed_tube_to_coordinate(tensor_t *destination, tensor_t *source)
 {
   uint                        i, t, r0, r;
   uint                        rn, nnz;
@@ -22,7 +22,7 @@ tensor_storage_convert_from_compressed_to_coordinate(tensor_t *destination, tens
   s = STORAGE_COMPRESSED(source);
   d = STORAGE_COORIDINATE(destination);
   
-  debug("tensor_storage_convert_from_compressed_to_coordinate_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_from_compressed_tube_to_coordinate_inplace(destination=0x%x, source=0x%x)\n", destination, source);
   
   nnz = source->nnz;
   T   = d->tuples;
@@ -45,6 +45,67 @@ tensor_storage_convert_from_compressed_to_coordinate(tensor_t *destination, tens
   
   for (i = 0; i < nnz; ++i) {
     destination->values[i] = source->values[i];
+  }
+}
+
+void
+tensor_storage_convert_from_compressed_slice_to_coordinate(tensor_t *destination, tensor_t *source)
+{
+  uint                        i, t, r0, r;
+  uint                        n, rn, nnz;
+  tensor_storage_coordinate_t *d;
+  tensor_storage_compressed_t *s;
+  coordinate_tuple_t          *T;
+  double                      *V;
+  uint                        *R, *C, *K;
+  
+  s = STORAGE_COMPRESSED(source);
+  d = STORAGE_COORIDINATE(destination);
+  
+  debug("tensor_storage_convert_from_compressed_slice_to_coordinate_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  
+  nnz = source->nnz;
+  T   = d->tuples;
+  
+  n   = source->n;
+  rn  = s->rn;
+  R   = s->RO;
+  C   = s->CO;
+  K   = s->KO;
+  V   = source->values;
+  
+  for (r = 1, t = 0; r < rn; ++r) {
+    r0 = r-1;
+    for (i = R[r0]; i < R[r]; ++i, ++t) {
+      T[t].i     = K[i] / n;
+      T[t].j     = K[i] % n;
+      T[t].k     = r;
+      T[t].index = i;
+    }
+  }
+  
+  for (i = 0; i < nnz; ++i) {
+    destination->values[i] = source->values[i];
+  }
+}
+
+void
+tensor_storage_convert_from_compressed_to_coordinate(tensor_t *destination, tensor_t *source)
+{
+  debug("tensor_storage_convert_from_compressed_to_coordinate(destination=0x%x, source=0x%x)\n", destination, source);
+  
+  switch (source->strategy) {
+  case strategy::compressed:
+    tensor_storage_convert_from_compressed_tube_to_coordinate(destination, source);
+    break;
+  case strategy::slice:
+    tensor_storage_convert_from_compressed_slice_to_coordinate(destination, source);
+    break;
+  default:
+    die("tensor_storage_convert_from_compressed_to_coordinate: "
+	"unknown or unsupported strategy %d.\n", 
+	source->strategy);
+    break;
   }
 }
 

@@ -8,7 +8,7 @@ tensor_copy_shallow(tensor_t *destination, tensor_t *source)
   debug("tensor_copy_shallow(destination=0x%x, source=0x%x)\n", destination, source);
   
   destination->owner   = ownership::viewer;
-  destination->storage = source->values;
+  destination->values  = source->values;
   destination->storage = source->storage;
 }
 

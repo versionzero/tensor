@@ -106,8 +106,10 @@ compatible(tensor_t const *lhs, tensor_t const *rhs)
     die("Tensors do not have the same dimensions.\n");
   }
   
+#if 0
   if (rhs->strategy != strategy::coordinate) {
     die("Conversion from '%s' is not currently supported.\n",
 	strategy_to_string(rhs->strategy));
   }
+#endif
 }
