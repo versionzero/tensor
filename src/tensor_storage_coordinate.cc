@@ -12,7 +12,7 @@ void
 tensor_storage_convert_from_compressed_tube_to_coordinate(tensor_t *destination, tensor_t *source)
 {
   uint                        i, t, r0, r;
-  uint                        rn, nnz;
+  uint                        n, rn, nnz;
   tensor_storage_coordinate_t *d;
   tensor_storage_compressed_t *s;
   coordinate_tuple_t          *T;
@@ -27,6 +27,7 @@ tensor_storage_convert_from_compressed_tube_to_coordinate(tensor_t *destination,
   nnz = source->nnz;
   T   = d->tuples;
   
+  n   = source->n;
   rn  = s->rn;
   R   = s->RO;
   C   = s->CO;
@@ -36,14 +37,16 @@ tensor_storage_convert_from_compressed_tube_to_coordinate(tensor_t *destination,
   for (r = 1, t = 0; r < rn; ++r) {
     r0 = r-1;
     for (i = R[r0]; i < R[r]; ++i, ++t) {
-      T[t].i     = r;
+      T[t].i     = r0;
       T[t].j     = K[i];
       T[t].k     = C[i];
       T[t].index = i;
+      
     }
   }
   
   for (i = 0; i < nnz; ++i) {
+    //destination->values[i] = source->values[STORAGE_COORIDINATE(source)->tuples[i].index];
     destination->values[i] = source->values[i];
   }
 }
@@ -79,7 +82,7 @@ tensor_storage_convert_from_compressed_slice_to_coordinate(tensor_t *destination
     for (i = R[r0]; i < R[r]; ++i, ++t) {
       T[t].i     = K[i] / n;
       T[t].j     = K[i] % n;
-      T[t].k     = r;
+      T[t].k     = r0 % n;
       T[t].index = i;
     }
   }

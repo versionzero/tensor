@@ -360,8 +360,8 @@ tensor_permute(tensor_t *tensor, permutation_heuristic::type_t heuristic)
   vector     = vector_malloc(tensor->n);
   coordinate = tensor_convert(tensor, strategy::coordinate);
   frontal    = tensor_convert(coordinate, strategy::slice, orientation::frontal);
-  
-#if 0
+
+#if 0  
   message("tube:\n");
   tensor_fwrite(stdout, tensor);
   message("coordinate:\n");
@@ -386,12 +386,14 @@ tensor_permute(tensor_t *tensor, permutation_heuristic::type_t heuristic)
   
   (*permutation)(vector, frontal, distance);
   permuted   = tensor_apply_permutation(frontal, vector);
-  tensor_free(frontal);
   
 #if 0
   message("compressed frontal slice (permuted):\n");
   tensor_fwrite(stdout, permuted);
 #endif
+  
+  tensor_free(frontal);
+  vector_free(vector);
   
   coordinate = tensor_convert(permuted, strategy::coordinate);
   result     = tensor_convert(coordinate, tensor->strategy, tensor->orientation);
