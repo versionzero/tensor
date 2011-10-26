@@ -386,6 +386,7 @@ tensor_permute(tensor_t *tensor, permutation_heuristic::type_t heuristic)
   
   (*permutation)(vector, frontal, distance);
   permuted   = tensor_apply_permutation(frontal, vector);
+  tensor_free(frontal);
   
 #if 0
   message("compressed frontal slice (permuted):\n");

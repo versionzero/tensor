@@ -149,6 +149,8 @@ timed_operation_n_mode_product(int argc, char *argv[])
     tensor_free(tensor);
     tensor = permuted;
     debug("timed_operation_n_mode_product: permutation=0x%x\n", permuted);
+  } else {
+    print_elapsed_time(clock());
   }
   
   for (i = 0; i < iterations; ++i) {
