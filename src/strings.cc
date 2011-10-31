@@ -12,7 +12,7 @@ bool_to_string(bool b)
 }
 
 char*
-basename_inplace(char *name)
+destructive_basename(char *name)
 {
   char *base, *dot;
 

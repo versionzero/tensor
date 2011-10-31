@@ -29,7 +29,7 @@ copier_for_slice_frontal(tensor_storage_compressed_t *destination, tensor_storag
 }
 
 void
-tensor_storage_convert_from_coordinate_to_matrix_slice_inplace(tensor_t *destination, tensor_t *source)
+tensor_storage_convert_from_coordinate_to_matrix_slice(tensor_t *destination, tensor_t *source)
 {
   uint                        nnz;
   tensor_storage_base_t       *base;
@@ -41,7 +41,7 @@ tensor_storage_convert_from_coordinate_to_matrix_slice_inplace(tensor_t *destina
   s = STORAGE_COORIDINATE(source);
   d = STORAGE_COMPRESSED(destination);
   
-  debug("tensor_storage_convert_from_coordinate_to_matrix_slice_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_from_coordinate_to_matrix_slice(destination=0x%x, source=0x%x)\n", destination, source);
 
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;

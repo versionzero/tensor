@@ -58,7 +58,7 @@ main(int argc, char *argv[])
   };
     
   /* store the our name for future use */
-  tool_name = basename_inplace(argv[0]);
+  tool_name = destructive_basename(argv[0]);
   
   /* figure out which tool the user is invoking */
   tool_type = tool_from_string(tool_name);
@@ -72,7 +72,7 @@ main(int argc, char *argv[])
     if (0 == argc) {
       usage();
     }
-    tool_name = basename_inplace(argv[1]);
+    tool_name = destructive_basename(argv[1]);
     tool_type = tool_from_string(tool_name);
     argv++;
   }

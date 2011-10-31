@@ -30,7 +30,7 @@ char const* bool_to_string(bool b);
 /* Determine the appropriate name to base the output file names on.
    Note that this command is destructive, so the input buffer *will*
    be modified. */
-char* mybasename(char *name);
+char* mydestructive_basename(char *name);
 
 /* ln(x), or log base 2 of x */
 long double log2(long double x);

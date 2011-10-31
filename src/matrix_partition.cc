@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void
-matrix_partition_inplace(matrix_t *mr, matrix_t const *m1, 
+matrix_partition(matrix_t *mr, matrix_t const *m1, 
 			 uint i, uint j, uint m, uint n)
 {
   uint p, q;
@@ -33,7 +33,7 @@ matrix_partition(matrix_t const *m1, uint i, uint j, uint m, uint n)
     die( "Failed to allocate output matrix.\n");
   }
   
-  matrix_partition_inplace(mr, m1, i, j, m, n);
+  matrix_partition(mr, m1, i, j, m, n);
     
   return mr;
 }

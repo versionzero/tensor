@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 void
-matrix_copy_shallow_inplace(matrix_t *mr, matrix_t const *m1)
+matrix_copy_shallow(matrix_t *mr, matrix_t const *m1)
 {
   information("Matrix Copy (inplace, shallow)\n");
   
@@ -21,13 +21,13 @@ matrix_copy_shallow(matrix_t const *m1)
   
   information("Matrix Copy (shallow)\n");
   mr = matrix_malloc(m1->m, m1->n, ownership::viewer);
-  matrix_copy_shallow_inplace(mr, m1);
+  matrix_copy_shallow(mr, m1);
 
   return mr;
 }
 
 void
-matrix_copy_inplace_with_offset(matrix_t *mr, uint oi, uint oj, matrix_t const *m1)
+matrix_copy_with_offset(matrix_t *mr, uint oi, uint oj, matrix_t const *m1)
 {
   uint i, j;
   
@@ -42,7 +42,7 @@ matrix_copy_inplace_with_offset(matrix_t *mr, uint oi, uint oj, matrix_t const *
 }
 
 void
-matrix_copy_inplace(matrix_t *mr, matrix_t const *m1)
+matrix_copy(matrix_t *mr, matrix_t const *m1)
 {
   uint i, j;
   
@@ -63,7 +63,7 @@ matrix_copy(matrix_t const *m1)
   
   information("Matrix Copy\n");  
   mr = matrix_malloc(m1->m, m1->n);
-  matrix_copy_inplace(mr, m1);
+  matrix_copy(mr, m1);
   
   return mr;
 }

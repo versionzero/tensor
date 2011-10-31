@@ -151,13 +151,13 @@ void print_permutation_heuristics(char const *format);
 void print_permutation_heuristics_with_descriptions(char const *format);
 
 #if 0
-void tensor_add_inplace(tensor_t *t1, tensor_t const *t2);
+void tensor_add(tensor_t *t1, tensor_t const *t2);
 tensor_t *tensor_add(tensor_t const *t1, tensor_t const *t2);
 
-void tensor_subtract_inplace(tensor_t *t1, tensor_t const *t2);
+void tensor_subtract(tensor_t *t1, tensor_t const *t2);
 tensor_t *tensor_subtract(tensor_t const *t1, tensor_t const *t2);
 
-void tensor_multiply_inplace(tensor_t *tr, tensor_t const *t1, tensor_t const *t2);
+void tensor_multiply(tensor_t *tr, tensor_t const *t1, tensor_t const *t2);
 tensor_t *tensor_multiply(tensor_t const *t1, tensor_t const *t2);
 #endif
 

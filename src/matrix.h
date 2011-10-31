@@ -39,12 +39,12 @@ matrix_t *matrix_malloc(uint m, uint n, ownership::type_t owner = ownership::cre
 void matrix_free(matrix_t *m);
 void matrix_clear(matrix_t *m1);
 matrix_t *matrix_copy_shallow(matrix_t const *m1);
-void matrix_copy_shallow_inplace(matrix_t *mr, matrix_t const *m1);
-void matrix_copy_inplace(matrix_t *mr, matrix_t const *m1);
-void matrix_copy_inplace_with_offset(matrix_t *mr, matrix_t const *m1, uint oi, uint oj);
+void matrix_copy_shallow(matrix_t *mr, matrix_t const *m1);
+void matrix_copy(matrix_t *mr, matrix_t const *m1);
+void matrix_copy_with_offset(matrix_t *mr, matrix_t const *m1, uint oi, uint oj);
 matrix_t* matrix_copy(matrix_t const *m1);
 matrix_t* matrix_partition(matrix_t const *m1, uint i, uint j, uint m, uint n);
-void matrix_partition_inplace(matrix_t *mr, matrix_t const *m1, uint i, uint j, uint m, uint n);
+void matrix_partition(matrix_t *mr, matrix_t const *m1, uint i, uint j, uint m, uint n);
 
 matrix_t *matrix_read(char const *filename);
 matrix_t *matrix_fread(FILE *stream);
@@ -56,13 +56,13 @@ void matrix_supported(matrix_t const *m1);
 void matrix_compatible(matrix_t const *m1, matrix_t const *m2);
 void matrix_check_range(matrix_t const *m1, uint i, uint j, uint m, uint n);
 
-void matrix_add_inplace(matrix_t *m1, matrix_t const *m2);
+void matrix_add(matrix_t *m1, matrix_t const *m2);
 matrix_t *matrix_add(matrix_t const *m1, matrix_t const *m2);
 
-void matrix_subtract_inplace(matrix_t *m1, matrix_t const *m2);
+void matrix_subtract(matrix_t *m1, matrix_t const *m2);
 matrix_t *matrix_subtract(matrix_t const *m1, matrix_t const *m2);
 
-void matrix_multiply_inplace(matrix_t *mr, matrix_t const *m1, matrix_t const *m2);
+void matrix_multiply(matrix_t *mr, matrix_t const *m1, matrix_t const *m2);
 matrix_t *matrix_multiply(matrix_t const *m1, matrix_t const *m2);
 matrix_t *matrix_multiply_strassen(matrix_t const *m1, matrix_t const *m2);
 matrix_t *matrix_distributed_multiply_strassen(matrix_t const *m1, matrix_t const *m2);

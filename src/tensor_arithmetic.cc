@@ -10,14 +10,14 @@
 typedef double (*operation_t)(double, double);
 
 void
-tensor_operation_inplace(tensor_t       *t1, 
+tensor_operation(tensor_t       *t1, 
 			 tensor_t const *t2, 
 			 operation_t    op,
 			 char const     *name)
 {
   //uint i, j, k;
 
-  debug("tensor_operation_inplace(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
+  debug("tensor_operation(t1=0x%x, t2=0x%x, op=%d, name='%s')\n", 
 	t1, t2, op, name);
   
   compatible(t1, t2);
@@ -47,16 +47,16 @@ tensor_operation(tensor_t const *t1,
   compatible(t1, t2);
   tr = tensor_malloc_from_template(t1);
 #if 0
-  tensor_convert_inplace(tr, t1);
-  tensor_operation_inplace(tr, t2, op, name);
+  tensor_convert(tr, t1);
+  tensor_operation(tr, t2, op, name);
 #endif
   
   return tr;
 }
 
 #define MTX_OP(name)							\
-  void tensor_##name##_inplace(tensor_t *t1, tensor_t const *t2)	\
-  { tensor_operation_inplace(t1, t2, name, #name);	}		\
+  void tensor_##name(tensor_t *t1, tensor_t const *t2)			\
+  { tensor_operation(t1, t2, name, #name);	}			\
   tensor_t* tensor_##name(tensor_t const *t1, tensor_t const *t2)	\
   { return tensor_operation(t1, t2, name, #name); }
 
@@ -64,11 +64,11 @@ MTX_OP(add)
 MTX_OP(subtract)
 
 void
-tensor_multiply_inplace(tensor_t *tr, tensor_t const *t1, tensor_t const *t2)
+tensor_multiply(tensor_t *tr, tensor_t const *t1, tensor_t const *t2)
 {
   //uint i, j, k;
   
-  debug("tensor_multiply_inplace(tr=0x%x, t1=0x%x, t2=0x%x)\n", tr, t1, t2);
+  debug("tensor_multiply(tr=0x%x, t1=0x%x, t2=0x%x)\n", tr, t1, t2);
   
   compatible(t1, t2);
   compatible(tr, t1);
@@ -90,11 +90,11 @@ tensor_multiply(tensor_t const *t1, tensor_t const *t2)
 {
   tensor_t *tr;
   
-  debug("tensor_multiply_inplace(t1=0x%x, t2=0x%x)\n", t1, t2);
+  debug("tensor_multiply(t1=0x%x, t2=0x%x)\n", t1, t2);
   
   compatible(t1, t2);
   tr = tensor_malloc_from_template(t1);
-  tensor_multiply_inplace(tr, t1, t2);
+  tensor_multiply(tr, t1, t2);
   
   return tr;
 }

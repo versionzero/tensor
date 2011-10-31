@@ -22,7 +22,7 @@ tensor_storage_convert_from_compressed_tube_to_coordinate(tensor_t *destination,
   s = STORAGE_COMPRESSED(source);
   d = STORAGE_COORIDINATE(destination);
   
-  debug("tensor_storage_convert_from_compressed_tube_to_coordinate_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_from_compressed_tube_to_coordinate(destination=0x%x, source=0x%x)\n", destination, source);
   
   nnz = source->nnz;
   T   = d->tuples;
@@ -65,7 +65,7 @@ tensor_storage_convert_from_compressed_slice_to_coordinate(tensor_t *destination
   s = STORAGE_COMPRESSED(source);
   d = STORAGE_COORIDINATE(destination);
   
-  debug("tensor_storage_convert_from_compressed_slice_to_coordinate_inplace(destination=0x%x, source=0x%x)\n", destination, source);
+  debug("tensor_storage_convert_from_compressed_slice_to_coordinate(destination=0x%x, source=0x%x)\n", destination, source);
   
   nnz = source->nnz;
   T   = d->tuples;
