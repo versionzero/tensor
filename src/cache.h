@@ -56,6 +56,14 @@ typedef struct {
   bool               has_statistics[26];
 } cache_t;
 
+#if !defined (NOSIMULATE)
+#define CACHE_ACCESS(...) cache_access(__VA_ARGS__)
+#define CACHE_DEBUG(...)  cache_debug(__VA_ARGS__)
+#else
+#define CACHE_ACCESS(...)
+#define CACHE_DEBUG(...)
+#endif 
+
 cache_t* cache_malloc(size_t max_size, size_t line_size);
 void cache_free(cache_t *table);
 void cache_supported(cache_t *cache);

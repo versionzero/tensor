@@ -8,10 +8,12 @@ ifeq ($(OS), Darwin)
 endif
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
-ifdef DEBUG
-	EXTRA_DEBUG=-g
-else
-	EXTRA_DEBUG=-g -DNODEBUG
+EXTRA_DEBUG=-g
+ifndef DEBUG
+	EXTRA_DEBUG += -DNODEBUG
+endif
+ifndef SIMULATE
+	EXTRA_DEBUG += -DNOSIMULATE
 endif
 EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)

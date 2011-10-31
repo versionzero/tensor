@@ -42,14 +42,18 @@ effectuate_tool_usage()
   message("\t%s [options] <input1> <intput2> ... [output]\n", tool_name);
   message("\nOptions:\n");
   message("\t-h\tthis screen\n");
+#if !defined (NOSIMULATE)
   message("\t-l\tcache line size (default: %d)\n", DEFAULT_CACHE_LINE_SIZE);
   message("\t-m\tcache size (default: %d)\n", DEFAULT_CACHE_SIZE);
+#endif
   message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
   message("\t-p\tpermutation heuristic (default: %s)\n", permutation_heuristic_to_string(DEFAULT_PERMUTATION_HEURISTIC));
   print_permutation_heuristics_with_descriptions("\t\t- %s : %s\n");
+#if !defined (NOSIMULATE)
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
+#endif
   message("\t-t\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
