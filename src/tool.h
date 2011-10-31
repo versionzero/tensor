@@ -45,8 +45,8 @@ void effectuate_tool_main(int argc, char *argv[]);
 vector_t* timed_vector_read(char const *name);
 matrix_t* timed_matrix_read(char const *name);
 tensor_t* timed_tensor_read(char const *name);
-void timed_tensor_write(char const *name, tensor_t const *tensor);
-void print_elapsed_time(clock_t t);
+void timed_tensor_write(int argc, char *argv[], int const offset, tensor_t const *tensor);
+void timed_tensor_fwrite(FILE *file, tensor_t const *tensor);
 
 tool::type_t tool_from_string(char const *s);
 char const* string_from_tool(tool::type_t tool);

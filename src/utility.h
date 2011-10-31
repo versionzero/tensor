@@ -3,16 +3,13 @@
 #define _UTILITY_H_
 
 #include "types.h"
-#include <time.h>
+#include "timer.h"
 
 /* How close to zero is zero */
 #define EPSILON 1e-10
 
 /* Largest path for a file on disk (yes, I know this is evil...) */
 #define PATH_MAX 256
-
-/* Very simple calculation of elapsed time */
-#define SECONDS_SINCE(t)  ((clock()-(t))/(double)CLOCKS_PER_SEC)
 
 /* Count the number of elements in x[n] */
 #define COUNT_OF(x) (sizeof(x)/sizeof(x[0]))

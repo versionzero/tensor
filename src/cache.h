@@ -4,7 +4,6 @@
 
 #include "hash.h"
 #include "types.h"
-#include <time.h>
 
 #define MINIMUM_CACHE_LINE_SIZE 2
 

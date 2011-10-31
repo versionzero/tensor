@@ -3,7 +3,6 @@
 #define _HASH_H_
 
 #include "types.h"
-#include <time.h>
 
 typedef struct hash_table_node_tag {
   void                *key, *data;

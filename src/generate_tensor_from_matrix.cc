@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include "timer.h"
 #include <ctype.h>
 #include <unistd.h>
 

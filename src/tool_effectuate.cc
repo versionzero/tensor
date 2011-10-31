@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include "timer.h"
 #include <ctype.h>
 #include <unistd.h>
 
@@ -66,7 +66,7 @@ effectuate_tool_usage()
 void
 timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *matrix)
 {
-  clock_t  t;
+  timer_t  t;
   char     *name;
   FILE     *file;
   
@@ -79,8 +79,9 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
     progress("Writing matrix to %s ... ", name);
   }
   
-  t = clock();
+  timer_start(&t);
   matrix_fwrite(file, matrix, format::coordinate);
+  timer_end(&t);
   print_elapsed_time(t);
   
   if (stdout != file) {
@@ -91,25 +92,27 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
 void
 timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
 {
-  clock_t  t;
+  timer_t  t;
   
   progress("Performing operation '%s' ... ", 
 	   operation_to_description_string(operation::n_mode_product));
-  t = clock();
+  timer_start(&t);
   operation_n_mode_product_inplace(matrix, vector, tensor);
+  timer_end(&t);
   print_elapsed_time(t);
 }
 
 tensor_t*
 timed_tensor_permute(tensor_t *tensor)
 {
-  clock_t  t;
+  timer_t  t;
   tensor_t *permuted;
 
   progress("Permuting tensor using the '%s' heuristic ... ", 
 	   permutation_heuristic_to_string(heuristic));
-  t = clock();
+  timer_start(&t);
   permuted = tensor_permute(tensor, heuristic);
+  timer_end(&t);
   print_elapsed_time(t);
   
   return permuted;
@@ -150,7 +153,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
     tensor = permuted;
     debug("timed_operation_n_mode_product: permutation=0x%x\n", permuted);
   } else {
-    print_elapsed_time(clock());
+    print_elapsed_time(0.0);
   }
   
   for (i = 0; i < iterations; ++i) {

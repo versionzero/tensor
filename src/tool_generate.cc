@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include "timer.h"
 #include <ctype.h>
 #include <unistd.h>
 
@@ -41,31 +41,6 @@ generate_tool_usage()
   message("\t-h\tthis screen\n");
   message("\t-s\trandom number generator seed (default: %d)\n", DEFAULT_SEED);
   exit(1);
-}
-
-void
-timed_tensor_write(int argc, char *argv[], int const offset, tensor_t const *tensor)
-{
-  clock_t  t;
-  char     *name;
-  FILE     *file;
-  
-  if (offset == argc) {
-    file = stdout;
-    message("Writing tensor to stdout ... ");
-  } else {
-    name = argv[offset];
-    file = fopen_or_die(name, "w+");
-    message("Writing tensor to %s ... ", name);
-  }
-  
-  t = clock();
-  tensor_fwrite(file, tensor);
-  print_elapsed_time(t);
-  
-  if (stdout != file) {
-    fclose(file);
-  }
 }
 
 void
