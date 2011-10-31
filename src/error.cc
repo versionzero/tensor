@@ -5,10 +5,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+extern bool              human_readable;
+extern verbosity::type_t noisiness;
 extern char              *tool_name;
 extern bool              tracing;
 extern bool              verbose;
-extern verbosity::type_t noisiness;
 
 void
 verror(uint levels, char const *format, va_list args)
@@ -56,7 +57,11 @@ void
 progress(char const *format, ...)
 {
   va_list args;
-
+  
+  if (!human_readable) {
+    return;
+  }
+  
   va_start(args, format);
   verror(level::progress, format, args);
   va_end(args);
@@ -77,13 +82,14 @@ trace(char const *format, ...)
 {
   va_list args;
   
-  if (tracing) {
-    va_start(args, format);
-    verror(level::trace, format, args);
-    va_end(args);
+  if (!tracing) {
+    return;
   }
+  
+  va_start(args, format);
+  verror(level::trace, format, args);
+  va_end(args);
 }
-
 
 void
 debug(char const *format, ...)
@@ -112,11 +118,13 @@ superfluous(char const *format, ...)
 {
   va_list args;
   
-  if (noisiness >= verbosity::max) {
-    va_start(args, format);
-    verror(level::debug, format, args);
-    va_end(args);
+  if (noisiness < verbosity::max) {
+    return;
   }
+  
+  va_start(args, format);
+  verror(level::debug, format, args);
+  va_end(args);
 }
 
 void
