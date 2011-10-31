@@ -55,7 +55,7 @@ convert_tool_usage()
 tensor_t*
 timed_tensor_convert(tensor_t *source, strategy::type_t strategy, orientation::type_t orientation)
 {
-  timer_t  t;
+  precision_timer_t  t;
   tensor_t *tensor;
   
   progress("Converting from '%s' to '%s-%s' ... ",

@@ -20,7 +20,7 @@
 vector_t*
 timed_vector_read(char const *name)
 {
-  timer_t  t;
+  precision_timer_t  t;
   vector_t *vector;
   
   progress("Reading vector %s ... ", name);
@@ -35,7 +35,7 @@ timed_vector_read(char const *name)
 matrix_t*
 timed_matrix_read(char const *name)
 {
-  timer_t  t;
+  precision_timer_t  t;
   matrix_t *matrix;
   
   progress("Reading matrix %s ... ", name);
@@ -50,7 +50,7 @@ timed_matrix_read(char const *name)
 tensor_t*
 timed_tensor_read(char const *name)
 {
-  timer_t  t;
+  precision_timer_t  t;
   tensor_t *tensor;
   
   progress("Reading tensor %s ... ", name);
@@ -65,7 +65,7 @@ timed_tensor_read(char const *name)
 void
 timed_tensor_fwrite(FILE *file, tensor_t const *tensor)
 {
-  timer_t t;
+  precision_timer_t t;
   
   timer_start(&t);
   tensor_fwrite(file, tensor);

@@ -6,19 +6,19 @@
 extern bool human_readable;
 
 void
-timer_start(timer_t *timer) 
+timer_start(precision_timer_t *timer) 
 {
   gettimeofday(&timer->start, NULL);
 }
 
 void
-timer_end(timer_t *timer)
+timer_end(precision_timer_t *timer)
 {
   gettimeofday(&timer->end, NULL);
 }
 
 double
-timer_elapsed_time(timer_t timer)
+timer_elapsed_time(precision_timer_t timer)
 {
   double elapsed;
   
@@ -39,7 +39,7 @@ print_elapsed_time(double elapsed)
 }
 
 void
-print_elapsed_time(timer_t timer)
+print_elapsed_time(precision_timer_t timer)
 {
   double elapsed;
   

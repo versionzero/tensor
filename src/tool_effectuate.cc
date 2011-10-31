@@ -66,7 +66,7 @@ effectuate_tool_usage()
 void
 timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *matrix)
 {
-  timer_t  t;
+  precision_timer_t  t;
   char     *name;
   FILE     *file;
   
@@ -92,7 +92,7 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
 void
 timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
 {
-  timer_t  t;
+  precision_timer_t  t;
   
   progress("Performing operation '%s' ... ", 
 	   operation_to_description_string(operation::n_mode_product));
@@ -105,7 +105,7 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
 tensor_t*
 timed_tensor_permute(tensor_t *tensor)
 {
-  timer_t  t;
+  precision_timer_t  t;
   tensor_t *permuted;
 
   progress("Permuting tensor using the '%s' heuristic ... ", 

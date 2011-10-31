@@ -1,20 +1,20 @@
 
-#ifndef _TIME_H_
-#define _TIME_H_
+#ifndef _TIMER_H_
+#define _TIMER_H_
 
 #include <sys/time.h>
 
 typedef struct {
   timeval start, end;
-} timer_t;
+} precision_timer_t;
 
-void timer_start(timer_t *timer);
-void timer_end(timer_t *timer);
-double timer_elapsed_time(timer_t *timer);
-void print_elapsed_time(timer_t timer);
+void timer_start(precision_timer_t *timer);
+void timer_end(precision_timer_t *timer);
+double timer_elapsed_time(precision_timer_t *timer);
+void print_elapsed_time(precision_timer_t timer);
 void print_elapsed_time(double elapsed);
 
-#endif /* _TIME_H_ */
+#endif /* _TIMER_H_ */
 
 /*
   Local Variables:
