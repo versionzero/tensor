@@ -40,8 +40,6 @@ compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   
   debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
-  matrix_clear(matrix);
-  
   p       = vector->data;
   M       = matrix->data;
   V       = tensor->values;
@@ -117,8 +115,6 @@ compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor
   tensor_storage_compressed_t const *storage;
   
   debug("compressed_tube(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  matrix_clear(matrix);
   
   p       = vector->data;
   M       = matrix->data;
@@ -240,8 +236,6 @@ compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tenso
   
   debug("compressed_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
-  matrix_clear(matrix);
-  
   p       = vector->data;
   M       = matrix->data;
   V       = tensor->values;
@@ -342,8 +336,6 @@ ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
   
   debug("ekmr_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
-  matrix_clear(matrix);
-  
   p       = vector->data;
   M       = matrix->data;
   V       = tensor->values;
@@ -420,9 +412,9 @@ n_mode_product_ekmr(matrix_t *matrix, vector_t const *vector, tensor_t const *te
 }
 
 void
-operation_n_mode_product_inplace(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  debug("operation_n_mode_product_inplace(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   compatible(vector, tensor);
   
@@ -457,7 +449,7 @@ operation_n_mode_product(vector_t const *vector, tensor_t const *tensor)
   matrix = matrix_malloc(tensor->m, tensor->n, ownership::creator);
   debug("operation_n_mode_product: matrix=0x%x\n", matrix);
  
-  operation_n_mode_product_inplace(matrix, vector, tensor);
+  operation_n_mode_product(matrix, vector, tensor);
   
   return matrix;
 }

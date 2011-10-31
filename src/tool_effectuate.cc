@@ -98,10 +98,11 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
 {
   precision_timer_t  t;
   
+  matrix_clear(matrix);
   progress("Performing operation '%s' ... ", 
 	   operation_to_description_string(operation::n_mode_product));
   timer_start(&t);
-  operation_n_mode_product_inplace(matrix, vector, tensor);
+  operation_n_mode_product(matrix, vector, tensor);
   timer_end(&t);
   print_elapsed_time(t);
 }
