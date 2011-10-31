@@ -162,7 +162,7 @@ convert_tool_main(int argc, char *argv[])
   }
   debug("main: result=0x%x\n", result);
   
-  timed_tensor_write(argc, argv, offset, tensor);
+  timed_tensor_write(argc, argv, offset, result);
   
   tensor_free(result);
   tensor_free(tensor);
