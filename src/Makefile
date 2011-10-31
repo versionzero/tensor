@@ -1,7 +1,13 @@
-CXX=clang
+CXX=g++
+SYMBOLS=echo
+OS=`uname`
+ifeq ($(OS), Darwin)
+	CXX=clang
+	CPPX11=-std=c++0x -stdlib=libc++
+	SYMBOLS=dsymutil
+endif
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
-CPPX11=-std=c++0x -stdlib=libc++
 ifdef DEBUG
 	EXTRA_DEBUG=-g
 else
@@ -12,8 +18,8 @@ EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
-		memory.h operation.h random.h strings.h tool.h		\
-		utility.h compatible.h
+	 memory.h operation.h random.h strings.h timer.h tool.h		\
+	utility.h compatible.h
 HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=storage.h tensor.h
@@ -25,7 +31,7 @@ SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
 	information.cc latex.cc memory.cc mmio.cc			\
 	operation_n_mode_product.cc operation_utility.cc random.cc	\
-	strings.cc tool_convert.cc tool_effectuate.cc			\
+	strings.cc timer.cc tool_convert.cc tool_effectuate.cc	\
 	tool_generate.cc tool_timing.cc tool_utility.cc types.cc	\
 	utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
@@ -56,12 +62,13 @@ OBJECTS=$(ASSEMBLER:.s=.o)
 EXECUTABLE=tensor
 
 default: dependencies
-	make -j4 all
+	@echo The OS environment variable is set to [$(OS)].
+	@make -j4 all
 
 all: $(HEADERS) $(SOURCES) $(EXECUTABLE)
 
 asm: $(HEADERS) $(ASSEMBLER) $(OBJECTS)
-	dsymutil $(EXECUTABLE)
+	$(SYMBOLS) $(EXECUTABLE)
 
 # Use Clang's static analysis tool on our source
 analysis:
@@ -71,7 +78,7 @@ analysis:
 
 $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 	$(CXX) $(EXTRA_LDFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
-	dsymutil $@
+	$(SYMBOLS) $@
 
 .cc.o: $(HEADERS)
 	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -o $@ $<
@@ -83,19 +90,19 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $@ -o $(@:.s=.o)
 
 debug:
-	make -j4 DEBUG=1
+	@make -j4 DEBUG=1
 
 rebuild: clean
-	make -j4 all
+	@make -j4 all
 
 clean:
-	rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
+	@rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
 		$(EXECUTABLE) *.o *.d annotate.*.h cache.*.dat a.out	\
 		*.plist *.bak;
 
 dependencies:
-	touch Makefile.d
-	makedepend -I/usr/Llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include -fMakefile.d -- $(EXTRA_CXXFLAGS) $(CXXFLAGS) -- $(SOURCES)
+	@touch Makefile.d
+	@makedepend -I/usr/Llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include -fMakefile.d -- $(EXTRA_CXXFLAGS) $(CXXFLAGS) -- $(SOURCES)
 
 -include Makefile.d
 
