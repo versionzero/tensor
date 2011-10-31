@@ -288,14 +288,12 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
   storage     = STORAGE_COMPRESSED(source);
   rn          = storage->rn;
   R1          = storage->RO;
-  //C1          = storage->CO;
   K1          = storage->KO;
   V1          = source->values;
   
   destination = tensor_malloc(n, n, n, nnz, strategy::slice, orientation::frontal);
   storage     = STORAGE_COMPRESSED(destination);
   R2          = storage->RO;
-  //C2          = storage->CO;
   K2          = storage->KO;
   V2          = destination->values;
   storage->rn = rn;
@@ -309,10 +307,8 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
     DEBUG("> r0=R1[V[i=%d]  =%d]=%d\n", i, V[i], r0);
     DEBUG("> r =R1[V[i=%d]+1=%d]=%d\n", i, V[i]+1, r);
     for (i1 = r0, i2 = offset; i1 < r && i2 < nnz; ++i1, ++i2) {
-      //C2[i2] = C1[i1];
       K2[i2] = K1[i1];
       V2[i2] = V1[i1];
-      //DEBUG("C2[i2=%d]=%d; C1[i1=%d]=%d\n",   i2, C2[i2], i1, C1[i1]);
       DEBUG("K2[i2=%d]=%d; K1[i1=%d]=%d\n",   i2, K2[i2], i1, K1[i1]);
       DEBUG("V2[i2=%d]=%lf; V1[i1=%d]=%lf\n", i2, V2[i2], i1, V1[i1]);
     }
