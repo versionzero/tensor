@@ -46,7 +46,6 @@ tensor_storage_convert_from_compressed_tube_to_coordinate(tensor_t *destination,
   }
   
   for (i = 0; i < nnz; ++i) {
-    //destination->values[i] = source->values[STORAGE_COORIDINATE(source)->tuples[i].index];
     destination->values[i] = source->values[i];
   }
 }
