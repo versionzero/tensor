@@ -21,6 +21,7 @@ extern bool              write_results;
 #define CONVERT_DESCRIPTION    "A tool for converting between th-order tensor storage strategies."
 #define GENERATE_DESCRIPTION   "A tool for generating varieties of th-order tensors."
 #define EFFECTUATE_DESCRIPTION "A tool for performing computations on th-order tensors."
+#define PERMUTE_DESCRIPTION    "A tool for permuting the non-zeros of th-order tensors."
 #define VERSION "Version 0.01 (" __DATE__ "), " \
   "Copyright (C) 2011, and GPLv3'd, by Ben Burnett\n" \
   "This is free software; see the source for copying conditions.  There is NO\n" \
@@ -33,7 +34,8 @@ static char const *map_tool_to_string[] = {
   "tensor",
   "convert", 
   "generate",
-  "effectuate"
+  "effectuate",
+  "permute"
 };
 
 static char const *map_tools_to_description[] = { 
@@ -41,7 +43,8 @@ static char const *map_tools_to_description[] = {
   TENSOR_DESCRIPTION,
   CONVERT_DESCRIPTION,
   GENERATE_DESCRIPTION,
-  EFFECTUATE_DESCRIPTION
+  EFFECTUATE_DESCRIPTION,
+  PERMUTE_DESCRIPTION
 };
 
 char const* string_from_tool(tool::type_t tool)

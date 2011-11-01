@@ -66,7 +66,7 @@ tensor_storage_index_copy_for_zzekmr_row(void *destination, void const *source, 
 void
 tensor_storage_convert_from_coordinate_to_zzekmr(tensor_t *destination, tensor_t *source)
 {
-  int                  i, nnz;
+  uint                  i, n, nnz;
   tensor_storage_base_t       *base;
   tensor_storage_extended_t   *d;
   tensor_storage_coordinate_t *s;
@@ -80,12 +80,13 @@ tensor_storage_convert_from_coordinate_to_zzekmr(tensor_t *destination, tensor_t
   
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
+  n      = source->n;
   values = source->values;
   g_r    = d->rn;
   tuples = s->tuples;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  d->rn = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_r_encoder);
+  d->rn = tensor_storage_index_encode(d->RO, n, tuples, nnz, base->callbacks->index_r_encoder);
   (*base->callbacks->index_copy)(d, s, nnz);
   
   for (i = 0; i < nnz; ++i) {

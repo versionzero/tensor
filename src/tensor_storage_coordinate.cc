@@ -78,11 +78,14 @@ tensor_storage_convert_from_compressed_slice_to_coordinate(tensor_t *destination
   
   for (r = 1, t = 0; r < rn; ++r) {
     r0 = r-1;
+    DEBUG("R[r0=%u]=%u, R[r=%u]=%u\n", r0, R[r0], r, R[r]);
     for (i = R[r0]; i < R[r]; ++i, ++t) {
+      DEBUG("K[i=%u]=%u\n", i, K[i]);
       T[t].i     = K[i] / n;
       T[t].j     = K[i] % n;
       T[t].k     = r0 % n;
       T[t].index = i;
+      DEBUG("i=%u, j=%u, k=%u, index=%u\n", T[t].i, T[t].j, T[t].k, T[t].index);
     }
   }
   

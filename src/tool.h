@@ -14,7 +14,8 @@ namespace tool {
     tensor,
     convert,
     generate,
-    effectuate
+    effectuate,
+    permute
   } type_t;
 }
 
@@ -41,6 +42,7 @@ namespace tool {
 void convert_tool_main(int argc, char *argv[]);
 void generate_tool_main(int argc, char *argv[]);
 void effectuate_tool_main(int argc, char *argv[]);
+void permute_tool_main(int argc, char *argv[]);
 
 vector_t* timed_vector_read(char const *name);
 matrix_t* timed_matrix_read(char const *name);

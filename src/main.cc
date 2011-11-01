@@ -54,14 +54,22 @@ main(int argc, char *argv[])
     { &convert_tool_main },
     { &generate_tool_main },
     { &effectuate_tool_main },
+    { &permute_tool_main },
     { NULL }
   };
-    
+  
   /* store the our name for future use */
   tool_name = destructive_basename(argv[0]);
   
   /* figure out which tool the user is invoking */
   tool_type = tool_from_string(tool_name);
+  
+  /* some tools rename our executable--i.e. Condor--so we must guard
+     against this here.  That is, if we don't recognize the name, just
+     assume it has been renamed. */
+  if (tool::unknown == tool_type) {
+    tool_type = tool::tensor;
+  }
   
   /* if the binary has not been renamed, then the tool name is the
      first parameter in the list.  We handle this very simply: we skip

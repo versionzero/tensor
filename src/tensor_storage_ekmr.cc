@@ -29,7 +29,7 @@ index_copy_for_ekmr_row(void *destination, void const *source, uint nnz)
 void
 tensor_storage_convert_from_coordinate_to_ekmr(tensor_t *destination, tensor_t *source)
 {
-  int                         nnz;
+  int                         n, nnz;
   tensor_storage_base_t       *base;
   tensor_storage_extended_t   *d;
   tensor_storage_coordinate_t *s;
@@ -43,11 +43,12 @@ tensor_storage_convert_from_coordinate_to_ekmr(tensor_t *destination, tensor_t *
   
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
+  n      = source->n;
   values = source->values;
   tuples = s->tuples;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  d->rn = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_r_encoder);
+  d->rn = tensor_storage_index_encode(d->RO, n, tuples, nnz, base->callbacks->index_r_encoder);
   tensor_storage_copy(d, s, nnz, base->callbacks->index_copy);
   tensor_storage_copy(destination, source, nnz, (index_copy_t) &copier_for_values);
 }

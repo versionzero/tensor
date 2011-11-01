@@ -26,12 +26,15 @@ void
 copier_for_slice_frontal(tensor_storage_compressed_t *destination, tensor_storage_coordinate_t const *source, uint i)
 {
   destination->KO[i] = source->tuples[i].i * g_n + source->tuples[i].j;
+  
+  debug("copier_for_slice_frontal: KO[i=%u]=(i=%u) * (n=%u) + (j=%u)=%u\n", 
+	i, source->tuples[i].i, g_n, source->tuples[i].j, destination->KO[i]);
 }
 
 void
 tensor_storage_convert_from_coordinate_to_compressed_slice(tensor_t *destination, tensor_t *source)
 {
-  uint                        nnz;
+  uint                        n, nnz;
   tensor_storage_base_t       *base;
   tensor_storage_compressed_t *d;
   tensor_storage_coordinate_t *s;
@@ -45,12 +48,13 @@ tensor_storage_convert_from_coordinate_to_compressed_slice(tensor_t *destination
 
   base   = STORAGE_BASE(destination);
   nnz    = source->nnz;
+  n      = source->n;
   values = source->values;
   tuples = s->tuples;
   g_n    = source->n;
   
   qsort(tuples, nnz, sizeof(coordinate_tuple_t), base->callbacks->index_compare);
-  d->rn = tensor_storage_index_encode(d->RO, tuples, nnz, base->callbacks->index_r_encoder);
+  d->rn = tensor_storage_index_encode(d->RO, n, tuples, nnz, base->callbacks->index_r_encoder);
   tensor_storage_copy(d, s, nnz, base->callbacks->index_copy);
   tensor_storage_copy(destination, source, nnz, (index_copy_t) &copier_for_values);
 }

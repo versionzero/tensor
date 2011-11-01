@@ -26,7 +26,7 @@ int index_compare_kji(coordinate_tuple_t const *ta, coordinate_tuple_t const *tb
 int index_compare_kij(coordinate_tuple_t const *ta, coordinate_tuple_t const *tb);
 int index_compare_ikj(coordinate_tuple_t const *ta, coordinate_tuple_t const *tb);
 
-uint tensor_storage_index_encode(uint *indices, coordinate_tuple_t const *tuple, uint nnz, index_encoder_t encoder);
+uint tensor_storage_index_encode(uint *indices, uint n, coordinate_tuple_t const *tuple, uint nnz, index_encoder_t encoder);
 uint encoder_for_i(coordinate_tuple_t const *tuple);
 uint encoder_for_j(coordinate_tuple_t const *tuple);
 uint encoder_for_k(coordinate_tuple_t const *tuple);

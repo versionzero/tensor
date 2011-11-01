@@ -31,8 +31,7 @@ extern bool              verbose;
 extern verbosity::type_t noisiness;
 extern bool              write_results;
 
-static operation::type_t             optcode;
-static permutation_heuristic::type_t heuristic;
+static operation::type_t optcode;
 
 void
 effectuate_tool_usage() 
@@ -49,8 +48,6 @@ effectuate_tool_usage()
   message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
-  message("\t-p\tpermutation heuristic (default: %s)\n", permutation_heuristic_to_string(DEFAULT_PERMUTATION_HEURISTIC));
-  print_permutation_heuristics_with_descriptions("\t\t- %s : %s\n");
 #if !defined (NOSIMULATE)
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
 #endif
@@ -107,22 +104,6 @@ timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
   print_elapsed_time(t);
 }
 
-tensor_t*
-timed_tensor_permute(tensor_t *tensor)
-{
-  precision_timer_t  t;
-  tensor_t *permuted;
-
-  progress("Permuting tensor using the '%s' heuristic ... ", 
-	   permutation_heuristic_to_string(heuristic));
-  timer_start(&t);
-  permuted = tensor_permute(tensor, heuristic);
-  timer_end(&t);
-  print_elapsed_time(t);
-  
-  return permuted;
-}
-
 void
 timed_operation_n_mode_product(int argc, char *argv[])
 {
@@ -131,7 +112,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   char     *name;
   vector_t *vector;
   matrix_t *matrix;
-  tensor_t *tensor, *permuted;
+  tensor_t *tensor;
   
   offset = optind;
   name   = argv[offset++];
@@ -150,15 +131,6 @@ timed_operation_n_mode_product(int argc, char *argv[])
   if (simulate) {
     cache = cache_malloc(cache_size, cache_line_size);
     cache_supported(cache);
-  }
-  
-  if (heuristic != permutation_heuristic::none) {
-    permuted = timed_tensor_permute(tensor);
-    tensor_free(tensor);
-    tensor = permuted;
-    debug("timed_operation_n_mode_product: permutation=0x%x\n", permuted);
-  } else {
-    print_elapsed_time(0.0);
   }
   
   for (i = 0; i < iterations; ++i) {
@@ -206,7 +178,6 @@ effectuate_tool_main(int argc, char *argv[])
   
   /* set the program's defaults */
   optcode   = DEFAULT_OPERATION;
-  heuristic = DEFAULT_PERMUTATION_HEURISTIC;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -240,13 +211,6 @@ effectuate_tool_main(int argc, char *argv[])
 	optcode = (operation::type_t) atoi(optarg);
       } else {
 	optcode = string_to_operation(optarg);
-      }
-      break;
-    case 'p': 
-      if (isdigit(optarg[0])) {
-	heuristic = (permutation_heuristic::type_t) atoi(optarg);
-      } else {
-	heuristic = string_to_permutation_heuristic(optarg);
       }
       break;
     case 's':
@@ -294,7 +258,6 @@ effectuate_tool_main(int argc, char *argv[])
   /* print program options, for debugging purposes */
   print_tool_options();
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
-  debug("effectuate_tool_main: heuristic='%s'\n", permutation_heuristic_to_string(heuristic));
   
   /* if we are just running a simulation, then we only do one
      iteration; otherwise, it would be really slow */
