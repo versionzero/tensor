@@ -1,0 +1,14 @@
+#!/bin/bash -x
+
+SIZE=${1:-100}
+TENSOR=/Volumes/Backup/tensor/example
+VECTOR=/Volumes/Backup/tensor/vector
+PERMUTATIONS="none naive-minimum naive-median"
+
+for x in $PERMUTATIONS; do 
+    ./tensor permute -p $x ${TENSOR}${SIZE}.in ${TENSOR}${SIZE}.${x}.in
+done
+
+for x in $PERMUTATIONS; do 
+    ./tensor convert -s compressed -o tube ${TENSOR}${SIZE}.${x}.in ${TENSOR}${SIZE}.${x}.compressed.tube.in
+done

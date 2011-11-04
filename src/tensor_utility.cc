@@ -12,7 +12,7 @@ static char const *map_permutation_heuristics_to_string[] = {
 
 static char const *map_permutation_heuristics_to_description[] = { 
   "none",
-  "re-order tensor layout based on minimum intra-slice proximity"
+  "re-order tensor layout based on minimum intra-slice proximity",
   "re-order tensor layout based on median intra-slice proximity"
 };
 

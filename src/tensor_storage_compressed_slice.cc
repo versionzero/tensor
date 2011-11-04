@@ -27,8 +27,10 @@ copier_for_slice_frontal(tensor_storage_compressed_t *destination, tensor_storag
 {
   destination->KO[i] = source->tuples[i].i * g_n + source->tuples[i].j;
   
+#if 0
   debug("copier_for_slice_frontal: KO[i=%u]=(i=%u) * (n=%u) + (j=%u)=%u\n", 
 	i, source->tuples[i].i, g_n, source->tuples[i].j, destination->KO[i]);
+#endif
 }
 
 void

@@ -36,6 +36,7 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
+#if 0
   storage = STORAGE_COORIDINATE(tensor);
   tuples  = storage->tuples;
   nnz     = 0;
@@ -48,15 +49,20 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
   
   debug("tensor_write_coordinate: non-zero values: implied=%d, actual=%d.\n", tensor->nnz, nnz);
   debug("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+#endif
   
-  if (0 != (result = mm_write_tensor_coordinate_size(file, tensor->l, tensor->m, tensor->n, nnz))) {
+  debug("tensor_write_coordinate: non-zero values: actual=%d.\n", tensor->nnz);
+  debug("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+  
+  if (0 != (result = mm_write_tensor_coordinate_size(file, tensor->l, tensor->m, tensor->n, tensor->nnz))) {
     die("Failed to write coordinate tensor of size %d (%d).\n", nnz, result);
   }
   
-  for (i = 0; i < nnz; ++i) {
-    if (!might_as_well_be_zero(tensor->values[i])) {
-      fprintf(file, "%d %d %d %10.32g\n", tuples[i].k, tuples[i].i, tuples[i].j, tensor->values[tuples[i].index]);
-    }
+  storage = STORAGE_COORIDINATE(tensor);
+  tuples  = storage->tuples;
+  
+  for (i = 0; i < tensor->nnz; ++i) {
+    fprintf(file, "%d %d %d %10.32g\n", tuples[i].k, tuples[i].i, tuples[i].j, tensor->values[tuples[i].index]);
   }
 }
 

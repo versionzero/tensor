@@ -56,7 +56,7 @@ timed_tensor_permute(tensor_t *tensor)
 {
   precision_timer_t  t;
   tensor_t *permuted;
-
+  
   progress("Permuting tensor using the '%s' heuristic ... ", 
 	   permutation_heuristic_to_string(heuristic));
   timer_start(&t);
@@ -79,8 +79,14 @@ timed_permutation(int argc, char *argv[])
   tensor = timed_tensor_read(name);
   debug("timed_permutation: tensor=0x%x\n", tensor);
   
-  permuted = timed_tensor_permute(tensor);
-  debug("timed_permutation: permutation=0x%x\n", permuted);
+  if (permutation_heuristic::none == heuristic) {
+    print_elapsed_time(0.0); /* just a no-op */
+  } else {
+    permuted = timed_tensor_permute(tensor);
+    tensor_free(tensor);
+    tensor = permuted;
+  }
+  debug("timed_permutation: permutation=0x%x\n", tensor);
   
   /* if we are not printing times for each procedure out in a human
      consumable way, then we need to terminate the line containing all
@@ -89,10 +95,8 @@ timed_permutation(int argc, char *argv[])
     message("\n");
   }
   
-  timed_tensor_write(argc, argv, offset, permuted);
-  
+  timed_tensor_write(argc, argv, offset, tensor);
   tensor_free(tensor);
-  tensor_free(permuted);
 }
 
 void
@@ -161,10 +165,6 @@ permute_tool_main(int argc, char *argv[])
   /* print program options, for debugging purposes */
   print_tool_options();
   debug("permute_tool_main: heuristic='%s'\n", permutation_heuristic_to_string(heuristic));
-  
-  if (permutation_heuristic::none == heuristic) {
-    die("Please supply a permutation heuristic.\n");
-  }
   
   /* pass control over to some naive timing procedures */
   timed_permutation(argc, argv);

@@ -68,6 +68,9 @@ tensor_fread_coordinate(FILE *file)
     die("Failed to read tensor dimensions (%d).\n", result);
   }
   
+  debug("tensor_fread_coordinate: non-zero values: actual=%d.\n", nnz);
+  debug("tensor_fread_coordinate: l=%d, m=%d, n=%d.\n", l, m, n);
+  
   tensor  = tensor_malloc(l, m, n, nnz, strategy::coordinate);
   storage = STORAGE_COORIDINATE(tensor);
   tuples  = storage->tuples;
@@ -306,6 +309,9 @@ tensor_fread_matlab(FILE *file)
   if (4 != (result = fscanf(file, "%*[^ ]%*[^1234567890]%d%*[ x]%d%*[ x]%d with %d nonzeros\n", &l, &m, &n, &nnz))) {
     die("tensor_fread_matlab: failed to read tensor dimensions (%d).\n", result);
   }
+  
+  debug("tensor_fread_matlab: non-zero values: actual=%d.\n", nnz);
+  debug("tensor_fread_matlab: l=%d, m=%d, n=%d.\n", l, m, n);
   
   tensor  = tensor_malloc(l, m, n, nnz, strategy::coordinate);
   storage = STORAGE_COORIDINATE(tensor);

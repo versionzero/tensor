@@ -150,6 +150,10 @@ tensor_storage_index_encode(uint *indices, uint n, coordinate_tuple_t const *tup
     }
   }
   
+  for (; i < n; ++i) {
+    indices[i] = nnz;
+  }
+  
   DEBUG("indices[i=%u]=%u\n", i, nnz);
   indices[i++] = nnz;
   DEBUG("i=%u\n", i);

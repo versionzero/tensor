@@ -50,7 +50,7 @@ slice_distance(tensor_t *tensor, uint s1, uint s2)
     distance++;
   }
   
-  DEBUG("slice_distance: distance(%d, %d)=%d\n", s1, s2, distance);
+  //DEBUG("slice_distance: distance(%d, %d)=%d\n", s1, s2, distance);
   
   return distance;
 }
@@ -59,7 +59,7 @@ slice_distance(tensor_t *tensor, uint s1, uint s2)
 void
 naive_minimum_permutation(vector_t *vector, tensor_t *tensor, slice_distance_t distance)
 {
-  uint     i, j, k;
+  uint     i, j, k, p;
   uint     n;
   uint     best;
   matrix_t *matrix;
@@ -84,11 +84,15 @@ naive_minimum_permutation(vector_t *vector, tensor_t *tensor, slice_distance_t d
     
   matrix_clear(matrix);
   
+  for (i = 0; i < n; ++i) {
+    D[i][i] = n*n+1;
+  }  
   for (j = 0; j < n; ++j) {
     best = n*n+1;
-    for (i = 0; i < n; ++i) {
+    for (i = j+1; i < n; ++i) {
       if (i != j) {
 	D[i][j] = (*distance)(tensor, i, j);
+	D[j][i] = D[i][j];
 	if (best > D[i][j]) {
 	  best = D[i][j];
 	  V[0] = i;
@@ -100,8 +104,7 @@ naive_minimum_permutation(vector_t *vector, tensor_t *tensor, slice_distance_t d
   }
   
   DEBUG("permutation: best=%d, V[0]=%d, V[1]=%d\n", best, V[0], V[1]);
-  
-  matrix_fwrite(stdout, matrix, format::coordinate);
+  //matrix_fwrite(stdout, matrix, format::coordinate);
   
   seen = MALLOC_N(bool, n);
   for (i = 0; i < n; ++i) {
@@ -114,11 +117,12 @@ naive_minimum_permutation(vector_t *vector, tensor_t *tensor, slice_distance_t d
   for (j = 2; j < n; ++j) {
     best = n*n+1;
     k    = 0;
+    p    = V[j-1];
     for (i = 0; i < n; ++i) {
-      if (!seen[i] && i != j) {
+      if (!seen[i] && i != p) {
 	DEBUG("permutation: looking-at(%d, %d)=%lf\n", i, j, D[i][j]);
-	if (best > D[i][j]) {
-	  best = D[i][j];
+	if (best > D[p][i]) {
+	  best = D[p][i];
 	  k    = i;
 	  DEBUG("permutation: best(%d, %d)=%d\n", i, j, best);
 	}
@@ -132,8 +136,6 @@ naive_minimum_permutation(vector_t *vector, tensor_t *tensor, slice_distance_t d
   
   safe_free(seen);
   
-  vector_fwrite(stdout, vector);
-    
 #if 0
   vector_fwrite(stdout, vector)
   vector_fwrite(stdout, mean);
@@ -229,7 +231,7 @@ naive_median_permutation(vector_t *vector, tensor_t *tensor, slice_distance_t di
   
   DEBUG("permutation: best=%d, V[0]=%d, V[1]=%d\n", best, V[0], V[1]);
 #if 0
-  //matrix_fwrite(stdout, matrix, format::coordinate);
+  matrix_fwrite(stdout, matrix, format::coordinate);
 #endif
   
   seen = MALLOC_N(bool, n);
@@ -304,7 +306,6 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
   offset      = 0;
   R2[0]       = 0;
   
-#if 0
   for (i = 0; i < n; ++i) {
     r0 = R1[V[i]];
     r  = R1[V[i]+1];
@@ -322,31 +323,12 @@ tensor_apply_permutation(tensor_t *source, vector_t *vector)
     R2[i+1]  = offset; 
     DEBUG("< R2[i+1=%d]=%d+%d-%d=%d\n", i+1, offset, r, r0, R2[i+1]);
   }
-  R2[i] = nnz;
-#endif
-
-  for (i = 0; i < n; ++i) {
-    r0 = R1[V[i]];
-    r  = R1[V[i]+1];
-    i2 = offset;
-    DEBUG("> r0=R1[V[i=%d]  =%d]=%d\n", i, V[i], r0);
-    DEBUG("> r =R1[V[i=%d]+1=%d]=%d\n", i, V[i]+1, r);
-    DEBUG("> i2=%d\n", i2);
-    for (i1 = r0; i1 < r && i2 < nnz; ++i1, ++i2) {
-      K2[i2] = K1[i1];
-      V2[i2] = V1[i1];
-      DEBUG("K2[i2=%d]=%d; K1[i1=%d]=%d\n",   i2, K2[i2], i1, K1[i1]);
-      DEBUG("V2[i2=%d]=%lf; V1[i1=%d]=%lf\n", i2, V2[i2], i1, V1[i1]);
-    }
-    offset  += r - r0;
-    R2[i+1]  = offset; 
-    DEBUG("< R2[i+1=%d]=%d+%d-%d=%d\n", i+1, offset, r, r0, R2[i+1]);
-  }
+  
   R2[i] = nnz;
   
-//#if 0
+#if 0
   tensor_fwrite(stdout, destination);
-//#endif
+#endif
   
   return destination;
 }
@@ -386,9 +368,6 @@ tensor_permute(tensor_t *tensor, permutation_heuristic::type_t heuristic)
   tensor_fwrite(stdout, frontal);
 #endif
   
-  message("compressed frontal slice:\n");
-  tensor_fwrite(stdout, frontal);
-
   switch (heuristic) {
   case permutation_heuristic::naive_minimum:
     permutation = &naive_minimum_permutation;
@@ -410,9 +389,6 @@ tensor_permute(tensor_t *tensor, permutation_heuristic::type_t heuristic)
   message("compressed frontal slice (permuted):\n");
   tensor_fwrite(stdout, permuted);
 #endif
-  
-  message("compressed frontal slice (permuted):\n");
-  tensor_fwrite(stdout, permuted);
   
   coordinate = tensor_convert(permuted, strategy::coordinate);
   tensor_free(permuted);
