@@ -107,6 +107,7 @@ typedef struct {
 #define STORAGE_COMPRESSED(x) ((tensor_storage_compressed_t*)x->storage)
 #define STORAGE_EXTENDED(x) ((tensor_storage_extended_t*)x->storage)
 
+tensor_t* tensor_malloc(uint l, uint m, uint n, ownership::type_t owner = ownership::creator);
 tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, 
 			orientation::type_t orientation = orientation::unknown,
 			ownership::type_t owner = ownership::creator);
