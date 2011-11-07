@@ -30,6 +30,7 @@ namespace tool {
 #define DEFAULT_SIMULATE              false
 #define DEFAULT_STRATEGY              strategy::compressed
 #define DEFAULT_TRACING               false
+#define DEFAULT_THREAD_COUNT          1
 #define DEFAULT_VERBOSE               false
 #define DEFAULT_VERBOSITY             verbosity::low
 #define DEFAULT_WRITE_RESULTS         false
