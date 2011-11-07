@@ -11,6 +11,7 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
   debug("compatible(vector=0x%x, tensor=0x%x)\n", lhs, rhs);
   
   switch (rhs->strategy) {
+  case strategy::array:
   case strategy::compressed:
   case strategy::slice:
   case strategy::ekmr:
@@ -23,7 +24,7 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
   }
   
   if (!supported) {
-    die("Tensor strategy '%s' is not currently supported.\n",
+    die("compatible: tensor strategy '%s' is not currently supported.\n",
 	strategy_to_string(rhs->strategy));
   }
   
