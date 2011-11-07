@@ -339,6 +339,8 @@ detect_file_format(FILE *file)
   
   debug("detect_file_format(0x%x)\n", file);
   
+  format = file_format::unknown;
+  
   if (EOF != (c = peek(file))) {
     if ('%' == c) {
       format = file_format::mmio;
