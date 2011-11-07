@@ -28,24 +28,12 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
 	strategy_to_string(rhs->strategy));
   }
   
-  switch (rhs->orientation) {
-  case orientation::row:
-  case orientation::column:
-  case orientation::tube:
-  case orientation::lateral:
-  case orientation::horizontal:
-  case orientation::frontal:
-    compatible = (lhs->n == rhs->l);
-    break;
-  default:
-    compatible = false;
-    break;
-  }
+  compatible = (lhs->n == rhs->l);
   
   if (!compatible) {
     print_information(lhs);
     print_information(rhs);
-    die("Tensors and vector do not have matching dimensions.\n");
+    die("Tensor and vector do not have matching dimensions.\n");
   }
 }
 
