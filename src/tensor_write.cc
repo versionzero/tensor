@@ -36,21 +36,6 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
-#if 0
-  storage = STORAGE_COORIDINATE(tensor);
-  tuples  = storage->tuples;
-  nnz     = 0;
-  
-  for (i = 0; i < tensor->nnz; ++i) {
-    if (!might_as_well_be_zero(tensor->values[i])) {
-      nnz++;
-    }
-  }
-  
-  debug("tensor_write_coordinate: non-zero values: implied=%d, actual=%d.\n", tensor->nnz, nnz);
-  debug("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
-#endif
-  
   debug("tensor_write_coordinate: non-zero values: actual=%d.\n", tensor->nnz);
   debug("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
   
