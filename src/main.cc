@@ -22,6 +22,7 @@ uint              cache_size;
 uint              cache_line_size;
 uint              iterations;
 uint              seed;
+uint              threads;
 char              *tool_name;
 tool::type_t      tool_type;
 bool              tracing;
