@@ -11,8 +11,6 @@
 void
 matrix_free(matrix_t *matrix)
 {
-  uint i;
-  
   superfluous("matrix_free(matrix=0x%x)\n", matrix);
   
   if (!matrix) {
@@ -20,9 +18,7 @@ matrix_free(matrix_t *matrix)
   }
   
   if (ownership::creator == matrix->owner) {
-    for (i = 0; i < matrix->m; ++i) {
-      safe_free(matrix->data[i]);
-    }    
+    safe_free(matrix->data[0]);
     safe_free(matrix->data);
   }
   
