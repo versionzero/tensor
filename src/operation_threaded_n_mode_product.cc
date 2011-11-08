@@ -29,9 +29,9 @@ extern uint    thread_count;
 */
 
 typedef struct {
-  uint           *pdone;
+  uint           *pdone, *dummy;
   uint           done;
-  uint           id, offset, i;
+  uint           id, offset, i, stride;
   matrix_t       *matrix;
   vector_t const *vector;
   tensor_t const *tensor;
@@ -42,9 +42,8 @@ static pthread_mutex_t tube_lock;
 int
 serial_next_tube(product_thread_data_t *p)
 {
-  uint   k;
+  uint k;
   
-    
   pthread_mutex_lock(&tube_lock);
   k = p->done++;
   pthread_mutex_unlock(&tube_lock);
@@ -88,13 +87,15 @@ padded_next_tube(product_thread_data_t *p)
 {
   uint k, choise;
   
-  if (p->i < 10) {
+  if (p->i < p->stride) {
     choise = p->offset + p->i++;
   } else {
-    p->offset += p->i*p->tensor->n;
-    p->i       = 0;
+    p->offset += p->stride;
+    p->i       = 1;
     choise     = p->offset;
   }
+  
+  //message("offset=%d\n", p->offset);
   
   pthread_mutex_lock(&tube_lock);
   k = (*p->pdone)++;
@@ -136,24 +137,32 @@ padded_fiber_product(void *arg)
 void
 threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
+  uint                  stride;
   uint                  i, done;
   uint                  n;
   pthread_t             threads[32];
   int                   error;
   product_thread_data_t data[32];
   
+  //message("sizeof(data)=%d\n", sizeof(data));
+  
   n = tensor->n;
   pthread_mutex_init(&tube_lock, NULL);
   
+  done         = 0;
+  stride       = 32 > tensor->n ? tensor->n : 2;
+  thread_count = thread_count > tensor->n ? tensor->n : thread_count;
+  
   for (i = 0; i < thread_count; ++i) {
-    data[i].pdone   = &done;
-    data[i].matrix = matrix;
-    data[i].vector = vector;
-    data[i].tensor = tensor;
-    data[i].offset = i*n;
-    data[i].i      = 0;
-    data[i].id     = i;
-    if (0 != (error = pthread_create(&threads[i], NULL, padded_fiber_product, &data[i]))) {
+    data[i+2].pdone  = &done;
+    data[i+2].matrix = matrix;
+    data[i+2].vector = vector;
+    data[i+2].tensor = tensor;
+    data[i+2].offset = i*stride;
+    data[i+2].i      = 0;
+    data[i+2].stride = stride;
+    data[i+2].id     = i;
+    if (0 != (error = pthread_create(&threads[i], NULL, serial_fiber_product, &data[i+2]))) {
       die("threaded_n_mode_product_array: pthread_create() failed with %d\n", error);
     }
   }
