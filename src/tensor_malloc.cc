@@ -8,6 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+uint
+tensor_index(tensor_t const *tensor, uint i, uint j, uint k) {
+  return (i*tensor->n*tensor->m) + (j*tensor->m) + k;
+}
+
 tensor_t*
 tensor_malloc(uint l, uint m, uint n, ownership::type_t owner)
 {
@@ -30,8 +35,8 @@ tensor_malloc(uint l, uint m, uint n, ownership::type_t owner)
     return tensor;
   }
   
-  tensor->values     = MALLOC_N(double, l*m*n);
-  
+  tensor->values      = MALLOC_N(double, l*m*n);
+    
   superfluous("tensor_malloc: tensor->values=0x%x\n", tensor->values);
   superfluous("tensor_malloc: tensor=0x%x\n", tensor);
 

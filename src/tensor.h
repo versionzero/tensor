@@ -112,6 +112,7 @@ tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strat
 			orientation::type_t orientation = orientation::unknown,
 			ownership::type_t owner = ownership::creator);
 tensor_t* tensor_malloc_from_template(tensor_t const *tensor);
+uint tensor_index(tensor_t const *tensor, uint i, uint j, uint k);
 void tensor_free(tensor_t *tensor);
 
 tensor_t* tensor_copy_shallow(tensor_t *source);
