@@ -28,7 +28,7 @@ tensor_fwrite_array(FILE *file, tensor_t const *tensor)
   MM_typecode type;
   double      ***T;
   
-  debug("tensor_write_array(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_fwrite_array(file=0x%x, tensor=0x%x)\n", file, tensor);
   
   tensor_initialize_typecode(&type, strategy::array);
   
@@ -36,7 +36,7 @@ tensor_fwrite_array(FILE *file, tensor_t const *tensor)
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
-  debug("tensor_write_array: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+  debug("tensor_fwrite_array: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
   
   if (0 != (result = mm_write_tensor_array_size(file, tensor->l, tensor->m, tensor->n))) {
     die("Failed to write array tensor of size %d x %d x %d (%d).\n", tensor->l, tensor->m, tensor->n, result);
@@ -60,7 +60,7 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
   tensor_storage_coordinate_t *storage;
   coordinate_tuple_t          *tuples;
   
-  debug("tensor_write_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_fwrite_coordinate(file=0x%x, tensor=0x%x)\n", file, tensor);
   
   tensor_initialize_typecode(&type, strategy::coordinate);
   
@@ -68,8 +68,8 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
     die("Could not write Tensor Market banner (%d).\n", result);
   }
   
-  debug("tensor_write_coordinate: non-zero values: actual=%d.\n", tensor->nnz);
-  debug("tensor_write_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+  debug("tensor_fwrite_coordinate: non-zero values: actual=%d.\n", tensor->nnz);
+  debug("tensor_fwrite_coordinate: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
   
   if (0 != (result = mm_write_tensor_coordinate_size(file, tensor->l, tensor->m, tensor->n, tensor->nnz))) {
     die("Failed to write coordinate tensor of size %d (%d).\n", nnz, result);
