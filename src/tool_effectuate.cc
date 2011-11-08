@@ -23,7 +23,7 @@ extern uint              cache_size;
 extern uint              cache_line_size;
 extern uint              iterations;
 extern bool              human_readable;
-extern uint              threads;
+extern uint              thread_count;
 extern char              *tool_name;
 extern tool::type_t      tool_type;
 extern bool              simulate;
@@ -52,7 +52,7 @@ effectuate_tool_usage()
 #if !defined (NOSIMULATE)
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
 #endif
-  message("\t-t\tnumer of threads to use (default: %d)\n", DEFAULT_THREAD_COUNT);
+  message("\t-t\tnumer of thread_count to use (default: %d)\n", DEFAULT_THREAD_COUNT);
   message("\t-T\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
@@ -219,9 +219,9 @@ effectuate_tool_main(int argc, char *argv[])
       simulate = !simulate;
       break;
     case 't':
-      threads = atoi(optarg);
-      if (0 == threads) {
-	threads = DEFAULT_THREAD_COUNT;
+      thread_count = atoi(optarg);
+      if (0 == thread_count) {
+	thread_count = DEFAULT_THREAD_COUNT;
       }
       break;
     case 'T':

@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+extern cache_t *cache;
+extern uint    thread_count;
+
 /*
   Computing ($pT$):
   Let $\T \in R^{n\times n\times n}$ be a tensor.
@@ -23,8 +26,6 @@
     end for
   end for
 */
-
-extern cache_t *cache;
 
 void
 compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
@@ -412,9 +413,9 @@ n_mode_product_ekmr(matrix_t *matrix, vector_t const *vector, tensor_t const *te
 }
 
 void
-operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+serial_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  debug("operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("serial_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   compatible(vector, tensor);
   
@@ -435,6 +436,21 @@ operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t cons
     die("Tensor product for '%s' strategy is not currently supported.\n",
 	strategy_to_string(tensor->strategy));
     break;
+  }
+}
+
+extern void 
+threaded_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+
+void
+operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+{
+  debug("operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  
+  if (1 == thread_count) {
+    serial_n_mode_product(matrix, vector, tensor);
+  } else {
+    threaded_n_mode_product(matrix, vector, tensor);
   }
 }
 
