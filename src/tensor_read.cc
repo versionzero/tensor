@@ -10,13 +10,11 @@
 tensor_t*
 tensor_fread_array(FILE *file)
 {
-  int                  i, j, k, v;
-  int                  l, m, n, nnz;
-  int                  result;
-  double               d;
+  int                  i, j, k, index;
+  int                  l, m, n;
+  int                  line, result;
   tensor_t             *tensor;
-  tensor_storage_coordinate_t *storage;
-  coordinate_tuple_t   *tuples;
+  double               *T;
   
   debug("tensor_fread_array(0x%x)\n", file);
   
@@ -26,24 +24,18 @@ tensor_fread_array(FILE *file)
   
   debug("tensor_fread_array: l=%d, m=%d, n=%d\n", l, m, n);
   
-  nnz     = l*m*n;
-  tensor  = tensor_malloc(l, m, n, nnz, strategy::coordinate);
-  storage = STORAGE_COORIDINATE(tensor);
-  tuples  = storage->tuples;
-  v       = 0;
-  
-  for (k = 0; k < l; ++k) {
-    for (i = 0; i < m; ++i) {
-      for (j = 0; j < n; ++j) {
-	if (1 != (result = fscanf(file, "%lg\n", &d))) {
-	  die("Failed to process line %d of the input stream (%d).\n", v, result);
+  tensor  = tensor_malloc(l, m, n);
+  T       = tensor->values;
+  line    = 0;
+    
+  for (i = 0; i < m; ++i) {
+    for (j = 0; j < n; ++j) {
+      for (k = 0; k < l; ++k) {
+	index = tensor_index(tensor, i, j, k);
+	if (1 != (result = fscanf(file, "%lg\n", &T[index]))) {
+	  die("Failed to process line %d of the input stream (%d).\n", line, result);
 	}
-	tensor->values[v] = d;
-	tuples[v].i       = i;
-	tuples[v].j       = j;
-	tuples[v].k       = k;
-	tuples[v].index   = v;
-	v++;
+	line++;
       }
     }
   }

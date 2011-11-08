@@ -20,6 +20,38 @@ tensor_initialize_typecode(MM_typecode *type, strategy::type_t strategy)
 }
 
 void
+tensor_fwrite_array(FILE *file, tensor_t const *tensor)
+{
+  int         i, j, k;
+  int         l, m, n;
+  int         result;
+  MM_typecode type;
+  double      ***T;
+  
+  debug("tensor_write_array(file=0x%x, tensor=0x%x)\n", file, tensor);
+  
+  tensor_initialize_typecode(&type, strategy::array);
+  
+  if (0 != (result = mm_write_banner(file, type))) {
+    die("Could not write Tensor Market banner (%d).\n", result);
+  }
+  
+  debug("tensor_write_array: l=%d, m=%d, n=%d.\n", tensor->l, tensor->m, tensor->n);
+  
+  if (0 != (result = mm_write_tensor_array_size(file, tensor->l, tensor->m, tensor->n))) {
+    die("Failed to write array tensor of size %d x %d x %d (%d).\n", tensor->l, tensor->m, tensor->n, result);
+  }
+  
+  for (i = 0; i < m; ++i) {
+    for (j = 0; j < n; ++j) {
+      for (k = 0; k < l; ++k) {
+	fprintf(file, "%10.6g\n", T[i][j][k]);
+      }
+    }
+  }
+}
+
+void
 tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 {
   uint                        i, nnz;
@@ -47,7 +79,7 @@ tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
   tuples  = storage->tuples;
   
   for (i = 0; i < tensor->nnz; ++i) {
-    fprintf(file, "%d %d %d %10.32g\n", tuples[i].k, tuples[i].i, tuples[i].j, tensor->values[tuples[i].index]);
+    fprintf(file, "%d %d %d %10.6g\n", tuples[i].k, tuples[i].i, tuples[i].j, tensor->values[tuples[i].index]);
   }
 }
 
@@ -95,7 +127,7 @@ tensor_fwrite_compressed(FILE *file, tensor_t const *tensor)
   }
   
   for (i = 0; i < nnz; ++i) {
-    fprintf(file, "%d %d %10.32g\n", storage->CO[i], storage->KO[i], tensor->values[i]);
+    fprintf(file, "%d %d %10.6g\n", storage->CO[i], storage->KO[i], tensor->values[i]);
   }
 }
 
@@ -145,7 +177,7 @@ tensor_fwrite_compressed_slice(FILE *file, tensor_t const *tensor)
   }
   
   for (i = 0; i < nnz; ++i) {
-    fprintf(file, "%d %10.32g\n", storage->KO[i], tensor->values[i]);
+    fprintf(file, "%d %10.6g\n", storage->KO[i], tensor->values[i]);
   }
 }
 
@@ -195,7 +227,7 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor)
   }
   
   for (i = 0; i < nnz; ++i) {
-    fprintf(file, "%d %10.32g\n", storage->CK[i], tensor->values[i]);
+    fprintf(file, "%d %10.6g\n", storage->CK[i], tensor->values[i]);
   }
 }
 
@@ -206,6 +238,9 @@ tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
   debug("tensor_fwrite_implementation: strategy='%s'\n", strategy_to_string(tensor->strategy));
   
   switch (tensor->strategy) {
+  case strategy::array:
+    tensor_fwrite_array(file, tensor);
+    break;
   case strategy::coordinate:
     tensor_fwrite_coordinate(file, tensor);
     break;
