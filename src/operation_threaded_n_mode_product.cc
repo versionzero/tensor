@@ -38,41 +38,40 @@ typedef struct {
 static pthread_mutex_t tube_lock;
 
 int
-next_tube(product_thread_data_t *data)
+next_tube(product_thread_data_t *p)
 {
   uint k;
   
   pthread_mutex_lock(&tube_lock);
-  k = data->done++;
+  k = p->done++;
   pthread_mutex_unlock(&tube_lock);
-  return k < (data->tensor->m*data->tensor->n) ? k : -1;
+  return k < (p->tensor->n*p->tensor->n) ? k : -1;
 }
 
 void*
 fiber_product(void *arg)
 {
-  int                   k;
-  product_thread_data_t *data;
-  uint   i, j, k, index;
-  uint   m, n, l;
-  uint   *P;
-  double **M, *T;
+  int                   t;
+  uint                  i, j, k, offset;
+  uint                  n;
+  uint                  *P;
+  double                **M, *T;
+  product_thread_data_t *p;
   
-  data = (product_thread_data_t*) arg;
+  p = (product_thread_data_t*) arg;
   
-  M = matrix->data;
-  P = vector->data;
-  T = tensor->values;
+  M = p->matrix->data;
+  P = p->vector->data;
+  T = p->tensor->values;
   
-  l = tensor->l;
-  m = tensor->m;
-  n = tensor->n;
+  n = p->tensor->n;
   
-  while (-1 != (k = next_tube(data))) {
-    offset = k*data->tensor->l;
-    for (i = 0; i < l; ++i) {
-      T[offset+i];
-      // M[i][j] += P[k] * T[index];
+  while (-1 != (t = next_tube(p))) {
+    offset = t*n;
+    i      = t/n;
+    j      = t%n;
+    for (k = 0; k < n; ++k) {
+      M[i][j] += P[k] * T[offset+k];
     }
   }
   
@@ -85,7 +84,6 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   uint                  i;
   pthread_t             threads[32];
   int                   error;
-  int                   *status;
   product_thread_data_t data;
   
   data.done   = 0;
@@ -94,7 +92,7 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   data.tensor = tensor;
   
   pthread_mutex_init(&tube_lock, NULL);
-
+  
   for (i = 0; i < thread_count; ++i) {
     if (0 != (error = pthread_create(&threads[i], NULL, fiber_product, &data))) {
       die("threaded_n_mode_product_array: pthread_create() failed with %d\n", error);
@@ -114,23 +112,20 @@ void
 n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint   i, j, k, index;
-  uint   m, n, l;
+  uint   n;
   uint   *P;
   double **M, *T;
   
   debug("n_mode_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
+  n = tensor->n;
   M = matrix->data;
   P = vector->data;
   T = tensor->values;
   
-  l = tensor->l;
-  m = tensor->m;
-  n = tensor->n;
-  
-  for (i = 0; i < m; ++i) {
+  for (i = 0; i < n; ++i) {
     for (j = 0; j < n; ++j) {
-      for (k = 0; k < l; ++k) {
+      for (k = 0; k < n; ++k) {
 	index = tensor_index(tensor, i, j, k);
 	M[i][j] += P[k] * T[index];
       }
@@ -147,7 +142,7 @@ threaded_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const
   
   switch (tensor->strategy) {
   case strategy::array:
-    n_mode_product_array(matrix, vector, tensor);
+    threaded_n_mode_product_array(matrix, vector, tensor);
     break;
   default:
     die("Tensor product for '%s' strategy (using thread_count) is not currently supported.\n",
