@@ -83,7 +83,7 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
   }
   
   timer_start(&t);
-  matrix_fwrite(file, matrix, format::coordinate);
+  matrix_fwrite(file, matrix, format::array);
   timer_end(&t);
   print_elapsed_time(t);
   
@@ -179,7 +179,8 @@ effectuate_tool_main(int argc, char *argv[])
   int c;
   
   /* set the program's defaults */
-  optcode   = DEFAULT_OPERATION;
+  optcode      = DEFAULT_OPERATION;
+  thread_count = DEFAULT_THREAD_COUNT;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -266,6 +267,7 @@ effectuate_tool_main(int argc, char *argv[])
   /* print program options, for debugging purposes */
   print_tool_options();
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
+  debug("effectuate_tool_main: thread_count=%d\n", thread_count);
   
   /* if we are just running a simulation, then we only do one
      iteration; otherwise, it would be really slow */
