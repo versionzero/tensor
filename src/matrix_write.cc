@@ -23,6 +23,8 @@ matrix_fwrite_array(FILE *file, matrix_t const *matrix)
   int         result;
   MM_typecode type;
   
+  debug("matrix_fwrite_array(file=0x%x, matrix=0x%x)\n", file, matrix);
+  
   matrix_initialize_type(&type);
   mm_set_array(&type);
   
@@ -33,10 +35,10 @@ matrix_fwrite_array(FILE *file, matrix_t const *matrix)
   if (0 != (result = mm_write_matrix_array_size(file, matrix->m, matrix->n))) {
     die("Failed to write matrix array size (%d).\n", result);
   }
-
+  
   for (i = 0; i < matrix->m; ++i) {
     for (j = 0; j < matrix->n; ++j) {
-      fprintf(file, "%10.32g\n", matrix->data[i][j]);
+      fprintf(file, "%10.6g\n", matrix->data[i][j]);
     }
   }
 }
@@ -47,6 +49,8 @@ matrix_fwrite_coordinate(FILE *file, matrix_t const *matrix)
   uint        i, j;
   int         nnz, result;
   MM_typecode type;
+  
+  debug("matrix_fwrite_coordinate(file=0x%x, matrix=0x%x)\n", file, matrix);
   
   matrix_initialize_type(&type);
   mm_set_coordinate(&type);
@@ -71,7 +75,7 @@ matrix_fwrite_coordinate(FILE *file, matrix_t const *matrix)
   for (i = 0; i < matrix->m; ++i) {
     for (j = 0; j < matrix->n; ++j) {
       if (!might_as_well_be_zero(matrix->data[i][j])) {
-	fprintf(file, "%d %d %10.32g\n", i+1, j+1, matrix->data[i][j]);
+	fprintf(file, "%d %d %10.6g\n", i+1, j+1, matrix->data[i][j]);
       }
     }
   }
@@ -80,6 +84,8 @@ matrix_fwrite_coordinate(FILE *file, matrix_t const *matrix)
 void
 matrix_fwrite(FILE *file, matrix_t const *matrix, format::type_t format)
 {
+  debug("matrix_fwrite(file=0x%x, matrix=0x%x)\n", file, matrix);
+  
   if (format::coordinate == format) {
     matrix_fwrite_coordinate(file, matrix);
   } else {
@@ -91,7 +97,9 @@ void
 matrix_write(char const *filename, matrix_t const *matrix, format::type_t format)
 {
   FILE *file;
-
+  
+  debug("matrix_write(0x%x)\n", file);
+  
   file = fopen_or_die(filename, "w+");
   matrix_fwrite(file, matrix, format);
   fclose(file);
