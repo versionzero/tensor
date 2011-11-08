@@ -53,7 +53,7 @@ fiber_product(void *arg)
 {
   int                   t;
   uint                  i, j, k, offset;
-  uint                  n;
+  uint                  n, sum;
   uint                  *P;
   double                **M, *T;
   product_thread_data_t *p;
@@ -67,12 +67,14 @@ fiber_product(void *arg)
   n = p->tensor->n;
   
   while (-1 != (t = next_tube(p))) {
+    sum    = 0;
     offset = t*n;
     i      = t/n;
     j      = t%n;
     for (k = 0; k < n; ++k) {
-      M[i][j] += P[k] * T[offset+k];
+      sum += P[k] * T[offset+k];
     }
+    M[i][j] = sum;
   }
   
   return NULL;
