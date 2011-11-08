@@ -412,6 +412,9 @@ n_mode_product_ekmr(matrix_t *matrix, vector_t const *vector, tensor_t const *te
   }
 }
 
+extern void
+n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+
 void
 serial_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
@@ -420,6 +423,9 @@ serial_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *
   compatible(vector, tensor);
   
   switch (tensor->strategy) {
+  case strategy::array:
+    n_mode_product_array(matrix, vector, tensor);
+    break;
   case strategy::compressed:
     n_mode_product_compressed(matrix, vector, tensor);
     break;
@@ -447,7 +453,7 @@ operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t cons
 {
   debug("operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
-  if (1 == thread_count) {
+  if (thread_count <= 1) {
     serial_n_mode_product(matrix, vector, tensor);
   } else {
     threaded_n_mode_product(matrix, vector, tensor);
