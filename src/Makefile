@@ -16,7 +16,7 @@ ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
 EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
-EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
+EXTRA_LDFLAGS=-Wall -lpthread $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
@@ -32,10 +32,11 @@ HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
 SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
 	information.cc latex.cc memory.cc mmio.cc			\
-	operation_n_mode_product.cc operation_utility.cc random.cc	\
-	strings.cc timer.cc tool_convert.cc tool_effectuate.cc		\
-	tool_generate.cc tool_permute.cc tool_timing.cc			\
-	tool_utility.cc types.cc utility.cc
+	operation_n_mode_product.cc					\
+	operation_threaded_n_mode_product.cc operation_utility.cc	\
+	random.cc strings.cc timer.cc tool_convert.cc			\
+	tool_effectuate.cc tool_generate.cc tool_permute.cc		\
+	tool_timing.cc tool_utility.cc types.cc utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
