@@ -7,7 +7,7 @@
 
 namespace format {
   typedef enum {
-    format,
+    unknown,
     array,
     coordinate
   } type_t;
