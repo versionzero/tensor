@@ -7,14 +7,6 @@
 #include "vector.h"
 #include <stdio.h>
 
-namespace permutation_heuristic {
-  typedef enum {
-    none,
-    naive_minimum,
-    naive_median
-  } type_t;
-}
-
 namespace file_format {
   typedef enum {
     unknown,
@@ -49,11 +41,10 @@ namespace orientation {
 }
 
 typedef struct {
-  uint                l, m, n, nnz;
+  uint                l, m, n;
   strategy::type_t    strategy;
   orientation::type_t orientation;
   ownership::type_t   owner;
-  void                *storage;
   double              *values;
 } tensor_t;
 
@@ -62,53 +53,8 @@ typedef struct {
   uint index;
 } coordinate_tuple_t;
 
-typedef int  (*index_compare_t)(const void *a, const void *b);
-typedef uint (*index_encoder_t)(coordinate_tuple_t const *tuple);
-typedef void (*index_copy_t)(void *destination, void const *source, uint i);
-
-typedef struct {
-  index_compare_t index_compare;
-  index_encoder_t index_r_encoder;
-  index_encoder_t index_c_encoder;
-  index_copy_t    index_copy;
-} conversion_callbacks_t;
-
-typedef struct {
-  conversion_callbacks_t *callbacks;
-} tensor_storage_base_t;
-
-typedef struct {
-  tensor_storage_base_t dummy;
-  coordinate_tuple_t    *tuples;
-} tensor_storage_coordinate_t;
-
-typedef struct {
-  tensor_storage_base_t base;
-  uint                  n, rn, cn, tn, kn;
-  uint                  *RO, *CO, *TO, *KO;
-} tensor_storage_compressed_t;
-
-typedef struct {
-  tensor_storage_base_t base;
-  uint                  rn, ckn;
-  uint                  *RO, *CK;
-} tensor_storage_extended_t;
-
-typedef struct {
-  tensor_storage_extended_t dummy;
-} tensor_storage_ekmr_t;
-
-typedef struct {
-  tensor_storage_extended_t dummy;
-} tensor_storage_zzekmr_t;
-
-#define STORAGE_BASE(x) ((tensor_storage_base_t*)x->storage)
-#define STORAGE_COORIDINATE(x) ((tensor_storage_coordinate_t*)x->storage)
-#define STORAGE_COMPRESSED(x) ((tensor_storage_compressed_t*)x->storage)
-#define STORAGE_EXTENDED(x) ((tensor_storage_extended_t*)x->storage)
-
 tensor_t* tensor_malloc(uint l, uint m, uint n, ownership::type_t owner = ownership::creator);
-tensor_t* tensor_malloc(uint l, uint m, uint n, uint nnz, strategy::type_t strategy, 
+tensor_t* tensor_malloc(uint l, uint m, uint n, strategy::type_t strategy, 
 			orientation::type_t orientation = orientation::unknown,
 			ownership::type_t owner = ownership::creator);
 tensor_t* tensor_malloc_from_template(tensor_t const *tensor);
@@ -121,10 +67,10 @@ void tensor_transfer_ownership(tensor_t *destination, tensor_t *source);
 
 void tensor_clear(tensor_t *tensor);
 
+#if 0
 tensor_t *tensor_convert(tensor_t *tensor, strategy::type_t strategy, orientation::type_t orientation = orientation::unknown);
 void tensor_convert(tensor_t *destination, tensor_t *source);
-
-tensor_t* tensor_permute(tensor_t *tensor, permutation_heuristic::type_t heuristic);
+#endif
 
 tensor_t *tensor_read(char const *filename);
 tensor_t *tensor_fread(FILE *file);
@@ -139,18 +85,14 @@ void tensor_validate(tensor_t const *tensor);
 char const* strategy_to_string(strategy::type_t strategy);
 char const* orientation_to_string(orientation::type_t orientation);
 char const* orientation_to_latex_macro(orientation::type_t orientation);
-char const* permutation_heuristic_to_string(permutation_heuristic::type_t heuristic);
 strategy::type_t string_to_strategy(char const *name);
 orientation::type_t string_to_orientation(char const *name);
-permutation_heuristic::type_t string_to_permutation_heuristic(char const *name);
 strategy::type_t typecode_to_strategy(MM_typecode type);
 void strategy_to_typecode(MM_typecode *type, strategy::type_t strategy);
 void print_strategies(char const *format);
 void print_orientations(char const *format);
 void print_operations(char const *format);
 void print_operations_with_descriptions(char const *format);
-void print_permutation_heuristics(char const *format);
-void print_permutation_heuristics_with_descriptions(char const *format);
 
 #if 0
 void tensor_add(tensor_t *t1, tensor_t const *t2);

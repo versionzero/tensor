@@ -24,7 +24,7 @@ HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
 	tool.h utility.h compatible.h
 HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
-HEADERS_TENSOR=storage.h tensor.h
+HEADERS_TENSOR=tensor.h
 HEADERS_VECTOR=vector.h
 HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
 	$(HEADERS_MATRIX) $(HEADERS_TENSOR) $(HEADERS_VECTOR)
@@ -32,33 +32,23 @@ HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
 SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
 	information.cc latex.cc memory.cc mmio.cc			\
-	operation_n_mode_product.cc					\
-	operation_threaded_n_mode_product.cc operation_utility.cc	\
-	random.cc strings.cc thread.cc timer.cc tool_convert.cc		\
-	tool_effectuate.cc tool_generate.cc tool_permute.cc		\
-	tool_timing.cc tool_utility.cc types.cc utility.cc
+	operation_n_mode_product.cc operation_utility.cc random.cc	\
+	strings.cc thread.cc timer.cc tool_effectuate.cc		\
+	tool_generate.cc tool_timing.cc tool_utility.cc types.cc	\
+	utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
 	matrix_malloc.cc matrix_partition.cc matrix_supported.cc	\
 	matrix_read.cc matrix_write.cc
-SOURCES_STORAGE=tensor_storage_convert.cc				\
-	tensor_storage_compressed.cc					\
-	tensor_storage_compressed_slice.cc				\
-	tensor_storage_coordinate.cc tensor_storage_matrix_slice.cc	\
-	tensor_emit_latex.cc tensor_storage_ekmr.cc			\
-	tensor_storage_gundersen.cc tensor_storage_malloc.cc		\
-	tensor_storage_utility.cc tensor_storage_zzekmr.cc
-SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
-	tensor_copy.cc tensor_free.cc tensor_malloc.cc			\
-	tensor_ownership.cc tensor_permute.cc tensor_supported.cc	\
-	tensor_read.cc tensor_write.cc tensor_utility.cc		\
-	tensor_validate.cc
+SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_copy.cc	\
+	tensor_emit_latex.cc tensor_free.cc tensor_malloc.cc		\
+	tensor_ownership.cc tensor_supported.cc tensor_read.cc		\
+	tensor_write.cc tensor_utility.cc tensor_validate.cc
 SOURCES_VECTOR=vector_clear.cc vector_free.cc vector_malloc.cc	\
 	vector_read.cc vector_write.cc
-SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_GENERATE)	\
-	$(SOURCES_MATRIX) $(SOURCES_STORAGE) $(SOURCES_TENSOR)	\
-	$(SOURCES_VECTOR) main.cc
+SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_GENERATE)		\
+	$(SOURCES_MATRIX) $(SOURCES_TENSOR) $(SOURCES_VECTOR) main.cc
 
 ASSEMBLER=$(SOURCES:.cc=.s)
 OBJECTS=$(ASSEMBLER:.s=.o)

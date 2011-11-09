@@ -26,12 +26,11 @@
 tensor_t*
 generate_tensor_from_matrix(matrix_t *matrix)
 {
+#if 0
   uint                        i, j, k;
-  uint                        nnz, size, n;
+  uint                        size, n;
   uint                        lower, upper;
   tensor_t                    *tensor;
-  tensor_storage_coordinate_t *storage;
-  coordinate_tuple_t          *tuples;
   double                      *values;
   double                      **data;
   
@@ -40,15 +39,6 @@ generate_tensor_from_matrix(matrix_t *matrix)
   n     = matrix->n;
   upper = matrix->n*matrix->n;
   data  = matrix->data;
-  nnz   = 0;
-  
-  for (i = 0; i < n; ++i) {
-    for (j = 0; j < n; ++j) {
-      if (!might_as_well_be_zero(data[i][j])) {
-	nnz++;
-      }
-    }
-  }
   
   lower   = nnz;
   nnz    *= n;
@@ -85,4 +75,7 @@ generate_tensor_from_matrix(matrix_t *matrix)
   }
   
   return tensor;
+#endif
+  
+  return NULL;
 }

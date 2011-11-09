@@ -20,6 +20,6 @@ void
 print_information(tensor_t const* tensor)
 {
   debug("print_information(tensor=0x%x)\n", tensor);
-  debug("l=%d, m=%d, n=%d, nnz=%d\n", tensor->l, tensor->m, tensor->n, tensor->nnz);
+  debug("l=%d, m=%d, n=%d, nnz=%d\n", tensor->l, tensor->m, tensor->n);
   debug("strategy='%s', orientation='%s'\n", strategy_to_string(tensor->strategy), orientation_to_string(tensor->orientation));
 }

@@ -46,47 +46,7 @@ print_footer(FILE *file)
   fprintf(file, "\\end{tabular}\n");
 }
 
-void
-tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
-{
-  uint                        l, m, n;
-  int                         nnz;
-  tensor_storage_compressed_t *storage;
-  char const                  *name, *macro;
-  
-  debug("tensor_fwrite_compressed_latex(file=0x%x, tensor=0x%x)\n", file, tensor);
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  l       = tensor->l;
-  m       = tensor->m;
-  n       = tensor->n;
-  nnz     = tensor->nnz;
-  name    = orientation_to_string(tensor->orientation);
-  macro   = orientation_to_latex_macro(tensor->orientation);
-  
-  debug("tensor_fwrite_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', macro='%s'.\n", 
-	l, m, n, nnz, name, macro);
-  
-  print_header(file, nnz);
-  print_hline(file, storage->rn);
-  fprintf(file, "$\\row_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->RO, storage->rn, " & ", " \\\\\n");
-  print_hline(file, storage->cn);
-  fprintf(file, "$\\col_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CO, storage->cn,  " & ", " \\\\\n");  
-  print_hline(file, storage->tn);
-  fprintf(file, "$\\tube_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->TO, storage->tn,  " & ", " \\\\\n");  
-  print_hline(file, storage->kn);
-  fprintf(file, "$KO_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->KO, storage->kn,  " & ", " \\\\\n");
-  print_hline(file, nnz);
-  fprintf(file, "$\\val_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%g%s", tensor->values, nnz,  " & ", " \\\\\n");
-  print_hline(file, nnz);
-  print_footer(file);
-}
-
+#if 0
 void
 tensor_fwrite_extended_compressed_latex(FILE *file, tensor_t const *tensor, strategy::type_t strategy)
 {
@@ -121,25 +81,12 @@ tensor_fwrite_extended_compressed_latex(FILE *file, tensor_t const *tensor, stra
   print_hline(file, nnz);
   print_footer(file);
 }
+#endif
 
 void
 tensor_emit_latex(FILE *file, tensor_t const *tensor)
 {
   debug("tensor_emit_latex(file=0x%x, tensor=0x%x)\n", file, tensor);
   debug("tensor_emit_latex: strategy='%s'\n", strategy_to_string(tensor->strategy));
-  
-  switch (tensor->strategy) {
-  case strategy::compressed:
-  case strategy::slice:
-    tensor_fwrite_compressed_latex(file, tensor);
-    break;
-  case strategy::ekmr:
-  case strategy::zzekmr:
-    tensor_fwrite_extended_compressed_latex(file, tensor, tensor->strategy);
-    break;
-  default:
-    die("Emitting LaTeX source for storage strategy '%d' is not supported.\n", 
-	strategy_to_string(tensor->strategy));
-  }
 }
 

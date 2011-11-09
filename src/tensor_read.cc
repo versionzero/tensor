@@ -43,6 +43,7 @@ tensor_fread_array(FILE *file)
   return tensor;
 }
 
+#if 0
 tensor_t*
 tensor_fread_coordinate(FILE *file)
 {
@@ -213,6 +214,7 @@ tensor_fread_extended_compressed(FILE *file, strategy::type_t strategy)
   
   return tensor;
 }
+#endif
 
 tensor_t*
 tensor_fread_mmio_data(FILE *file, MM_typecode type)
@@ -237,6 +239,7 @@ tensor_fread_mmio_data(FILE *file, MM_typecode type)
   case strategy::array:
     tensor = tensor_fread_array(file);
     break;
+#if 0
   case strategy::coordinate:
     tensor = tensor_fread_coordinate(file);
     break;
@@ -250,6 +253,7 @@ tensor_fread_mmio_data(FILE *file, MM_typecode type)
   case strategy::zzekmr:
     tensor = tensor_fread_extended_compressed(file, strategy);
     break;
+#endif
   default:
     die("Tensor storage strategy '%d' is not supported.\n", strategy);
   }
@@ -270,6 +274,7 @@ tensor_fread_mmio(FILE *file)
   return tensor_fread_mmio_data(file, type);
 }
 
+#if 0
 tensor_t*
 tensor_fread_matlab(FILE *file)
 {
@@ -322,6 +327,7 @@ tensor_fread_matlab(FILE *file)
   
   return tensor;
 }
+#endif
 
 file_format::type_t
 detect_file_format(FILE *file)
@@ -357,9 +363,11 @@ tensor_fread_file_format(FILE *file, file_format::type_t format)
   case file_format::mmio:
     tensor = tensor_fread_mmio(file);
     break;
+#if 0
   case file_format::matlab:
     tensor = tensor_fread_matlab(file);
     break;
+#endif
   default:
     die("tensor_fread_file_format: unknown file type %d.\n", format);
     break;

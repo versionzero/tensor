@@ -53,10 +53,8 @@ main(int argc, char *argv[])
   } entrypoints[] = {
     { NULL },
     { NULL },
-    { &convert_tool_main },
     { &generate_tool_main },
     { &effectuate_tool_main },
-    { &permute_tool_main },
     { NULL }
   };
   

@@ -12,10 +12,8 @@ namespace tool {
   typedef enum {
     unknown,
     tensor,
-    convert,
     generate,
-    effectuate,
-    permute
+    effectuate
   } type_t;
 }
 
@@ -41,10 +39,8 @@ namespace tool {
 #define DEFAULT_CACHE_SIZE            (2*1024)
 #define DEFAULT_CACHE_LINE_SIZE       32
 
-void convert_tool_main(int argc, char *argv[]);
 void generate_tool_main(int argc, char *argv[]);
 void effectuate_tool_main(int argc, char *argv[]);
-void permute_tool_main(int argc, char *argv[]);
 
 vector_t* timed_vector_read(char const *name);
 matrix_t* timed_matrix_read(char const *name);

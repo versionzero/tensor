@@ -51,6 +51,7 @@ tensor_fwrite_array(FILE *file, tensor_t const *tensor)
   }
 }
 
+#if 0
 void
 tensor_fwrite_coordinate(FILE *file, tensor_t const *tensor)
 {
@@ -230,6 +231,7 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor)
     fprintf(file, "%d %10.6g\n", storage->CK[i], tensor->values[i]);
   }
 }
+#endif
 
 void
 tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
@@ -241,6 +243,7 @@ tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
   case strategy::array:
     tensor_fwrite_array(file, tensor);
     break;
+#if 0
   case strategy::coordinate:
     tensor_fwrite_coordinate(file, tensor);
     break;
@@ -254,6 +257,7 @@ tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
   case strategy::zzekmr:
     tensor_fwrite_extended_compressed(file, tensor);
     break;
+#endif
   default:
     die("Tensor storage strategy '%d' is not supported.\n", 
 	strategy_to_string(tensor->strategy));

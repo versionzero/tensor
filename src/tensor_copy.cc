@@ -9,7 +9,6 @@ tensor_copy_shallow(tensor_t *destination, tensor_t *source)
   
   destination->owner   = ownership::viewer;
   destination->values  = source->values;
-  destination->storage = source->storage;
 }
 
 tensor_t*
@@ -19,7 +18,7 @@ tensor_copy_shallow(tensor_t *source)
   
   debug("tensor_copy_shallow(source=0x%x)\n", source);
   
-  destination = tensor_malloc(source->l, source->m, source->n, source->nnz, source->strategy, source->orientation, source->owner);
+  destination = tensor_malloc(source->l, source->m, source->n, source->strategy, source->orientation, source->owner);
   tensor_copy_shallow(destination, source);
   
   return destination;

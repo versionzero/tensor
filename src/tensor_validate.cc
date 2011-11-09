@@ -12,8 +12,4 @@ tensor_validate(tensor_t const *tensor)
   if (!tensor->values) {
     die("Tensor values have not been allocated.\n");
   }
-  
-  if (!tensor->storage) {
-    die("Tensor indexing strategy has not been allocated.\n");
-  }
 }

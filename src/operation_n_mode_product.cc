@@ -4,6 +4,7 @@
 #include "error.h"
 #include "matrix.h"
 #include "operation.h"
+#include "thread.h"
 #include "tensor.h"
 #include "utility.h"
 #include "vector.h"
@@ -11,7 +12,10 @@
 #include <stdlib.h>
 
 extern cache_t *cache;
+extern uint    memory_stride;
 extern uint    thread_count;
+
+static pthread_mutex_t tube_lock;
 
 /*
   Computing ($pT$):
@@ -27,393 +31,118 @@ extern uint    thread_count;
   end for
 */
 
-void
-compressed_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+typedef struct {
+  uint           done;
+  matrix_t       *matrix;
+  vector_t const *vector;
+  tensor_t const *tensor;
+} product_thread_data_t;
+
+int
+traditional_next_tube(product_thread_data_t *data)
 {
-  uint                       i, j, k;
-  uint                       rn, nnz;
-  uint                       start, end;
-  uint                       c, r, r0, t, m, n;
-  double                     **M;
-  double const               *V;
-  uint const                 *p, *R, *C, *T;
-  tensor_storage_compressed_t const *storage;
+  uint k;
   
-  debug("compressed_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  thread_mutex_lock(&tube_lock);
+  k = data->done++;
+  thread_mutex_unlock(&tube_lock);
+  return k < (data->tensor->n*data->tensor->n) ? k : -1;
+}
+
+thread_address_t
+traditional_fiber_product(thread_argument_t *argument)
+{
+  int                   t;
+  uint                  i, j, k, offset;
+  uint                  n, sum;
+  uint                  *P;
+  double                **M, *T;
+  product_thread_data_t *data;
   
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  m       = matrix->m;
-  n       = matrix->n;
+  data = (product_thread_data_t*) thread_data(argument);
   
-  storage = STORAGE_COMPRESSED(tensor);
-  rn      = storage->rn;
-  R       = storage->RO;
-  C       = storage->CO;
-  T       = storage->KO;
+  n = data->tensor->n;
+  M = data->matrix->data;
+  P = data->vector->data;
+  T = data->tensor->values;
   
-  /*
-    Using \emph{compressed row storage} ($\CRS$), this tensor can be
-    represented as:
-    
-           $k$   0   1   2    3   4   5   6    7   8   9   10   11
-     $\rowcrs$ & 0 & 4 & 8 & 12
-     $\colcrs$ & 1 & 3 & 0 &  2 & 0 & 2 & 1 &  2 & 1 & 2 &  0 &  3
-    $\tubecrs$ & 0 & 0 & 1 &  1 & 0 & 0 & 1 &  1 & 0 & 0 &  1 &  1
-     $\valcrs$ & 1 & 2 & 7 &  8 & 3 & 4 & 9 & 10 & 5 & 6 & 11 & 12
-  */
+  while (-1 != (t = traditional_next_tube(data))) {
+    sum    = 0;
+    offset = t*n;
+    i      = t/n;
+    j      = t%n;
+    for (k = 0; k < n; ++k) {
+      sum += P[k] * T[offset+k];
+    }
+    M[i][j] = sum;
+  }
   
-  DEBUG("\n");
+  return NULL;
+}
+
+void
+threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+{
+  product_thread_data_t data;
   
-  for (r = 1; r < rn; ++r) {
-    r0    = r-1;
-    i     = r0 % n;
-    start = R[r0];
-    end   = R[r];
-    
-    CACHE_ACCESS(cache, &R[r0], cache_operation::read, "R[r=%d]", r0);
-    CACHE_ACCESS(cache, &R[r],  cache_operation::read, "R[r=%d]", r);
-    
-    DEBUG("start=%d, end=%d\n", start, end);
-    
-    for (k = start; k < end; ++k) {
-      
-      c = C[k];
-      j = c;
-      t = T[k];
-      
-      DEBUG("i=%d, j=%d, t=%d, r=%d, c=%d, k=%d\n", i, j, t, r, c, k);
-      
-      CACHE_ACCESS(cache, &C[k], cache_operation::read, "C[k=%d]", k);
-      CACHE_ACCESS(cache, &T[k], cache_operation::read, "T[k=%d]", k);
-      
-      // trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", i, j, M[i][j], t, p[t], k, V[k], p[t] * V[k], M[i][j] + p[t] * V[k]);
-      
-      M[i][j] += p[t] * V[k];
-      
-      CACHE_ACCESS(cache, &V[k],    cache_operation::read,  "V[k=%d]", k);
-      CACHE_ACCESS(cache, &p[t],    cache_operation::read,  "P[t=%d]", t);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::read,  "M[i=%d][j=%d]", i, j);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::write, "M[i=%d][j=%d]", i, j);
-      
-      CACHE_DEBUG(cache);
+  memory_stride = memory_stride > tensor->n ? tensor->n : memory_stride;
+  thread_count  = thread_count > tensor->n ? tensor->n : thread_count;
+  
+  debug("threaded_n_mode_product_array: memory_stride=%d\n", memory_stride);
+  debug("threaded_n_mode_product_array: thread_count=%d\n", thread_count);
+  
+  data.done   = 0;
+  data.matrix = matrix;
+  data.vector = vector;
+  data.tensor = tensor;
+  
+  thread_mutex_init(&tube_lock);
+  thread_fork(thread_count, traditional_fiber_product, &data, NULL);
+  thread_mutex_destroy(&tube_lock);
+}
+ 
+void
+serial_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+{
+  uint   i, j, k, index;
+  uint   n;
+  uint   *P;
+  double **M, *T;
+  
+  debug("n_mode_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  
+  n = tensor->n;
+  M = matrix->data;
+  P = vector->data;
+  T = tensor->values;
+  
+  for (i = 0; i < n; ++i) {
+    for (j = 0; j < n; ++j) {
+      for (k = 0; k < n; ++k) {
+	index = tensor_index(tensor, i, j, k);
+	M[i][j] += P[k] * T[index];
+      }
     }
   }
 }
 
 void
-compressed_tube(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+threaded_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  uint                       i, j, k;
-  uint                       rn, nnz;
-  uint                       start, end;
-  uint                       c, r, r0, t, m, n;
-  double                     **M;
-  double const               *V;
-  uint const                 *p, *R, *C, *T;
-  tensor_storage_compressed_t const *storage;
+  debug("threaded_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
-  debug("compressed_tube(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  compatible(vector, tensor);
   
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  m       = matrix->m;
-  n       = matrix->n;
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  rn      = storage->rn;
-  R       = storage->RO;
-  C       = storage->CO;
-  T       = storage->KO;
-  
-  /*
-    Using \emph{compressed row storage} ($\CRS$), this tensor can be
-    represented as:
-    
-           $k$   0   1   2    3   4   5   6    7   8   9   10   11
-     $\rowcrs$ & 0 & 4 & 8 & 12
-     $\colcrs$ & 1 & 3 & 0 &  2 & 0 & 2 & 1 &  2 & 1 & 2 &  0 &  3
-    $\tubecrs$ & 0 & 0 & 1 &  1 & 0 & 0 & 1 &  1 & 0 & 0 &  1 &  1
-     $\valcrs$ & 1 & 2 & 7 &  8 & 3 & 4 & 9 & 10 & 5 & 6 & 11 & 12
-  */
-  
-  DEBUG("\n");
-  
-  for (r = 1; r < rn; ++r) {
-    r0    = r-1;
-    i     = r0 % n;
-    start = R[r0];
-    end   = R[r];
-    
-    CACHE_ACCESS(cache, &R[r0], cache_operation::read, "R[r=%d]", r0);
-    CACHE_ACCESS(cache, &R[r],  cache_operation::read, "R[r=%d]", r);
-    
-    DEBUG("start=%d, end=%d\n", start, end);
-    
-    for (k = start; k < end; ++k) {
-      c = C[k];
-      t = T[k]; // row
-      j = t;
-      
-      DEBUG("i=%d, j=%d, t=%d, r=%d, c=%d, k=%d\n", i, j, t, r, c, k);
-      
-      CACHE_ACCESS(cache, &C[k], cache_operation::read, "C[k=%d]", k);
-      CACHE_ACCESS(cache, &T[k], cache_operation::read, "T[k=%d]", k);
-      
-      // trace("(M[i=%2d][j=%2d]=%2.0f += (p[c=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", i, j, M[i][j], c, p[c], k, V[k], p[c] * V[k], M[i][j] + p[c] * V[k]);
-      
-      M[i][j] += p[c] * V[k];
-      
-      CACHE_ACCESS(cache, &V[k],    cache_operation::read,  "V[k=%d]", k);
-      CACHE_ACCESS(cache, &p[c],    cache_operation::read,  "P[c=%d]", c);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::read,  "M[i=%d][j=%d]", i, j);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::write, "M[i=%d][j=%d]", i, j);
-      
-      CACHE_DEBUG(cache);
-    }
-  }
-}
-
-void
-n_mode_product_compressed(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("n_mode_product_compressed(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  switch (tensor->orientation) {
-  case orientation::row:
-    compressed_row(matrix, vector, tensor);
-    break;
-  case orientation::tube:
-    compressed_tube(matrix, vector, tensor);
+  switch (tensor->strategy) {
+  case strategy::array:
+    threaded_n_mode_product_array(matrix, vector, tensor);
     break;
   default:
-    die("Tensor product for '%s' orientation is not currently supported.\n",
-	orientation_to_string(tensor->orientation));
+    die("Tensor product for '%s' strategy (using thread_count) is not currently supported.\n",
+	strategy_to_string(tensor->strategy));
     break;
   }
 }
-
-typedef void (*index_convert_t)(uint rr, uint kk, uint n, uint *i, uint *j, uint *t);
-
-void
-converter_for_lateral(uint rr, uint kk, uint n, uint *i, uint *j, uint *t)
-{
-  *i = kk / n;
-  *j = rr;
-  *t = kk % n;
-}
-
-void
-converter_for_horizontal(uint rr, uint kk, uint n, uint *i, uint *j, uint *t)
-{
-  *i = rr;
-  *j = kk / n;
-  *t = kk % n;
-}
-
-void
-converter_for_frontal(uint rr, uint kk, uint n, uint *i, uint *j, uint *t)
-{
-  *i = kk / n;
-  *j = kk % n;
-  *t = rr;
-}
-
-void
-compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, index_convert_t converter)
-{
-  uint                       i, j, k, kk;
-  uint                       rn, nnz;
-  uint                       start, end;
-  uint                       r, rr, r0, t, m, n;
-  double                     **M;
-  double const               *V;
-  uint const                 *p, *R, *K;
-  tensor_storage_compressed_t const *storage;
-  
-  debug("compressed_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  m       = matrix->m;
-  n       = matrix->n;
-  
-  storage = STORAGE_COMPRESSED(tensor);
-  rn      = storage->rn;
-  R       = storage->RO;
-  K       = storage->KO;
-  
-  /*
-    Using \emph{compressed row storage} ($\CRS$), this tensor can be
-    represented as:
-    
-           $k$   0   1   2    3   4   5   6    7   8   9   10   11
-     $\rowcrs$ & 0 & 4 & 8 & 12
-     $\colcrs$ & 1 & 3 & 0 &  2 & 0 & 2 & 1 &  2 & 1 & 2 &  0 &  3
-    $\tubecrs$ & 0 & 0 & 1 &  1 & 0 & 0 & 1 &  1 & 0 & 0 &  1 &  1
-     $\valcrs$ & 1 & 2 & 7 &  8 & 3 & 4 & 9 & 10 & 5 & 6 & 11 & 12
-  */
-  
-  DEBUG("\n");
-  
-  for (r = 1; r < rn; ++r) {
-    r0    = r-1;
-    rr    = r0;
-    start = R[r0];
-    end   = R[r];
-    
-    CACHE_ACCESS(cache, &R[r0], cache_operation::read, "R[r=%d]", r0);
-    CACHE_ACCESS(cache, &R[r],  cache_operation::read, "R[r=%d]", r);
-    
-    DEBUG("start=%d, end=%d\n", start, end);
-    
-    for (k = start; k < end; ++k) {
-      kk = K[k];
-      
-      converter(rr, kk, n, &i, &j, &t);
-      DEBUG("i=%d, j=%d, t=%d, r=%d, k=%d\n", i, j, t, r, k);
-      
-      CACHE_ACCESS(cache, &K[k], cache_operation::read, "K[k=%d]", k);
-      
-      // trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", i, j, M[i][j], t, p[t], k, V[k], p[t] * V[k], M[i][j] + p[t] * V[k]);
-      
-      M[i][j] += p[t] * V[k];
-      
-      CACHE_ACCESS(cache, &V[k],    cache_operation::read,  "V[k=%d]", k);
-      CACHE_ACCESS(cache, &p[t],    cache_operation::read,  "P[t=%d]", t);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::read,  "M[i=%d][j=%d]", i, j);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::write, "M[i=%d][j=%d]", i, j);
-      
-      CACHE_DEBUG(cache);
-    }
-  }
-}
-
-void
-n_mode_product_compressed_slice(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  index_convert_t converter;
-  
-  debug("n_mode_product_compressed_slice(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  converter = NULL;
-  
-  switch (tensor->orientation) {
-  case orientation::horizontal:
-    converter = &converter_for_horizontal;
-    break;
-  case orientation::lateral:
-    converter = &converter_for_lateral;
-    break;
-  case orientation::frontal:
-    converter = &converter_for_frontal;
-    break;
-  default:
-    die("Tensor product for '%s' orientation is not currently supported.\n",
-	orientation_to_string(tensor->orientation));
-    break;
-  }
-  
-  compressed_slice(matrix, vector, tensor, converter);
-}
-
-void
-ekmr_row(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  uint                 i, j, k;
-  uint                 rn, nnz;
-  uint                 start, end;
-  uint                 c, ck, r, r0, t, m, n;
-  double               **M;
-  double const         *V;
-  uint const           *p, *R, *CK;
-  tensor_storage_extended_t const *storage;
-  
-  debug("ekmr_row(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  p       = vector->data;
-  M       = matrix->data;
-  V       = tensor->values;
-  nnz     = tensor->nnz;
-  m       = matrix->m;
-  n       = matrix->n;
-  
-  storage = STORAGE_EXTENDED(tensor);
-  rn      = storage->rn;
-  R       = storage->RO;
-  CK      = storage->CK;
-  
-  /* 
-     Now, using \emph{extended compressed row storage} ($\ECRS$), the
-     original tensor can be represented as:
-     
-           $k$   0   1   2    3   4   5   6    7   8   9   10   11
-     $\rowcrs$ & 0 & 4 & 8 & 12
-      $\ctcrs$ & 1 & 2 & 5 &  6 & 0 & 3 & 4 &  5 &  1 & 2 & 4 &  7
-     $\valcrs$ & 7 & 1 & 8 &  2 & 3 & 9 & 4 & 10 & 11 & 5 & 6 & 12
-  */
-  
-  DEBUG("\n");
-  
-  for (r = 1; r < rn; ++r) {
-    r0    = r-1;
-    i     = r0 % n;
-    start = R[r0];
-    end   = R[r];
-    
-    CACHE_ACCESS(cache, &R[r0], cache_operation::read, "R[r=%d]", r0);
-    CACHE_ACCESS(cache, &R[r],  cache_operation::read, "R[r=%d]", r);
-    
-    DEBUG("start=%d, end=%d\n", start, end);
-    
-    for (k = start; k < end; ++k) {
-      ck = CK[k];
-      c  = ck / n;
-      j  = c;
-      t  = ck % n;
-      
-      DEBUG("i=%d, j=%d, t=%d, r=%d, c=%d, k=%d\n", i, j, t, r, c, k);
-      
-      CACHE_ACCESS(cache, &CK[k], cache_operation::read, "CK[k=%d]", k);
-      
-      // trace("(M[i=%2d][j=%2d]=%2.0f += (p[t=%2d]=%2d * V[k=%2d]=%2.0f)=%2.0f))=%2.0f\n", i, j, M[i][j], t, p[t], k, V[k], p[t] * V[k], M[i][j] + p[t] * V[k]);
-      
-      M[i][j] += p[t] * V[k];
-      
-      CACHE_ACCESS(cache, &V[k],    cache_operation::read,  "V[k=%d]", k);
-      CACHE_ACCESS(cache, &p[t],    cache_operation::read,  "P[t=%d]", t);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::read,  "M[i=%d][j=%d]", i, j);
-      CACHE_ACCESS(cache, &M[i][j], cache_operation::write, "M[i=%d][j=%d]", i, j);
-      
-      CACHE_DEBUG(cache);
-    }
-  }
-}
-
-void
-n_mode_product_ekmr(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("n_mode_product_ekmr(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  switch (tensor->orientation) {
-  case orientation::row:
-    ekmr_row(matrix, vector, tensor);
-    break;
-  default:
-    die("Tensor product for '%s' orientation is not currently supported.\n",
-	orientation_to_string(tensor->orientation));
-    break;
-  }
-}
-
-extern void
-n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
 
 void
 serial_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
@@ -424,29 +153,14 @@ serial_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *
   
   switch (tensor->strategy) {
   case strategy::array:
-    n_mode_product_array(matrix, vector, tensor);
-    break;
-  case strategy::compressed:
-    n_mode_product_compressed(matrix, vector, tensor);
-    break;
-  case strategy::slice:
-    n_mode_product_compressed_slice(matrix, vector, tensor);
-    break;
-  case strategy::ekmr:
-  case strategy::zzekmr:  /* NOTE: the encoding may differ, but the
-			     way we calculate products remains the
-			     same.  How is that for simplicity? */
-    n_mode_product_ekmr(matrix, vector, tensor);
+    serial_n_mode_product_array(matrix, vector, tensor);
     break;
   default:
-    die("Tensor product for '%s' strategy is not currently supported.\n",
+    die("serial_n_mode_product: tensor product for '%s' strategy is not currently supported.\n",
 	strategy_to_string(tensor->strategy));
     break;
   }
 }
-
-extern void 
-threaded_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
 
 void
 operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
