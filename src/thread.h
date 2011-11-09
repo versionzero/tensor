@@ -8,6 +8,28 @@
 #ifndef _THREAD_H_
 #define _THREAD_H_
 
+namespace thread {
+  
+  namespace model {
+    typedef enum {
+      unknown,
+      traditional
+    } type_t;
+  }
+  
+  namespace partition {
+    typedef enum {
+      unknown,
+      tube,
+      slice
+    } type_t;
+  }
+  
+}
+
+char const* thread_partition_to_string(thread::partition::type_t partition);
+thread::partition::type_t string_to_thread_partition(char const *name);
+
 /* Linux defs:
  *   _REENTRANT to get thread-safe libs
  *   _POSIX_SOURCE to get POSIX semantics

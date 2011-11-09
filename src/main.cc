@@ -7,6 +7,7 @@
 #include "operation.h"
 #include "strings.h"
 #include "tensor.h"
+#include "thread.h"
 #include "tool.h"
 #include "utility.h"
 #include "vector.h"
@@ -17,22 +18,23 @@
 #include <ctype.h>
 #include <unistd.h>
 
-cache_t           *cache;
-uint              cache_size;
-uint              cache_line_size;
-uint              iterations;
-uint              memory_stride;
-uint              seed;
-uint              thread_count;
-char              *tool_name;
-tool::type_t      tool_type;
-bool              tracing;
-bool              simulate;
-bool              human_readable;
-bool              verbose;
-verbosity::type_t noisiness;
-bool              write_results;
-bool              emit_latex;
+cache_t                   *cache;
+uint                      cache_size;
+uint                      cache_line_size;
+uint                      iterations;
+uint                      memory_stride;
+thread::partition::type_t thread_partition;
+uint                      seed;
+uint                      thread_count;
+char                      *tool_name;
+tool::type_t              tool_type;
+bool                      tracing;
+bool                      simulate;
+bool                      human_readable;
+bool                      verbose;
+verbosity::type_t         noisiness;
+bool                      write_results;
+bool                      emit_latex;
 
 void
 usage()

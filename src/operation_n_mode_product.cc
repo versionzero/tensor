@@ -11,11 +11,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern cache_t *cache;
-extern uint    memory_stride;
-extern uint    thread_count;
+extern cache_t			 *cache;
+extern uint			 memory_stride;
+extern uint			 thread_count;
+extern thread::partition::type_t thread_partition;
 
-static pthread_mutex_t tube_lock;
+static pthread_mutex_t           tube_lock;
 
 /*
   Computing ($pT$):
@@ -39,7 +40,7 @@ typedef struct {
 } product_thread_data_t;
 
 int
-traditional_next_tube(product_thread_data_t *data)
+tube_next(product_thread_data_t *data)
 {
   uint k;
   
@@ -50,7 +51,7 @@ traditional_next_tube(product_thread_data_t *data)
 }
 
 thread_address_t
-traditional_fiber_product(thread_argument_t *argument)
+tube_product(thread_argument_t *argument)
 {
   int                   t;
   uint                  i, j, k, offset;
@@ -66,7 +67,7 @@ traditional_fiber_product(thread_argument_t *argument)
   P = data->vector->data;
   T = data->tensor->values;
   
-  while (-1 != (t = traditional_next_tube(data))) {
+  while (-1 != (t = tube_next(data))) {
     sum    = 0;
     offset = t*n;
     i      = t/n;
@@ -80,8 +81,54 @@ traditional_fiber_product(thread_argument_t *argument)
   return NULL;
 }
 
+int
+slice_next(product_thread_data_t *data)
+{
+  uint k;
+  
+  thread_mutex_lock(&tube_lock);
+  k = data->done++;
+  thread_mutex_unlock(&tube_lock);
+  return k < (data->tensor->n) ? k : -1;
+}
+
+thread_address_t
+slice_product(thread_argument_t *argument)
+{
+  int                   i;
+  uint                  j, k;
+  uint                  ioffset, joffset;
+  uint                  n, sum[1000];
+  uint                  *P;
+  double                **M, *T;
+  product_thread_data_t *data;
+  
+  data = (product_thread_data_t*) thread_data(argument);
+  
+  n = data->tensor->n;
+  M = data->matrix->data;
+  P = data->vector->data;
+  T = data->tensor->values;
+  
+  while (-1 != (i = slice_next(data))) {
+    ioffset = i*n*n;
+    for (j = 0; j < n; ++j) {
+      sum[j]  = 0;
+      joffset = ioffset+j*n;
+      for (k = 0; k < n; ++k) {
+	sum[j] += P[k] * T[joffset+k];
+      }
+    }
+    for (j = 0; j < n; ++j) {
+      M[i][j] = sum[j];
+    }
+  }
+  
+  return NULL;
+}
+
 void
-threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t function)
 {
   product_thread_data_t data;
   
@@ -95,10 +142,31 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   data.matrix = matrix;
   data.vector = vector;
   data.tensor = tensor;
-  
+
   thread_mutex_init(&tube_lock);
-  thread_fork(thread_count, traditional_fiber_product, &data, NULL);
+  thread_fork(thread_count, slice_product, &data, NULL);
   thread_mutex_destroy(&tube_lock);
+}
+
+void
+threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+{
+  thread_function_t function;
+  
+  switch (thread_partition) {
+  case thread::partition::tube:
+    function = (thread_function_t) &tube_product;
+    break;
+  case thread::partition::slice:
+    function = (thread_function_t) &slice_product;
+    break;
+  default:
+    die("serial_n_mode_product: tensor product for '%s' strategy is not currently supported.\n",
+	strategy_to_string(tensor->strategy));
+    break;
+  }
+  
+  threaded_n_mode_product_array(matrix, vector, tensor, function);
 }
  
 void

@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "operation.h"
 #include "tensor.h"
+#include "thread.h"
 #include "tool.h"
 #include "utility.h"
 #include "vector.h"
@@ -18,20 +19,21 @@
 #include <ctype.h>
 #include <unistd.h>
 
-extern cache_t           *cache;
-extern uint              cache_size;
-extern uint              cache_line_size;
-extern bool              human_readable;
-extern uint              iterations;
-extern uint              memory_stride;
-extern uint              thread_count;
-extern char              *tool_name;
-extern tool::type_t      tool_type;
-extern bool              simulate;
-extern bool              tracing;
-extern bool              verbose;
-extern verbosity::type_t noisiness;
-extern bool              write_results;
+extern cache_t			 *cache;
+extern uint			 cache_size;
+extern uint			 cache_line_size;
+extern bool			 human_readable;
+extern uint			 iterations;
+extern uint			 memory_stride;
+extern uint			 thread_count;
+extern thread::partition::type_t thread_partition;
+extern char			 *tool_name;
+extern tool::type_t		 tool_type;
+extern bool			 simulate;
+extern bool			 tracing;
+extern bool			 verbose;
+extern verbosity::type_t	 noisiness;
+extern bool			 write_results;
 
 static operation::type_t optcode;
 
@@ -180,10 +182,10 @@ effectuate_tool_main(int argc, char *argv[])
   int c;
   
   /* set the program's defaults */
-  memory_stride = DEFAULT_MEMORY_STRIDE;
-  optcode       = DEFAULT_OPERATION;
-  thread_count  = DEFAULT_THREAD_COUNT;
-  
+  memory_stride    = DEFAULT_MEMORY_STRIDE;
+  optcode          = DEFAULT_OPERATION;
+  thread_count     = DEFAULT_THREAD_COUNT;
+  thread_partition = DEFAULT_THREAD_PARTITION;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -217,6 +219,13 @@ effectuate_tool_main(int argc, char *argv[])
 	optcode = (operation::type_t) atoi(optarg);
       } else {
 	optcode = string_to_operation(optarg);
+      }
+      break;
+    case 'p':
+      if (isdigit(optarg[0])) {
+	thread_partition = (thread::partition::type_t) atoi(optarg);
+      } else {
+	thread_partition = string_to_thread_partition(optarg);
       }
       break;
     case 'r':
@@ -278,6 +287,7 @@ effectuate_tool_main(int argc, char *argv[])
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
   debug("effectuate_tool_main: memory_stride=%d\n", memory_stride);
   debug("effectuate_tool_main: thread_count=%d\n", thread_count);
+  debug("effectuate_tool_main: thread_partition='%s'\n", thread_partition_to_string(thread_partition));
   
   /* if we are just running a simulation, then we only do one
      iteration; otherwise, it would be really slow */

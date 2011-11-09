@@ -5,10 +5,36 @@
  */
 
 #include "thread.h"
-
+#include "utility.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>	/* for EBUSY */
+
+static char const *map_thread_partition_to_string[] = { 
+  "unknown",
+  "tube",
+  "slice"
+};
+
+char const*
+thread_partition_to_string(thread::partition::type_t partition)
+{
+  return map_thread_partition_to_string[partition];
+}
+
+thread::partition::type_t
+string_to_thread_partition(char const *name)
+{
+  uint i;
+  
+  for (i = 0; i < COUNT_OF(map_thread_partition_to_string); ++i) {
+    if (0 == strcmp(name, map_thread_partition_to_string[i])) {
+      return (thread::partition::type_t) i;
+    }
+  }
+  
+  return thread::partition::unknown;
+}
 
 /*************************************************
  * attempt to lock a mutex
