@@ -21,8 +21,9 @@
 extern cache_t           *cache;
 extern uint              cache_size;
 extern uint              cache_line_size;
-extern uint              iterations;
 extern bool              human_readable;
+extern uint              iterations;
+extern uint              memory_stride;
 extern uint              thread_count;
 extern char              *tool_name;
 extern tool::type_t      tool_type;
@@ -179,14 +180,16 @@ effectuate_tool_main(int argc, char *argv[])
   int c;
   
   /* set the program's defaults */
-  optcode      = DEFAULT_OPERATION;
-  thread_count = DEFAULT_THREAD_COUNT;
+  memory_stride = DEFAULT_MEMORY_STRIDE;
+  optcode       = DEFAULT_OPERATION;
+  thread_count  = DEFAULT_THREAD_COUNT;
+  
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:p:st:TuvV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:p:r:st:TuvV:w"))) {
     switch (c) {
     case 'h': 
       effectuate_tool_usage();
@@ -214,6 +217,12 @@ effectuate_tool_main(int argc, char *argv[])
 	optcode = (operation::type_t) atoi(optarg);
       } else {
 	optcode = string_to_operation(optarg);
+      }
+      break;
+    case 'r':
+      memory_stride = atoi(optarg);
+      if (0 == memory_stride) {
+	memory_stride = DEFAULT_MEMORY_STRIDE;
       }
       break;
     case 's':
@@ -267,6 +276,7 @@ effectuate_tool_main(int argc, char *argv[])
   /* print program options, for debugging purposes */
   print_tool_options();
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
+  debug("effectuate_tool_main: memory_stride=%d\n", memory_stride);
   debug("effectuate_tool_main: thread_count=%d\n", thread_count);
   
   /* if we are just running a simulation, then we only do one

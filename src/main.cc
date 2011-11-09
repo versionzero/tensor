@@ -21,6 +21,7 @@ cache_t           *cache;
 uint              cache_size;
 uint              cache_line_size;
 uint              iterations;
+uint              memory_stride;
 uint              seed;
 uint              thread_count;
 char              *tool_name;
