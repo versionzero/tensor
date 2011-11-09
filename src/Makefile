@@ -20,8 +20,8 @@ EXTRA_LDFLAGS=-Wall -lpthread $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
-	 memory.h operation.h random.h strings.h timer.h tool.h		\
-	utility.h compatible.h
+	memory.h operation.h random.h thread.h strings.h timer.h	\
+	tool.h utility.h compatible.h
 HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=storage.h tensor.h
@@ -34,7 +34,7 @@ SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
 	information.cc latex.cc memory.cc mmio.cc			\
 	operation_n_mode_product.cc					\
 	operation_threaded_n_mode_product.cc operation_utility.cc	\
-	random.cc strings.cc timer.cc tool_convert.cc			\
+	random.cc strings.cc thread.cc timer.cc tool_convert.cc		\
 	tool_effectuate.cc tool_generate.cc tool_permute.cc		\
 	tool_timing.cc tool_utility.cc types.cc utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
