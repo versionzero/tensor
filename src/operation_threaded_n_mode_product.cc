@@ -5,13 +5,14 @@
 #include "matrix.h"
 #include "operation.h"
 #include "tensor.h"
+#include "thread.h"
 #include "utility.h"
 #include "vector.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 
 extern cache_t *cache;
+extern uint    memory_stride;
 extern uint    thread_count;
 
 /*
@@ -29,9 +30,7 @@ extern uint    thread_count;
 */
 
 typedef struct {
-  uint           *pdone, *dummy;
   uint           done;
-  uint           id, offset, i, stride;
   matrix_t       *matrix;
   vector_t const *vector;
   tensor_t const *tensor;
@@ -40,87 +39,34 @@ typedef struct {
 static pthread_mutex_t tube_lock;
 
 int
-serial_next_tube(product_thread_data_t *p)
+serial_next_tube(product_thread_data_t *data)
 {
   uint k;
   
-  pthread_mutex_lock(&tube_lock);
-  k = p->done++;
-  pthread_mutex_unlock(&tube_lock);
-  return k < (p->tensor->n*p->tensor->n) ? k : -1;
+  thread_mutex_lock(&tube_lock);
+  k = data->done++;
+  thread_mutex_unlock(&tube_lock);
+  return k < (data->tensor->n*data->tensor->n) ? k : -1;
 }
 
-void*
-serial_fiber_product(void *arg)
+thread_address_t
+serial_fiber_product(thread_argument_t *argument)
 {
   int                   t;
   uint                  i, j, k, offset;
   uint                  n, sum;
   uint                  *P;
   double                **M, *T;
-  product_thread_data_t *p;
+  product_thread_data_t *data;
   
-  p = (product_thread_data_t*) arg;
+  data = (product_thread_data_t*) thread_data(argument);
   
-  M = p->matrix->data;
-  P = p->vector->data;
-  T = p->tensor->values;
+  n = data->tensor->n;
+  M = data->matrix->data;
+  P = data->vector->data;
+  T = data->tensor->values;
   
-  n = p->tensor->n;
-  
-  while (-1 != (t = serial_next_tube(p))) {
-    sum    = 0;
-    offset = t*n;
-    i      = t/n;
-    j      = t%n;
-    for (k = 0; k < n; ++k) {
-      sum += P[k] * T[offset+k];
-    }
-    M[i][j] = sum;
-  }
-  
-  return NULL;
-}
-
-int
-padded_next_tube(product_thread_data_t *p)
-{
-  uint k, choise;
-  
-  if (p->i < p->stride) {
-    choise = p->offset + p->i++;
-  } else {
-    p->offset += p->stride;
-    p->i       = 1;
-    choise     = p->offset;
-  }
-  
-  //message("offset=%d\n", p->offset);
-  
-  pthread_mutex_lock(&tube_lock);
-  k = (*p->pdone)++;
-  pthread_mutex_unlock(&tube_lock);
-  return k < (p->tensor->n*p->tensor->n) ? choise : -1;
-}
-
-void*
-padded_fiber_product(void *arg)
-{
-  int                   t;
-  uint                  i, j, k, offset;
-  uint                  n, sum;
-  uint                  *P;
-  double                **M, *T;
-  product_thread_data_t *p;
-  
-  p = (product_thread_data_t*) arg;
-  
-  M = p->matrix->data;
-  P = p->vector->data;
-  T = p->tensor->values;
-  n = p->tensor->n;
-  
-  while (-1 != (t = padded_next_tube(p))) {
+  while (-1 != (t = serial_next_tube(data))) {
     sum    = 0;
     offset = t*n;
     i      = t/n;
@@ -137,43 +83,22 @@ padded_fiber_product(void *arg)
 void
 threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  uint                  stride;
-  uint                  i, done;
-  uint                  n;
-  pthread_t             threads[32];
-  int                   error;
-  product_thread_data_t data[32];
+  product_thread_data_t data;
   
-  //message("sizeof(data)=%d\n", sizeof(data));
+  memory_stride = memory_stride > tensor->n ? tensor->n : memory_stride;
+  thread_count  = thread_count > tensor->n ? tensor->n : thread_count;
   
-  n = tensor->n;
-  pthread_mutex_init(&tube_lock, NULL);
+  debug("threaded_n_mode_product_array: memory_stride=%d\n", memory_stride);
+  debug("threaded_n_mode_product_array: thread_count=%d\n", thread_count);
   
-  done         = 0;
-  stride       = 32 > tensor->n ? tensor->n : 2;
-  thread_count = thread_count > tensor->n ? tensor->n : thread_count;
+  data.done   = 0;
+  data.matrix = matrix;
+  data.vector = vector;
+  data.tensor = tensor;
   
-  for (i = 0; i < thread_count; ++i) {
-    data[i+2].pdone  = &done;
-    data[i+2].matrix = matrix;
-    data[i+2].vector = vector;
-    data[i+2].tensor = tensor;
-    data[i+2].offset = i*stride;
-    data[i+2].i      = 0;
-    data[i+2].stride = stride;
-    data[i+2].id     = i;
-    if (0 != (error = pthread_create(&threads[i], NULL, serial_fiber_product, &data[i+2]))) {
-      die("threaded_n_mode_product_array: pthread_create() failed with %d\n", error);
-    }
-  }
-  
-  for (i = 0; i < thread_count; ++i) {
-    if (0 != (error = pthread_join(threads[i], NULL))) {
-      die("threaded_n_mode_product_array: pthread_join() failed with %d\n", error);
-    }
-  }
-  
-  pthread_mutex_destroy(&tube_lock);
+  thread_mutex_init(&tube_lock);
+  thread_fork(thread_count, serial_fiber_product, &data, NULL);
+  thread_mutex_destroy(&tube_lock);
 }
 
 #if 0
@@ -193,7 +118,7 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   pthread_mutex_init(&tube_lock, NULL);
   
   for (i = 0; i < thread_count; ++i) {
-    if (0 != (error = pthread_create(&threads[i], NULL, fiber_product, &data))) {
+    if (0 != (error = pthread_create(&threads[i], NULL, (void* (*)(void*))serial_fiber_product, &data))) {
       die("threaded_n_mode_product_array: pthread_create() failed with %d\n", error);
     }
   }
