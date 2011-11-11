@@ -20,6 +20,9 @@ operation::type_t string_to_operation(char const *name);
 void operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
 matrix_t *operation_n_mode_product(vector_t const *vector, tensor_t const *tensor);
 
+void serial_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+void threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+
 #endif
 
 /*
