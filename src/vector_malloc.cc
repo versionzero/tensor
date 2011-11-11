@@ -19,7 +19,7 @@ vector_malloc(uint n, ownership::type_t owner)
     return v;
   }
   
-  v->data  = MALLOC_N(uint, n);
+  v->data  = MALLOC_N(double, n);
   
   return v;
 }

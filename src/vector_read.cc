@@ -20,7 +20,7 @@ vector_read_array(FILE *f)
   v = vector_malloc(n);
 
   for (i = 0; i < v->n; ++i) {
-    fscanf(f, "%u\n", &v->data[i]);
+    fscanf(f, "%lg\n", &v->data[i]);
   }
 
   return v;

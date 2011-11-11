@@ -33,7 +33,7 @@ vector_write_array(FILE *f, vector_t const *v)
   }
 
   for (i = 0; i < v->n; ++i) {
-    fprintf(f, "%d\n", v->data[i]);
+    fprintf(f, "%10.6g\n", v->data[i]);
   }
 }
 
