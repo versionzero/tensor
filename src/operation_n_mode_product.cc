@@ -10,6 +10,11 @@
 #include "vector.h"
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#else
+#include <cblas.h>
+#endif
 
 extern cache_t			 *cache;
 extern uint			 memory_stride;
@@ -52,11 +57,9 @@ thread_address_t
 tube_product(thread_argument_t *argument)
 {
   int                   t;
-  uint                  i, j, k, offset;
+  uint                  i, j, offset;
   uint                  n;
-  uint                  *P;
-  double                **M, *T;
-  double                sum;
+  double                **M, *T, *P;
   product_thread_data_t *data;
   
   data = (product_thread_data_t*) thread_data(argument);
@@ -67,14 +70,10 @@ tube_product(thread_argument_t *argument)
   T = data->tensor->values;
   
   while (-1 != (t = tube_next(data))) {
-    sum    = 0;
-    offset = t*n;
-    i      = t/n;
-    j      = t%n;
-    for (k = 0; k < n; ++k) {
-      sum += P[k] * T[offset+k];
-    }
-    M[i][j] = sum;
+    offset  = t*n;
+    i       = t/n;
+    j       = t%n;
+    M[i][j] = cblas_ddot(n, P, 1, T+offset, 1);
   }
   
   return NULL;
@@ -95,12 +94,10 @@ thread_address_t
 slice_product(thread_argument_t *argument)
 {
   int                   i;
-  uint                  j, k;
+  uint                  j;
   uint                  ioffset, joffset;
   uint                  n;
-  uint                  *P;
-  double                **M, *T;
-  double                sum[1000];
+  double                **M, *T, *P;
   product_thread_data_t *data;
   
   data = (product_thread_data_t*) thread_data(argument);
@@ -113,14 +110,8 @@ slice_product(thread_argument_t *argument)
   while (-1 != (i = slice_next(data))) {
     ioffset = i*n*n;
     for (j = 0; j < n; ++j) {
-      sum[j]  = 0;
       joffset = ioffset+j*n;
-      for (k = 0; k < n; ++k) {
-	sum[j] += P[k] * T[joffset+k];
-      }
-    }
-    for (j = 0; j < n; ++j) {
-      M[i][j] = sum[j];
+      M[i][j] = cblas_ddot(n, P, 1, T+joffset, 1);
     }
   }
   
@@ -142,8 +133,8 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   data.matrix = matrix;
   data.vector = vector;
   data.tensor = tensor;
-
-  thread_afork(thread_count, slice_product, &data, NULL);
+  
+  thread_afork(thread_count, function, &data, NULL);
 }
 
 void
@@ -170,10 +161,10 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
 void
 serial_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  uint   i, j, k, index;
+  uint   i, j, k;
+  uint   index, sum;
   uint   n;
-  uint   *P;
-  double **M, *T;
+  double **M, *T, *P;
   
   debug("n_mode_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
@@ -184,74 +175,12 @@ serial_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t c
   
   for (i = 0; i < n; ++i) {
     for (j = 0; j < n; ++j) {
+      sum = 0;
       for (k = 0; k < n; ++k) {
 	index = tensor_index(tensor, i, j, k);
-	M[i][j] += P[k] * T[index];
+	sum += P[k] * T[index];
       }
+      M[i][j] = sum;
     }
   }
-}
-
-void
-threaded_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("threaded_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  compatible(vector, tensor);
-  
-  switch (tensor->strategy) {
-  case strategy::array:
-    threaded_n_mode_product_array(matrix, vector, tensor);
-    break;
-  default:
-    die("Tensor product for '%s' strategy (using thread_count) is not currently supported.\n",
-	strategy_to_string(tensor->strategy));
-    break;
-  }
-}
-
-void
-serial_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("serial_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  compatible(vector, tensor);
-  
-  switch (tensor->strategy) {
-  case strategy::array:
-    serial_n_mode_product_array(matrix, vector, tensor);
-    break;
-  default:
-    die("serial_n_mode_product: tensor product for '%s' strategy is not currently supported.\n",
-	strategy_to_string(tensor->strategy));
-    break;
-  }
-}
-
-void
-operation_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("operation_n_mode_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  if (thread_count <= 1) {
-    serial_n_mode_product(matrix, vector, tensor);
-  } else {
-    threaded_n_mode_product(matrix, vector, tensor);
-  }
-}
-
-matrix_t*
-operation_n_mode_product(vector_t const *vector, tensor_t const *tensor)
-{
-  matrix_t *matrix;
-  
-  compatible(vector, tensor);
-  debug("operation_n_mode_product(vector=0x%x, tensor=0x%x)\n", vector, tensor);
-  
-  matrix = matrix_malloc(tensor->m, tensor->n, ownership::creator);
-  debug("operation_n_mode_product: matrix=0x%x\n", matrix);
- 
-  operation_n_mode_product(matrix, vector, tensor);
-  
-  return matrix;
 }
