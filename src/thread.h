@@ -70,6 +70,18 @@ typedef void *thread_address_t;
     }							    \
 }
 
+#define thread_create_with_attr(t,attr,start,arg)	\
+{ \
+    int errcode; \
+    \
+    if ((errcode=pthread_create(t, \
+				(attr),			    \
+				(thread_function_t) (start), \
+				(thread_address_t) (arg)))) {	\
+      THREAD_DIE("thread_create_with_attr", errcode);	     \
+    }							    \
+}
+
 #define thread_create_detached(start,arg) \
 { \
     pthread_t t; \
@@ -232,13 +244,18 @@ typedef struct _thread_argument_t_ {
 }
 
 extern void _thread_fork(int nthreads,
-		     thread_function_t start,
-		     thread_address_t arg,
-		     thread_address_t *exitcodes);
+			 thread_function_t start,
+			 thread_address_t arg,
+			 thread_address_t *exitcodes,
+			 int setaffinity);
 
 #define thread_fork(nt,start,arg,codes) \
   _thread_fork(nt,(thread_function_t) start, \
-	   (thread_address_t) arg,(thread_address_t *) codes)
+	       (thread_address_t) arg,(thread_address_t *) codes, 0)
+
+#define thread_afork(nt,start,arg,codes) \
+  _thread_fork(nt,(thread_function_t) start, \
+		(thread_address_t) arg,(thread_address_t *) codes, 1)
 
 /*************************************************
  * the gate struct (rendezvous point)

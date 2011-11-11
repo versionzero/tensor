@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <errno.h>	/* for EBUSY */
 
+extern uint thread_count;
+
 static char const *map_thread_partition_to_string[] = { 
   "unknown",
   "tube",
@@ -72,12 +74,15 @@ thread_wait(pthread_t *thread, thread_address_t exitcode)
  * run nthreads threads in the routine start
  */
 void _thread_fork(int nthreads,
-	      thread_function_t start,
-	      thread_address_t arg,
-	      thread_address_t *exitcodes)
+		  thread_function_t start,
+		  thread_address_t arg,
+		  thread_address_t *exitcodes,
+		  int setaffinity)
 {
   int i;
   thread_argument_t *args;
+  pthread_attr_t attr, *pattr;
+  cpu_set_t mask;
   thread_address_t *address;
   
   if (nthreads<1) {
@@ -89,9 +94,22 @@ void _thread_fork(int nthreads,
   for (i=0; i<nthreads; i++) {
     args[i].nthreads=nthreads; args[i].myid=i; args[i].data=arg;
   }
+  pthread_attr_init(&attr);
   for (i=0; i<nthreads; i++) {
-    thread_create(&args[i].self,start,args+i);
+    pattr = NULL;
+#if 0
+    /* for this to work correctly, we need to detect the number of
+       CPUs */
+    if (setaffinity) {
+      CPU_ZERO(&mask);
+      CPU_SET(i%thread_count,&mask);
+      pthread_attr_setaffinity_np(&attr,sizeof(mask),&mask);
+      pattr = &attr;
+    }
+#endif
+    thread_create_with_attr(&args[i].self,pattr,start,args+i);
   }
+  pthread_attr_destroy(&attr);
   for (i=0; i<nthreads; i++) {
     address = (exitcodes==NULL?NULL:exitcodes+i);
     thread_wait(&args[i].self,address);
