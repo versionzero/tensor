@@ -80,6 +80,36 @@ void _thread_fork(int nthreads,
   int i;
   thread_argument_t *args;
   thread_address_t *address;
+  
+  if (nthreads<1) {
+    die("thread_mutex_trylock: nthreads<1\n");
+  }
+  if ((args=(thread_argument_t *) malloc(nthreads*sizeof(thread_argument_t)))==NULL) {
+    die("thread_fork: malloc failed!\n");
+  }
+  for (i=0; i<nthreads; i++) {
+    args[i].nthreads=nthreads; args[i].myid=i; args[i].data=arg;
+  }
+  for (i=0; i<nthreads; i++) {
+    thread_create(&args[i].self,start,args+i);
+  }
+  for (i=0; i<nthreads; i++) {
+    address = (exitcodes==NULL?NULL:exitcodes+i);
+    thread_wait(&args[i].self,address);
+  }
+  free(args);
+}
+
+#if 0
+void _thread_fork(int nthreads,
+		  thread_function_t start,
+		  thread_address_t arg,
+		  thread_address_t *exitcodes,
+		  int setaffinity)
+{
+  int i;
+  thread_argument_t *args;
+  thread_address_t *address;
   pthread_attr_t attr, *pattr;
 #ifdef __linux__
   cpu_set_t mask;
@@ -118,6 +148,7 @@ void _thread_fork(int nthreads,
   }
   free(args);
 }
+#endif
 
 /*************************************************
  * initialize a gate
