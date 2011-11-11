@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <errno.h>	/* for EBUSY */
 
-extern uint thread_count;
-
 static char const *map_thread_partition_to_string[] = { 
   "unknown",
   "tube",
@@ -81,9 +79,11 @@ void _thread_fork(int nthreads,
 {
   int i;
   thread_argument_t *args;
-  pthread_attr_t attr, *pattr;
-  cpu_set_t mask;
   thread_address_t *address;
+  pthread_attr_t attr, *pattr;
+#ifdef __linux__
+  cpu_set_t mask;
+#endif
   
   if (nthreads<1) {
     die("thread_mutex_trylock: nthreads<1\n");
@@ -100,14 +100,16 @@ void _thread_fork(int nthreads,
 #if 0
     /* for this to work correctly, we need to detect the number of
        CPUs */
+#ifdef __linux__
     if (setaffinity) {
       CPU_ZERO(&mask);
       CPU_SET(i%thread_count,&mask);
       pthread_attr_setaffinity_np(&attr,sizeof(mask),&mask);
       pattr = &attr;
-    }
 #endif
+    }
     thread_create_with_attr(&args[i].self,pattr,start,args+i);
+#endif
   }
   pthread_attr_destroy(&attr);
   for (i=0; i<nthreads; i++) {
