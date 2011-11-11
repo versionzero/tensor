@@ -16,7 +16,7 @@ ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
 EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
-EXTRA_LDFLAGS=-Wall -lpthread $(EXTRA_DEBUG)
+EXTRA_LDFLAGS=-Wall -thread $(EXTRA_DEBUG)
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
