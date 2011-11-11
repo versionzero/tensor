@@ -16,8 +16,6 @@ extern uint			 memory_stride;
 extern uint			 thread_count;
 extern thread::partition::type_t thread_partition;
 
-static pthread_mutex_t           tube_lock;
-
 /*
   Computing ($pT$):
   Let $\T \in R^{n\times n\times n}$ be a tensor.
@@ -42,11 +40,11 @@ typedef struct {
 int
 tube_next(product_thread_data_t *data)
 {
-  uint k;
+  volatile uint k;
   
-  thread_mutex_lock(&tube_lock);
-  k = data->done++;
-  thread_mutex_unlock(&tube_lock);
+  /* rather than a lock we can take advantage of the architecture and
+     issue an atomic fetch and increment */
+  k = __sync_fetch_and_add(&data->done, 1);
   return k < (data->tensor->n*data->tensor->n) ? k : -1;
 }
 
@@ -55,9 +53,10 @@ tube_product(thread_argument_t *argument)
 {
   int                   t;
   uint                  i, j, k, offset;
-  uint                  n, sum;
+  uint                  n;
   uint                  *P;
   double                **M, *T;
+  double                sum;
   product_thread_data_t *data;
   
   data = (product_thread_data_t*) thread_data(argument);
@@ -84,12 +83,12 @@ tube_product(thread_argument_t *argument)
 int
 slice_next(product_thread_data_t *data)
 {
-  uint k;
+  volatile uint k;
   
-  thread_mutex_lock(&tube_lock);
-  k = data->done++;
-  thread_mutex_unlock(&tube_lock);
-  return k < (data->tensor->n) ? k : -1;
+  /* rather than a lock we can take advantage of the architecture and
+     issue an atomic fetch and increment */
+  k = __sync_fetch_and_add(&data->done, 1);
+  return k < data->tensor->n ? k : -1;
 }
 
 thread_address_t
@@ -98,9 +97,10 @@ slice_product(thread_argument_t *argument)
   int                   i;
   uint                  j, k;
   uint                  ioffset, joffset;
-  uint                  n, sum[1000];
+  uint                  n;
   uint                  *P;
   double                **M, *T;
+  double                sum[1000];
   product_thread_data_t *data;
   
   data = (product_thread_data_t*) thread_data(argument);
@@ -143,9 +143,7 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   data.vector = vector;
   data.tensor = tensor;
 
-  thread_mutex_init(&tube_lock);
-  thread_fork(thread_count, slice_product, &data, NULL);
-  thread_mutex_destroy(&tube_lock);
+  thread_afork(thread_count, slice_product, &data, NULL);
 }
 
 void
