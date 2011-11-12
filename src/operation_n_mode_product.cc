@@ -1,4 +1,5 @@
 
+#include "algebra.h"
 #include "cache.h"
 #include "compatible.h"
 #include "error.h"
@@ -10,11 +11,6 @@
 #include "vector.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __APPLE__
-#include <Accelerate/Accelerate.h>
-#else
-#include <cblas.h>
-#endif
 
 extern cache_t			 *cache;
 extern uint			 memory_stride;
@@ -73,7 +69,7 @@ tube_product(thread_argument_t *argument)
     offset  = t*n;
     i       = t/n;
     j       = t%n;
-    M[i][j] = cblas_ddot(n, P, 1, T+offset, 1);
+    M[i][j] = array_inner_product(n, P, 1, T+offset, 1);
   }
   
   return NULL;
@@ -111,7 +107,7 @@ slice_product(thread_argument_t *argument)
     ioffset = i*n*n;
     for (j = 0; j < n; ++j) {
       joffset = ioffset+j*n;
-      M[i][j] = cblas_ddot(n, P, 1, T+joffset, 1);
+      M[i][j] = array_inner_product(n, P, 1, T+joffset, 1);
     }
   }
   
