@@ -16,6 +16,31 @@ matrix_initialize_type(MM_typecode *type)
   mm_set_real(type);
 }
 
+#if 0
+/* Matlab/Octave format */
+void printmat(int N, int M, double *A, int LDA)
+{
+    int i, j;
+    double mtmp;
+
+    printf("[ ");
+    for (i = 0; i < N; i++) {
+	printf("[ ");
+	for (j = 0; j < M; j++) {
+	    mtmp = A[i + j * LDA];
+	    printf("%5.2e", mtmp);
+	    if (j < M - 1)
+		printf(", ");
+	}
+	if (i < N - 1)
+	    printf("]; ");
+	else
+	    printf("] ");
+    }
+    printf("]");
+}
+#endif
+
 void
 matrix_fwrite_array(FILE *file, matrix_t const *matrix)
 {
