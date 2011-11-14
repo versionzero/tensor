@@ -20,7 +20,6 @@ namespace tool {
 #define OPTION_MESSAGE(x,a,b)   (x ? a:b)
 #define DEFAULT_ON_OR_OFF(x)    OPTION_MESSAGE(x, "on", "off")
 
-#define DEFAULT_ASSOCIATION           association::left
 #define DEFAULT_HUMAN_READABLE        true
 #define DEFAULT_ITERATIONS            1
 #define DEFAULT_MEMORY_STRIDE         32

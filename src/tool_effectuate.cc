@@ -190,7 +190,6 @@ effectuate_tool_main(int argc, char *argv[])
   int c;
   
   /* set the program's defaults */
-  operand_association = DEFAULT_ASSOCIATION;
   memory_stride       = DEFAULT_MEMORY_STRIDE;
   optcode             = DEFAULT_OPERATION;
   storage_orientation = DEFAULT_ORIENTATION;
@@ -202,15 +201,8 @@ effectuate_tool_main(int argc, char *argv[])
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":a:hl:m:n:o:O:p:r:sS:t:TuvV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:O:p:r:sS:t:TuvV:w"))) {
     switch (c) {
-    case 'a':
-      if (isdigit(optarg[0])) {
-	operand_association = (association::type_t) atoi(optarg);
-      } else {
-	operand_association = string_to_association(optarg);
-      }
-      break;
     case 'h': 
       effectuate_tool_usage();
       break;
