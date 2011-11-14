@@ -60,3 +60,29 @@ print_operations_with_descriptions(char const *format)
     message(format, map_operations_to_string[i], map_operations_to_description[i]);
   }
 }
+
+static char const *map_associations_to_string[] = { 
+  "unknown",
+  "left",
+  "right"
+};
+
+char const*
+association_to_string(association::type_t association)
+{
+  return map_associations_to_string[association];
+}
+
+association::type_t
+string_to_association(char const *name)
+{
+  uint i;
+  
+  for (i = 0; i < COUNT_OF(map_associations_to_string); ++i) {
+    if (0 == strcmp(name, map_associations_to_string[i])) {
+      return (association::type_t) i;
+    }
+  }
+  
+  return association::unknown;
+}
