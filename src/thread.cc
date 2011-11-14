@@ -16,6 +16,12 @@ static char const *map_thread_partition_to_string[] = {
   "slice"
 };
 
+static char const *map_thread_partition_to_description[] = { 
+  "unknown",
+  "tube per thread",
+  "slice per thread"
+};
+
 char const*
 thread_partition_to_string(thread::partition::type_t partition)
 {
@@ -34,6 +40,26 @@ string_to_thread_partition(char const *name)
   }
   
   return thread::partition::unknown;
+}
+
+void
+print_thread_partitions(char const *format)
+{
+  uint i;
+  
+  for (i = 1; i < COUNT_OF(map_thread_partition_to_string); ++i) {
+    message(format, map_thread_partition_to_string[i]);
+  }
+}
+
+void
+print_thread_partitions_with_descriptions(char const *format)
+{
+  uint i;
+  
+  for (i = 1; i < COUNT_OF(map_thread_partition_to_string); ++i) {
+    message(format, map_thread_partition_to_string[i], map_thread_partition_to_description[i]);
+  }
 }
 
 /*************************************************

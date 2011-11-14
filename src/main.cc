@@ -26,6 +26,8 @@ uint                      iterations;
 uint                      memory_stride;
 thread::partition::type_t thread_partition;
 uint                      seed;
+orientation::type_t       storage_orientation;
+strategy::type_t          storage_strategy;
 uint                      thread_count;
 char                      *tool_name;
 tool::type_t              tool_type;

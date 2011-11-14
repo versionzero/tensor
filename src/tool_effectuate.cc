@@ -26,6 +26,8 @@ extern uint			 cache_line_size;
 extern bool			 human_readable;
 extern uint			 iterations;
 extern uint			 memory_stride;
+extern orientation::type_t       storage_orientation;
+extern strategy::type_t          storage_strategy;
 extern uint			 thread_count;
 extern thread::partition::type_t thread_partition;
 extern char			 *tool_name;
@@ -53,20 +55,25 @@ effectuate_tool_usage()
   message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
+  message("\t-O\torientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
+  print_orientations("\t\t- %s\n");
 #if !defined (NOSIMULATE)
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
 #endif
-  message("\t-t\tnumer of thread_count to use (default: %d)\n", DEFAULT_THREAD_COUNT);
+  message("\t-S\tstrategy (default: %s)\n", strategy_to_string(DEFAULT_STRATEGY));
+  print_strategies("\t\t- %s\n");
+  message("\t-p\tpartition scheme for work (default: %s)\n", thread_partition_to_string(DEFAULT_THREAD_PARTITION));
+  print_thread_partitions_with_descriptions("\t\t- %s : %s\n");
+  message("\t-t\tnumber of threads to use for operation (default: %d)\n", DEFAULT_THREAD_COUNT);
   message("\t-T\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
-  message("\t$ ./tensor %s -o n-mode vector.in tensor.in matrix.out\n", tool_name);
+  message("\t$ ./tensor %s -o n-mode vector100.in dense100.in\n", tool_name);
   message("\tReading vector.in ... done [0.000305]\n");
   message("\tReading tensor.in ... done [0.000235]\n");
-  message("\tConverting from 'coordinate' to 'compressed-column' ... done [0.000010]\n");
-  message("\tWriting matrix.out ... done [0.000031]\n");
+  message("\tPerforming operation 'dense tensor \times vector product' ... done [3.736000]");
   exit(1);
 }
 
@@ -186,6 +193,8 @@ effectuate_tool_main(int argc, char *argv[])
   operand_association = DEFAULT_ASSOCIATION;
   memory_stride       = DEFAULT_MEMORY_STRIDE;
   optcode             = DEFAULT_OPERATION;
+  storage_orientation = DEFAULT_ORIENTATION;
+  storage_strategy    = DEFAULT_STRATEGY;
   thread_count        = DEFAULT_THREAD_COUNT;
   thread_partition    = DEFAULT_THREAD_PARTITION;
   
@@ -193,7 +202,7 @@ effectuate_tool_main(int argc, char *argv[])
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":a:hl:m:n:o:p:r:st:TuvV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":a:hl:m:n:o:O:p:r:sS:t:TuvV:w"))) {
     switch (c) {
     case 'a':
       if (isdigit(optarg[0])) {
@@ -230,6 +239,13 @@ effectuate_tool_main(int argc, char *argv[])
 	optcode = string_to_operation(optarg);
       }
       break;
+    case 'O':
+      if (isdigit(optarg[0])) {
+	storage_orientation = (orientation::type_t) atoi(optarg);
+      } else {
+	storage_orientation = string_to_orientation(optarg); 
+      }
+      break;
     case 'p':
       if (isdigit(optarg[0])) {
 	thread_partition = (thread::partition::type_t) atoi(optarg);
@@ -245,6 +261,13 @@ effectuate_tool_main(int argc, char *argv[])
       break;
     case 's':
       simulate = !simulate;
+      break;
+    case 'S':
+      if (isdigit(optarg[0])) {
+	storage_strategy = (strategy::type_t) atoi(optarg);
+      } else {
+	storage_strategy = string_to_strategy(optarg);
+      }
       break;
     case 't':
       thread_count = atoi(optarg);
@@ -296,6 +319,8 @@ effectuate_tool_main(int argc, char *argv[])
   debug("effectuate_tool_main: operand_association='%s'\n", association_to_string(operand_association));
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
   debug("effectuate_tool_main: memory_stride=%d\n", memory_stride);
+  debug("effectuate_tool_main: storage_orientation='%s'\n", orientation_to_string(storage_orientation));
+  debug("effectuate_tool_main: storage_strategy='%s'\n", strategy_to_string(storage_strategy));
   debug("effectuate_tool_main: thread_count=%d\n", thread_count);
   debug("effectuate_tool_main: thread_partition='%s'\n", thread_partition_to_string(thread_partition));
   

@@ -27,7 +27,7 @@ namespace tool {
 #define DEFAULT_OPERATION             operation::n_mode_product
 #define DEFAULT_ORIENTATION           orientation::row
 #define DEFAULT_SIMULATE              false
-#define DEFAULT_STRATEGY              strategy::compressed
+#define DEFAULT_STRATEGY              strategy::array
 #define DEFAULT_TRACING               false
 #define DEFAULT_THREAD_COUNT          1
 #define DEFAULT_THREAD_PARTITION      thread::partition::tube

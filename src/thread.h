@@ -29,6 +29,8 @@ namespace thread {
 
 char const* thread_partition_to_string(thread::partition::type_t partition);
 thread::partition::type_t string_to_thread_partition(char const *name);
+void print_thread_partitions(char const *format);
+void print_thread_partitions_with_descriptions(char const *format);
 
 /* Linux defs:
  *   _REENTRANT to get thread-safe libs
