@@ -20,7 +20,7 @@ namespace thread {
   namespace partition {
     typedef enum {
       unknown,
-      tube,
+      fiber,
       slice
     } type_t;
   }

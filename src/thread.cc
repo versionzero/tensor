@@ -12,13 +12,13 @@
 
 static char const *map_thread_partition_to_string[] = { 
   "unknown",
-  "tube",
+  "fiber",
   "slice"
 };
 
 static char const *map_thread_partition_to_description[] = { 
   "unknown",
-  "tube per thread",
+  "fiber per thread",
   "slice per thread"
 };
 
