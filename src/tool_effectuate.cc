@@ -307,7 +307,6 @@ effectuate_tool_main(int argc, char *argv[])
   
   /* print program options, for debugging purposes */
   print_tool_options();
-  debug("effectuate_tool_main: operand_association='%s'\n", association_to_string(operand_association));
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
   debug("effectuate_tool_main: memory_stride=%d\n", memory_stride);
   debug("effectuate_tool_main: storage_orientation='%s'\n", orientation_to_string(storage_orientation));
