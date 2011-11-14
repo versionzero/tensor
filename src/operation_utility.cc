@@ -12,7 +12,7 @@ static char const *map_operations_to_string[] = {
 
 static char const *map_operations_to_description[] = { 
   "unknown",
-  "dense vector \\times sparse tensor product"
+  "dense tensor \\times vector product"
 };
 
 char const*
