@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
+extern association::type_t       operand_association;
 extern cache_t			 *cache;
 extern uint			 cache_size;
 extern uint			 cache_line_size;
@@ -182,17 +183,25 @@ effectuate_tool_main(int argc, char *argv[])
   int c;
   
   /* set the program's defaults */
-  memory_stride    = DEFAULT_MEMORY_STRIDE;
-  optcode          = DEFAULT_OPERATION;
-  thread_count     = DEFAULT_THREAD_COUNT;
-  thread_partition = DEFAULT_THREAD_PARTITION;
+  operand_association = DEFAULT_ASSOCIATION;
+  memory_stride       = DEFAULT_MEMORY_STRIDE;
+  optcode             = DEFAULT_OPERATION;
+  thread_count        = DEFAULT_THREAD_COUNT;
+  thread_partition    = DEFAULT_THREAD_PARTITION;
   
   /* we will privide our own error messages */
   opterr = 0;
   
   /* extract any command-line options the user provided */
-  while (-1 != (c = getopt(argc, argv, ":hl:m:n:o:p:r:st:TuvV:w"))) {
+  while (-1 != (c = getopt(argc, argv, ":a:hl:m:n:o:p:r:st:TuvV:w"))) {
     switch (c) {
+    case 'a':
+      if (isdigit(optarg[0])) {
+	operand_association = (association::type_t) atoi(optarg);
+      } else {
+	operand_association = string_to_association(optarg);
+      }
+      break;
     case 'h': 
       effectuate_tool_usage();
       break;
@@ -284,6 +293,7 @@ effectuate_tool_main(int argc, char *argv[])
   
   /* print program options, for debugging purposes */
   print_tool_options();
+  debug("effectuate_tool_main: operand_association='%s'\n", association_to_string(operand_association));
   debug("effectuate_tool_main: operation='%s'\n", operation_to_string(optcode));
   debug("effectuate_tool_main: memory_stride=%d\n", memory_stride);
   debug("effectuate_tool_main: thread_count=%d\n", thread_count);

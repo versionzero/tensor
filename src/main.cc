@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
+association::type_t       operand_association;
 cache_t                   *cache;
 uint                      cache_size;
 uint                      cache_line_size;
