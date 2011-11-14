@@ -4,7 +4,9 @@
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
-#else
+#endif
+
+#ifdef __linux__
 #include <cblas.h>
 #endif
 
