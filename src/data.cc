@@ -7,13 +7,15 @@
 static char const *map_data_partition_to_string[] = { 
   "unknown",
   "fiber",
-  "slice"
+  "slice",
+  "fiber-decomposition"
 };
 
 static char const *map_data_partition_to_description[] = { 
   "unknown",
   "fiber per data",
-  "slice per data"
+  "slice per data",
+  "fibers decomposed by binary splitting"
 };
 
 char const*

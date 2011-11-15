@@ -6,6 +6,7 @@
 #include "error.h"
 #include "matrix.h"
 #include "operation.h"
+#include "queue.h"
 #include "thread.h"
 #include "tensor.h"
 #include "utility.h"
@@ -55,7 +56,7 @@ fiber_next(product_thread_data_t *data)
 }
 
 void
-fiber_product_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+fiber_consumer_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
   int  t;
   uint i, j, offset;
@@ -69,13 +70,13 @@ fiber_product_implementation(product_thread_data_t *data, uint n, double **M, do
 }
 
 thread_address_t
-fiber_product(thread_argument_t *argument)
+fiber_consumer(thread_argument_t *argument)
 {
   product_thread_data_t *data;
   
   data = (product_thread_data_t*) thread_data(argument);
   
-  fiber_product_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
+  fiber_consumer_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
   
   return NULL;
 }
@@ -92,7 +93,7 @@ slice_next(product_thread_data_t *data)
 }
 
 void
-slice_product_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+slice_consumer_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
   int  i;
   uint j, ioffset, joffset;
@@ -108,19 +109,19 @@ slice_product_implementation(product_thread_data_t *data, uint n, double **M, do
 }
 
 thread_address_t
-slice_product(thread_argument_t *argument)
+slice_consumer(thread_argument_t *argument)
 {
   product_thread_data_t *data;
   
   data = (product_thread_data_t*) thread_data(argument);
   
-  slice_product_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
+  slice_consumer_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
   
   return NULL;
 }
 
 void
-threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t function)
+threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t producer, thread_function_t consumer)
 {
   product_thread_data_t data;
   
@@ -135,28 +136,38 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   data.vector = vector;
   data.tensor = tensor;
   
-  thread_afork(thread_count, function, &data, NULL);
+  if (NULL != producer) {
+    thread_create_detached(producer, &data);
+  }
+  
+  thread_afork(thread_count, consumer, &data, NULL);
 }
 
 void
 threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
-  thread_function_t function;
+  thread_function_t consumer, producer;
+  
+  producer = NULL;
+  consumer = NULL;
   
   switch (data_partition) {
   case data::partition::fiber:
-    function = (thread_function_t) &fiber_product;
+    consumer = (thread_function_t) &fiber_consumer;
     break;
   case data::partition::slice:
-    function = (thread_function_t) &slice_product;
+    consumer = (thread_function_t) &slice_consumer;
     break;
+  case data::partition::fiber_decomposition:
+    consumer = (thread_function_t) &subfiber_consumer;
+    producer = (thread_function_t) &subfiber_producer;
   default:
     die("threaded_n_mode_product_array: tensor product for '%s' partition is not currently supported.\n",
 	data_partition_to_string(data_partition));
     break;
   }
   
-  threaded_n_mode_product_array(matrix, vector, tensor, function);
+  threaded_n_mode_product_array(matrix, vector, tensor, producer, consumer);
 }
  
 void
