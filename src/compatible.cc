@@ -28,7 +28,7 @@ compatible(vector_t const *lhs, tensor_t const *rhs)
 	strategy_to_string(rhs->strategy));
   }
   
-  compatible = (lhs->n == rhs->l);
+  compatible = (lhs->n == rhs->n);
   
   if (!compatible) {
     print_information(lhs);

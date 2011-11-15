@@ -7,7 +7,8 @@ namespace data {
     typedef enum {
       unknown,
       fiber,
-      slice
+      slice,
+      block
     } type_t;
   }
 }

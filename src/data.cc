@@ -8,14 +8,14 @@ static char const *map_data_partition_to_string[] = {
   "unknown",
   "fiber",
   "slice",
-  "fiber-decomposition"
+  "block"
 };
 
 static char const *map_data_partition_to_description[] = { 
   "unknown",
-  "fiber per data",
-  "slice per data",
-  "fibers decomposed by binary splitting"
+  "fiber per thread",
+  "slice per thread",
+  "block per thread"
 };
 
 char const*

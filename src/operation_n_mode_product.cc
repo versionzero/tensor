@@ -81,6 +81,39 @@ fiber_consumer(thread_argument_t *argument)
   return NULL;
 }
 
+void
+block_consumer_implementation(product_thread_data_t *data, uint n, uint start, uint end, double **M, double *P, double *T)
+{
+  uint i, j, t, offset;
+  
+  for (t = start; t < end; ++t) {
+    offset  = t*n;
+    i       = t/n;
+    j       = t%n;
+    M[i][j] = array_inner_product(n, P, 1, T+offset, 1);
+  }
+}
+
+thread_address_t
+block_consumer(thread_argument_t *argument)
+{
+  int                   id;
+  uint                  n, block_size;
+  uint                  start, end;
+  product_thread_data_t *data;
+  
+  data       = (product_thread_data_t*) thread_data(argument);
+  n          = data->tensor->n;
+  block_size = (n*n)/thread_count;
+  id         = thread_myid(argument);
+  start      = block_size*id;
+  end        = start+block_size;
+  
+  block_consumer_implementation(data, n, start, end, data->matrix->data, data->vector->data, data->tensor->values);
+  
+  return NULL;
+}
+
 int
 slice_next(product_thread_data_t *data)
 {
@@ -125,12 +158,6 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
 {
   product_thread_data_t data;
   
-  memory_stride = memory_stride > tensor->n ? tensor->n : memory_stride;
-  thread_count  = thread_count > tensor->n ? tensor->n : thread_count;
-  
-  debug("threaded_n_mode_product_array: memory_stride=%d\n", memory_stride);
-  debug("threaded_n_mode_product_array: thread_count=%d\n", thread_count);
-  
   data.done   = 0;
   data.matrix = matrix;
   data.vector = vector;
@@ -158,9 +185,9 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   case data::partition::slice:
     consumer = (thread_function_t) &slice_consumer;
     break;
-  case data::partition::fiber_decomposition:
-    consumer = (thread_function_t) &subfiber_consumer;
-    producer = (thread_function_t) &subfiber_producer;
+  case data::partition::block:
+    consumer = (thread_function_t) &block_consumer;
+    break;
   default:
     die("threaded_n_mode_product_array: tensor product for '%s' partition is not currently supported.\n",
 	data_partition_to_string(data_partition));
