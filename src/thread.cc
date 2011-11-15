@@ -10,58 +10,6 @@
 #include <stdlib.h>
 #include <errno.h>	/* for EBUSY */
 
-static char const *map_thread_partition_to_string[] = { 
-  "unknown",
-  "fiber",
-  "slice"
-};
-
-static char const *map_thread_partition_to_description[] = { 
-  "unknown",
-  "fiber per thread",
-  "slice per thread"
-};
-
-char const*
-thread_partition_to_string(thread::partition::type_t partition)
-{
-  return map_thread_partition_to_string[partition];
-}
-
-thread::partition::type_t
-string_to_thread_partition(char const *name)
-{
-  uint i;
-  
-  for (i = 0; i < COUNT_OF(map_thread_partition_to_string); ++i) {
-    if (0 == strcmp(name, map_thread_partition_to_string[i])) {
-      return (thread::partition::type_t) i;
-    }
-  }
-  
-  return thread::partition::unknown;
-}
-
-void
-print_thread_partitions(char const *format)
-{
-  uint i;
-  
-  for (i = 1; i < COUNT_OF(map_thread_partition_to_string); ++i) {
-    message(format, map_thread_partition_to_string[i]);
-  }
-}
-
-void
-print_thread_partitions_with_descriptions(char const *format)
-{
-  uint i;
-  
-  for (i = 1; i < COUNT_OF(map_thread_partition_to_string); ++i) {
-    message(format, map_thread_partition_to_string[i], map_thread_partition_to_description[i]);
-  }
-}
-
 /*************************************************
  * attempt to lock a mutex
  */

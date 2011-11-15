@@ -1,6 +1,7 @@
 
 #include "cache.h"
 #include "compatible.h"
+#include "data.h"
 #include "error.h"
 #include "file.h"
 #include "matrix.h"
@@ -18,25 +19,25 @@
 #include <ctype.h>
 #include <unistd.h>
 
-cache_t                   *cache;
-uint                      cache_size;
-uint                      cache_line_size;
-uint                      iterations;
-uint                      memory_stride;
-thread::partition::type_t thread_partition;
-uint                      seed;
-orientation::type_t       storage_orientation;
-strategy::type_t          storage_strategy;
-uint                      thread_count;
-char                      *tool_name;
-tool::type_t              tool_type;
-bool                      tracing;
-bool                      simulate;
-bool                      human_readable;
-bool                      verbose;
-verbosity::type_t         noisiness;
-bool                      write_results;
-bool                      emit_latex;
+cache_t                 *cache;
+uint                    cache_size;
+uint                    cache_line_size;
+uint                    iterations;
+uint                    memory_stride;
+data::partition::type_t data_partition;
+uint                    seed;
+orientation::type_t     storage_orientation;
+strategy::type_t        storage_strategy;
+uint                    thread_count;
+char                    *tool_name;
+tool::type_t            tool_type;
+bool                    tracing;
+bool                    simulate;
+bool                    human_readable;
+bool                    verbose;
+verbosity::type_t       noisiness;
+bool                    write_results;
+bool                    emit_latex;
 
 void
 usage()

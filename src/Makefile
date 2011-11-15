@@ -26,9 +26,9 @@ ifeq "$(OS)" "Darwin"
 endif
 
 HEADERS_CACHE=address.h cache.h hash.h
-HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
-	algebra.h memory.h operation.h random.h thread.h strings.h	\
-	timer.h tool.h utility.h compatible.h
+HEADERS_GENERAL=arithmetic.h data.h error.h file.h information.h	\
+	latex.h algebra.h memory.h operation.h queue.h random.h		\
+	thread.h strings.h timer.h tool.h utility.h compatible.h
 HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=tensor.h
@@ -37,12 +37,12 @@ HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
 	$(HEADERS_MATRIX) $(HEADERS_TENSOR) $(HEADERS_VECTOR)
 
 SOURCES_CACHE=address.cc cache.cc hash.cc
-SOURCES_GENERAL=arithmetic.cc compatible.cc error.cc file.cc		\
+SOURCES_GENERAL=arithmetic.cc data.cc compatible.cc error.cc file.cc	\
 	information.cc latex.cc algebra.cc memory.cc mmio.cc		\
 	operation.cc operation_n_mode_product.cc operation_utility.cc	\
-	random.cc strings.cc thread.cc timer.cc tool_effectuate.cc	\
-	tool_generate.cc tool_timing.cc tool_utility.cc types.cc	\
-	utility.cc
+	queue.cc random.cc strings.cc thread.cc timer.cc		\
+	tool_effectuate.cc tool_generate.cc tool_timing.cc		\
+	tool_utility.cc types.cc utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\

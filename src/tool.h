@@ -24,12 +24,12 @@ namespace tool {
 #define DEFAULT_ITERATIONS            1
 #define DEFAULT_MEMORY_STRIDE         32
 #define DEFAULT_OPERATION             operation::n_mode_product
-#define DEFAULT_ORIENTATION           orientation::row
+#define DEFAULT_ORIENTATION           orientation::tube
 #define DEFAULT_SIMULATE              false
 #define DEFAULT_STRATEGY              strategy::array
 #define DEFAULT_TRACING               false
 #define DEFAULT_THREAD_COUNT          1
-#define DEFAULT_THREAD_PARTITION      thread::partition::fiber
+#define DEFAULT_THREAD_PARTITION      data::partition::fiber
 #define DEFAULT_VERBOSE               false
 #define DEFAULT_VERBOSITY             verbosity::low
 #define DEFAULT_WRITE_RESULTS         false

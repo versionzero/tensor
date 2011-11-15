@@ -1,5 +1,6 @@
 
 #include "algebra.h"
+#include "data.h"
 #include "cache.h"
 #include "compatible.h"
 #include "error.h"
@@ -12,10 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern cache_t			 *cache;
-extern uint			 memory_stride;
-extern uint			 thread_count;
-extern thread::partition::type_t thread_partition;
+extern cache_t		       *cache;
+extern uint		       memory_stride;
+extern orientation::type_t     storage_orientation;
+extern strategy::type_t        storage_strategy;
+extern uint		       thread_count;
+extern data::partition::type_t data_partition;
 
 /*
   Computing ($pT$):
@@ -38,6 +41,8 @@ typedef struct {
   tensor_t const *tensor;
 } product_thread_data_t;
 
+typedef void (*n_mode_product_t)(product_thread_data_t *data, uint n, double **M, double *P, double *T);
+
 int
 fiber_next(product_thread_data_t *data)
 {
@@ -50,7 +55,7 @@ fiber_next(product_thread_data_t *data)
 }
 
 void
-fiber_product_tube(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+fiber_product_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
   int  t;
   uint i, j, offset;
@@ -70,7 +75,7 @@ fiber_product(thread_argument_t *argument)
   
   data = (product_thread_data_t*) thread_data(argument);
   
-  fiber_product_tube(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
+  fiber_product_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
   
   return NULL;
 }
@@ -87,20 +92,20 @@ slice_next(product_thread_data_t *data)
 }
 
 void
-slice_product_horizontal(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+slice_product_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
   int  i;
   uint j, ioffset, joffset;
   
   while (-1 != (i = slice_next(data))) {
     ioffset = i*n*n;
+    joffset = ioffset;
     for (j = 0; j < n; ++j) {
-      joffset = ioffset+j*n;
-      M[i][j] = array_inner_product(n, P, 1, T+joffset, 1);
+      M[i][j]  = array_inner_product(n, P, 1, T+joffset, 1);
+      joffset += n;
     }
   }
 }
-
 
 thread_address_t
 slice_product(thread_argument_t *argument)
@@ -109,7 +114,7 @@ slice_product(thread_argument_t *argument)
   
   data = (product_thread_data_t*) thread_data(argument);
   
-  slice_product_horizontal(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
+  slice_product_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
   
   return NULL;
 }
@@ -138,16 +143,16 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
 {
   thread_function_t function;
   
-  switch (thread_partition) {
-  case thread::partition::fiber:
+  switch (data_partition) {
+  case data::partition::fiber:
     function = (thread_function_t) &fiber_product;
     break;
-  case thread::partition::slice:
+  case data::partition::slice:
     function = (thread_function_t) &slice_product;
     break;
   default:
-    die("serial_n_mode_product: tensor product for '%s' strategy is not currently supported.\n",
-	strategy_to_string(tensor->strategy));
+    die("threaded_n_mode_product_array: tensor product for '%s' partition is not currently supported.\n",
+	data_partition_to_string(data_partition));
     break;
   }
   

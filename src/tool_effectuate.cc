@@ -1,6 +1,7 @@
 
 #include "cache.h"
 #include "compatible.h"
+#include "data.h"
 #include "error.h"
 #include "file.h"
 #include "matrix.h"
@@ -19,23 +20,23 @@
 #include <ctype.h>
 #include <unistd.h>
 
-extern cache_t			 *cache;
-extern uint			 cache_size;
-extern uint			 cache_line_size;
-extern bool			 human_readable;
-extern uint			 iterations;
-extern uint			 memory_stride;
-extern orientation::type_t       storage_orientation;
-extern strategy::type_t          storage_strategy;
-extern uint			 thread_count;
-extern thread::partition::type_t thread_partition;
-extern char			 *tool_name;
-extern tool::type_t		 tool_type;
-extern bool			 simulate;
-extern bool			 tracing;
-extern bool			 verbose;
-extern verbosity::type_t	 noisiness;
-extern bool			 write_results;
+extern cache_t		       *cache;
+extern uint		       cache_size;
+extern uint		       cache_line_size;
+extern bool		       human_readable;
+extern uint		       iterations;
+extern uint		       memory_stride;
+extern orientation::type_t     storage_orientation;
+extern strategy::type_t	       storage_strategy;
+extern uint		       thread_count;
+extern data::partition::type_t data_partition;
+extern char		       *tool_name;
+extern tool::type_t	       tool_type;
+extern bool		       simulate;
+extern bool		       tracing;
+extern bool		       verbose;
+extern verbosity::type_t       noisiness;
+extern bool		       write_results;
 
 static operation::type_t optcode;
 
@@ -54,25 +55,25 @@ effectuate_tool_usage()
   message("\t-n\tnumber of times to apply operation (default: %d)\n", DEFAULT_ITERATIONS);
   message("\t-o\toperation (default: %s)\n", operation_to_string(DEFAULT_OPERATION));
   print_operations_with_descriptions("\t\t- %s : %s\n");
-  message("\t-O\torientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
+  message("\t-O\tin memory storage orientation (default: %s)\n", orientation_to_string(DEFAULT_ORIENTATION));
   print_orientations("\t\t- %s\n");
 #if !defined (NOSIMULATE)
   message("\t-s\tsimulate cache (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_SIMULATE));
 #endif
-  message("\t-S\tstrategy (default: %s)\n", strategy_to_string(DEFAULT_STRATEGY));
+  message("\t-S\tin memory storage strategy (default: %s)\n", strategy_to_string(DEFAULT_STRATEGY));
   print_strategies("\t\t- %s\n");
-  message("\t-p\tpartition scheme for work (default: %s)\n", thread_partition_to_string(DEFAULT_THREAD_PARTITION));
-  print_thread_partitions_with_descriptions("\t\t- %s : %s\n");
+  message("\t-p\tpartition scheme for work (default: %s)\n", data_partition_to_string(DEFAULT_THREAD_PARTITION));
+  print_data_partitions_with_descriptions("\t\t- %s : %s\n");
   message("\t-t\tnumber of threads to use for operation (default: %d)\n", DEFAULT_THREAD_COUNT);
   message("\t-T\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
-  message("\t$ ./tensor %s -o n-mode vector100.in dense100.in\n", tool_name);
+  message("\t$ ./tensor %s -o n-mode vector.in tensor.in\n", tool_name);
   message("\tReading vector.in ... done [0.000305]\n");
   message("\tReading tensor.in ... done [0.000235]\n");
-  message("\tPerforming operation 'dense tensor \times vector product' ... done [3.736000]");
+  message("\tPerforming operation 'dense tensor \\times vector product' ... done [3.736000]\n");
   exit(1);
 }
 
@@ -194,7 +195,7 @@ effectuate_tool_main(int argc, char *argv[])
   storage_orientation = DEFAULT_ORIENTATION;
   storage_strategy    = DEFAULT_STRATEGY;
   thread_count        = DEFAULT_THREAD_COUNT;
-  thread_partition    = DEFAULT_THREAD_PARTITION;
+  data_partition    = DEFAULT_THREAD_PARTITION;
   
   /* we will privide our own error messages */
   opterr = 0;
@@ -239,9 +240,9 @@ effectuate_tool_main(int argc, char *argv[])
       break;
     case 'p':
       if (isdigit(optarg[0])) {
-	thread_partition = (thread::partition::type_t) atoi(optarg);
+	data_partition = (data::partition::type_t) atoi(optarg);
       } else {
-	thread_partition = string_to_thread_partition(optarg);
+	data_partition = string_to_data_partition(optarg);
       }
       break;
     case 'r':
@@ -312,7 +313,7 @@ effectuate_tool_main(int argc, char *argv[])
   debug("effectuate_tool_main: storage_orientation='%s'\n", orientation_to_string(storage_orientation));
   debug("effectuate_tool_main: storage_strategy='%s'\n", strategy_to_string(storage_strategy));
   debug("effectuate_tool_main: thread_count=%d\n", thread_count);
-  debug("effectuate_tool_main: thread_partition='%s'\n", thread_partition_to_string(thread_partition));
+  debug("effectuate_tool_main: data_partition='%s'\n", data_partition_to_string(data_partition));
   
   /* if we are just running a simulation, then we only do one
      iteration; otherwise, it would be really slow */

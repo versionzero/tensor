@@ -25,7 +25,7 @@ threaded_n_mode_product(matrix_t *matrix, vector_t const *vector, tensor_t const
     threaded_n_mode_product_array(matrix, vector, tensor);
     break;
   default:
-    die("Tensor product for '%s' strategy (using thread_count) is not currently supported.\n",
+    die("threaded_n_mode_product: tensor product for '%s' strategy (using threads) is not currently supported.\n",
 	strategy_to_string(tensor->strategy));
     break;
   }
