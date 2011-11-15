@@ -7,15 +7,17 @@
 static char const *map_data_partition_to_string[] = { 
   "unknown",
   "fiber",
+  "fiber-block",
   "slice",
-  "block"
+  "slice-block"
 };
 
 static char const *map_data_partition_to_description[] = { 
   "unknown",
   "fiber per thread",
+  "block of fibers per thread"
   "slice per thread",
-  "block per thread"
+  "block of slices per thread"
 };
 
 char const*

@@ -82,7 +82,7 @@ fiber_consumer(thread_argument_t *argument)
 }
 
 void
-block_consumer_implementation(product_thread_data_t *data, uint n, uint start, uint end, double **M, double *P, double *T)
+fiber_block_consumer_implementation(product_thread_data_t *data, uint n, uint start, uint end, double **M, double *P, double *T)
 {
   uint i, j, t, offset;
   
@@ -95,7 +95,7 @@ block_consumer_implementation(product_thread_data_t *data, uint n, uint start, u
 }
 
 thread_address_t
-block_consumer(thread_argument_t *argument)
+fiber_block_consumer(thread_argument_t *argument)
 {
   int                   id;
   uint                  n, block_size;
@@ -104,12 +104,12 @@ block_consumer(thread_argument_t *argument)
   
   data       = (product_thread_data_t*) thread_data(argument);
   n          = data->tensor->n;
-  block_size = (n*n)/thread_count;
   id         = thread_myid(argument);
+  block_size = (n*n)/thread_count;
   start      = block_size*id;
   end        = start+block_size;
   
-  block_consumer_implementation(data, n, start, end, data->matrix->data, data->vector->data, data->tensor->values);
+  fiber_block_consumer_implementation(data, n, start, end, data->matrix->data, data->vector->data, data->tensor->values);
   
   return NULL;
 }
@@ -154,6 +154,43 @@ slice_consumer(thread_argument_t *argument)
 }
 
 void
+slice_block_consumer_implementation(int id, product_thread_data_t *data, uint n, uint start, uint end, double **M, double *P, double *T)
+{
+  uint i, j, ioffset, joffset;
+  
+  for (i = start; i < end; ++i) {
+    ioffset = i*n*n;
+    joffset = ioffset;
+    for (j = 0; j < n; ++j) {
+      M[i][j]  = array_inner_product(n, P, 1, T+joffset, 1);
+      joffset += n;
+    }
+  }
+}
+
+thread_address_t
+slice_block_consumer(thread_argument_t *argument)
+{
+  int                   id;
+  uint                  n, block_size;
+  uint                  start, end;
+  product_thread_data_t *data;
+  
+  data       = (product_thread_data_t*) thread_data(argument);
+  n          = data->tensor->n;
+  id         = thread_myid(argument);
+  block_size = n/thread_count;
+  start      = block_size*id;
+  end        = start+block_size;
+  
+  DEBUG("thread:%d: block_size=%d/%d=%d, start=%d, end=%d\n", id, n, thread_count, block_size, start, end);
+  
+  slice_block_consumer_implementation(id, data, n, start, end, data->matrix->data, data->vector->data, data->tensor->values);
+  
+  return NULL;
+}
+
+void
 threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t producer, thread_function_t consumer)
 {
   product_thread_data_t data;
@@ -182,11 +219,14 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
   case data::partition::fiber:
     consumer = (thread_function_t) &fiber_consumer;
     break;
+  case data::partition::fiber_block:
+    consumer = (thread_function_t) &fiber_block_consumer;
+    break;
   case data::partition::slice:
     consumer = (thread_function_t) &slice_consumer;
     break;
-  case data::partition::block:
-    consumer = (thread_function_t) &block_consumer;
+  case data::partition::slice_block:
+    consumer = (thread_function_t) &slice_block_consumer;
     break;
   default:
     die("threaded_n_mode_product_array: tensor product for '%s' partition is not currently supported.\n",
