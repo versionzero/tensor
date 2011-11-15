@@ -2,21 +2,21 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
-#include "thread.h"
 #include "types.h"
 
-#define MAX_QUEUE_SIZE 100
+typedef struct _node_t {
+  void    *data;
+  _node_t *next;
+} node_t;
 
-typedef struct queue_tag {
-  uint            data[MAX_QUEUE_SIZE];
-  uint            first, last;
-  pthread_mutex_t lock;
+typedef struct _queue_t {
+  node_t *head, *tail;
 } queue_t;
 
 queue_t* queue_malloc();
 void queue_free(queue_t *queue);
-void queue_push(queue_t *queue, uint x);
-int queue_pop(queue_t *queue);
+void queue_push(queue_t *queue, void *data);
+void* queue_pop(queue_t *queue);
 
 #endif /* _HASH_H_ */
 

@@ -8,56 +8,84 @@
 #include <string.h>
 
 queue_t*
-queue_malloc()
+queue_malloc(void)
 {
-  queue_t *queue;
+  queue_t *q;
   
-  superfluous("queue_malloc(max_size=%d)\n", max_size);
+  q                 = MALLOC(queue_t);
+  q->head = q->tail = MALLOC(node_t);
   
-  queue        = MALLOC(queue_t);
-  queue->first = 0;
-  queue->last  = MAX_QUEUE_SIZE-1;
-  queuecount   = 0;
-  
-  thread_mutex_init(&queue->lock);
-  
-  return queue;
+  return q;
 }
 
 void
-queue_free(queue_t *queue)
+queue_push(queue_t *q, void *data)
 {
-  superfluous("queue_free(queue=0x%x)\n", queue);
+  node_t *node, *tail, *next;
   
-  thread_mutex_destroy(&queue->lock);
-  safe_free(queue);
-}
-void
-queue_push(queue_t *queue, queue_node_t *node, uint x)
-{
-  debug("queue_update(queue=0x%x, node=0x%x, data=0x%x)\n", queue, node, data);
+  node       = MALLOC(node_t);
+  node->data = data;
+  node->next = NULL;
   
-  thread_mutex_lock(&queue->lock);
+  while (true) {
+    
+    tail = q->tail;
+    next = tail->next;
+    
+    if (tail != q->tail) {
+      continue;
+    }
+    
+    if (NULL != next) {
+      __sync_bool_compare_and_swap(&q->tail, tail, next);
+      continue;
+    }
+    
+    if (__sync_bool_compare_and_swap(&tail->next, NULL, node)) {
+      break;
+    }
+    
+  }
   
-  queue->last              = (queue->last+1) % MAX_QUEUE_SIZE; 
-  queue->data[queue->last] = x;
-  queue->count++;
-  
-  thread_mutex_unlock(&queue->lock);
+  __sync_bool_compare_and_swap(&q->tail, tail, node);
 }
 
-void
-queue_pop(queue_t *queue)
+void*
+queue_pop(queue_t *q)
 {
-  int current, x;
-
-  thread_mutex_lock(&queue->lock);
+  void   *data;
+  node_t *head, *tail, *next;
   
-  x            = queue->data[queue->first];
-  queue->first = (queue->first+1) % QUEUE_SIZE;
-  queue->count--;
+  while (true) {
+    
+    head = q->head;
+    tail = q->tail;
+    next = head->next;
+    
+    if (head != q->head) {
+      continue;
+    }
+    
+    if (NULL == next) {
+      return NULL; // Empty
+    }
+    
+    if (head == tail) {
+      __sync_bool_compare_and_swap(&q->tail, tail, next);
+      continue;
+    }
+    
+    data = next->data;
+    
+    if (__sync_bool_compare_and_swap(&q->head, head, next)) {
+      break;
+    }
+    
+  }
   
-  return x;
+  safe_free(head);
+  
+  return data;
 }
 
 
