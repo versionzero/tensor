@@ -10,6 +10,40 @@
 #include <stdlib.h>
 #include <errno.h>	/* for EBUSY */
 
+#ifdef __APPLE__
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#endif
+
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#endif
+
+/*************************************************
+ * get the number of CPUs on this machine
+ */
+int
+thread_get_cpu_count()
+{
+#ifdef __APPLE__
+  int    i;
+  size_t s;
+  
+  i = 0;
+  s = sizeof(i);
+  
+  if (sysctlbyname("hw.ncpu", &i, &s, NULL, 0)) {
+    return 1;
+  }
+  
+  return i;
+#endif
+  
+#ifdef __linux__
+  return get_nprocs();
+#endif
+}
+
 /*************************************************
  * attempt to lock a mutex
  */
