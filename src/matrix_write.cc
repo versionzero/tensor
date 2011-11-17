@@ -123,7 +123,7 @@ matrix_write(char const *filename, matrix_t const *matrix, format::type_t format
 {
   FILE *file;
   
-  debug("matrix_write(0x%x)\n", file);
+  debug("matrix_write('%s')\n", filename);
   
   file = fopen_or_die(filename, "w+");
   matrix_fwrite(file, matrix, format);
