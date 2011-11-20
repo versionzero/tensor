@@ -1,13 +1,15 @@
 
 #include "algebra.h"
 #include "error.h"
+#include "cblas.h"
 
+#if 0
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
 #endif
-
 #ifdef __linux__
 #include <cblas.h>
+#endif
 #endif
 
 double

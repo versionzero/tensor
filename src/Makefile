@@ -18,14 +18,14 @@ ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
 
-EXTRA_LDFLAGS=-Wall -thread -lblas -llapack $(EXTRA_DEBUG)
-EXTRA_CXXFLAGS=-c -DYA_BLAS -DYA_LAPACK -DYA_BLASMULT $(EXTRA_DEBUG)	\
-		$(STRICT) $(INCLUDES) $(CPPX11)
+EXTRA_LDFLAGS=-Wall -thread $(EXTRA_DEBUG)
+EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
 ifeq "$(OS)" "Darwin"
 	EXTRA_LDFLAGS += -framework Accelerate
 endif
 
 HEADERS_CACHE=address.h cache.h hash.h
+HEADERS_BLAS=cblas.h
 HEADERS_GENERAL=arithmetic.h data.h error.h file.h information.h	\
 	latex.h algebra.h memory.h operation.h queue.h random.h		\
 	thread.h strings.h timer.h tool.h utility.h compatible.h
@@ -33,10 +33,12 @@ HEADERS_GENERATE=generate.h
 HEADERS_MATRIX=matrix.h mmio.h
 HEADERS_TENSOR=tensor.h
 HEADERS_VECTOR=vector.h
-HEADERS=$(HEADERS_CACHE) $(HEADERS_GENERAL) $(HEADERS_GENERATE)	\
-	$(HEADERS_MATRIX) $(HEADERS_TENSOR) $(HEADERS_VECTOR)
+HEADERS=$(HEADERS_CACHE) $(HEADERS_BLAS) $(HEADERS_GENERAL)	\
+	$(HEADERS_GENERATE) $(HEADERS_MATRIX) $(HEADERS_TENSOR)	\
+	$(HEADERS_VECTOR)
 
 SOURCES_CACHE=address.cc cache.cc hash.cc
+SOURCES_BLAS=blas_ddot.cc blas_dgemm.cc
 SOURCES_GENERAL=arithmetic.cc data.cc compatible.cc error.cc file.cc	\
 	information.cc latex.cc algebra.cc memory.cc mmio.cc		\
 	operation.cc operation_n_mode_product.cc operation_utility.cc	\
@@ -54,8 +56,9 @@ SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_copy.cc	\
 	tensor_write.cc tensor_utility.cc tensor_validate.cc
 SOURCES_VECTOR=vector_clear.cc vector_free.cc vector_malloc.cc	\
 	vector_read.cc vector_write.cc
-SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_GENERATE)		\
-	$(SOURCES_MATRIX) $(SOURCES_TENSOR) $(SOURCES_VECTOR) main.cc
+SOURCES=$(SOURCES_CACHE) $(SOURCES_BLAS) $(SOURCES_GENERAL)	\
+	$(SOURCES_GENERATE) $(SOURCES_MATRIX) $(SOURCES_TENSOR)	\
+	$(SOURCES_VECTOR) main.cc
 
 ASSEMBLER=$(SOURCES:.cc=.s)
 OBJECTS=$(ASSEMBLER:.s=.o)
