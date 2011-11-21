@@ -10,6 +10,8 @@
 //#include "dgemm.h"
 #include <stdio.h>
 #include <math.h>
+#include "cblas.h"
+#include "error.h"
 
 #define A(I,J) a[(I)-1 + ((J)-1)* ( *lda)]
 #define B(I,J) b[(I)-1 + ((J)-1)* ( *ldb)]
@@ -40,10 +42,49 @@ long int max(long int a, long int b)
    return a;
 }
 
-/* Subroutine */ void dgemm_(char *transa, char *transb, long int *m, long int *
-                            n, long int *k, double *alpha, double *a, long int *lda, 
-                            double *b, long int *ldb, double *beta, double *c, long int 
-                            *ldc)
+void dgemm_(char *transa, char *transb, int const *m, int const *n, int const *k,
+	    double const *alpha, double const *a, int const *lda, double const *b, 
+	    int const *ldb, double const *beta, double *c, int const *ldc);
+
+void 
+cblas_dgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
+	    const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+	    const int K, const double alpha, const double  *A,
+	    const int lda, const double  *B, const int ldb,
+	    const double beta, double  *C, const int ldc)
+{
+  char TA, TB;
+  
+  if (Order == CblasColMajor) {
+    if (TransA == CblasTrans)            TA='T';
+    else if ( TransA == CblasConjTrans ) TA='C';
+    else if ( TransA == CblasNoTrans )   TA='N';
+    else die("cblas_dgemm: Illegal TransA setting, %d\n", TransA);
+    if (TransB == CblasTrans)            TB='T';
+    else if ( TransB == CblasConjTrans ) TB='C';
+    else if ( TransB == CblasNoTrans )   TB='N';
+    else die("cblas_dgemm: Illegal TransB setting, %d\n", TransB);
+  } else if (Order == CblasRowMajor) {
+    if(TransA == CblasTrans)             TB='T';
+    else if ( TransA == CblasConjTrans ) TB='C';
+    else if ( TransA == CblasNoTrans )   TB='N';
+    else die("cblas_dgemm: Illegal TransA setting, %d\n", TransA);
+    if(TransB == CblasTrans) TA='T';
+    else if ( TransB == CblasConjTrans ) TA='C';
+    else if ( TransB == CblasNoTrans )   TA='N';
+    else die("cblas_dgemm: Illegal TransB setting, %d\n", TransB);
+  } else {
+    die("cblas_dgemm: Illegal Order setting, %d\n", Order);
+  }
+  
+  dgemm_(&TA, &TB, &M, &N, &K, &alpha, B, &ldb, A, &lda, &beta, C, &ldc);
+}
+
+/* Subroutine */ 
+void 
+dgemm_(char *transa, char *transb, int const *m, int const *n, int const *k,
+       double const *alpha, double const *a, int const *lda, double const *b, 
+       int const *ldb, double const *beta, double *c, int const *ldc)
 {
   
   
