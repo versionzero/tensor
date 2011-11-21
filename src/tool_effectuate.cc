@@ -71,9 +71,9 @@ effectuate_tool_usage()
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
   message("\nExample:\n\n");
-  message("\t$ ./tensor %s -o n-mode vector.in tensor.in\n", tool_name);
-  message("\tReading vector.in ... done [0.000305]\n");
+  message("\t$ ./tensor %s -o mode-1 tensor.in vector.in\n", tool_name);
   message("\tReading tensor.in ... done [0.000235]\n");
+  message("\tReading vector.in ... done [0.000305]\n");
   message("\tPerforming operation 'dense tensor \\times vector product' ... done [3.736000]\n");
   exit(1);
 }

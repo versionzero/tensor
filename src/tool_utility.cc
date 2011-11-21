@@ -38,7 +38,7 @@ static char const *map_tools_to_description[] = {
   "unknown",
   TENSOR_DESCRIPTION,
   GENERATE_DESCRIPTION,
-  EFFECTUATE_DESCRIPTION,
+  EFFECTUATE_DESCRIPTION
 };
 
 char const* string_from_tool(tool::type_t tool)

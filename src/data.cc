@@ -15,7 +15,7 @@ static char const *map_data_partition_to_string[] = {
 static char const *map_data_partition_to_description[] = { 
   "unknown",
   "fiber per thread",
-  "block of fibers per thread"
+  "block of fibers per thread",
   "slice per thread",
   "block of slices per thread"
 };

@@ -7,12 +7,14 @@
 
 static char const *map_operations_to_string[] = { 
   "unknown",
-  "n-mode"
+  "mode-1",
+  "mode-2"
 };
 
 static char const *map_operations_to_description[] = { 
   "unknown",
-  "dense tensor \\times vector product"
+  "dense tensor \\times vector product",
+  "dense tensor \\times matrix product"
 };
 
 char const*

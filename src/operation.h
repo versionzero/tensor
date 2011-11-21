@@ -9,7 +9,8 @@
 namespace operation {
   typedef enum {
     unknown,
-    mode_1_product
+    mode_1_product,
+    mode_2_product
   } type_t;
 }
 
