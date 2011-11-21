@@ -1,0 +1,234 @@
+diff --git i/src/Makefile w/src/Makefile
+index cd604fd..c5ba85a 100644
+--- i/src/Makefile
++++ w/src/Makefile
+@@ -4,8 +4,8 @@ CXX=g++
+ SYMBOLS=echo
+ CPPX11=
+ ifeq ($(OS),Darwin)
+-	CXX=clang
+-	CPPX11=-std=c++0x -stdlib=libc++
++	#CXX=clang
++	#CPPX11=-std=c++0x -stdlib=libc++
+ 	SYMBOLS=dsymutil
+ endif
+ 
+@@ -25,7 +25,8 @@ ifeq ($(OS),Linux)
+ 	EXTRA_LDFLAGS += -lpthread
+ endif
+ ifeq ($(OS),Darwin)
+-	EXTRA_LDFLAGS += -thread -framework Accelerate
++	#EXTRA_LDFLAGS += -thread -framework Accelerate
++	EXTRA_LDFLAGS += -lpthread -framework Accelerate
+ endif
+ 
+ EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
+diff --git i/src/operation.cc w/src/operation.cc
+index 028cb76..c903038 100644
+--- i/src/operation.cc
++++ w/src/operation.cc
+@@ -14,67 +14,35 @@
+ extern uint thread_count;
+ 
+ void
+-threaded_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
++operation_mode_1_product(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
+ {
+-  debug("threaded_mode_1_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
++  debug("operation_mode_1_product(matrix=0x%x, tensor=0x%x, vector=0x%x)\n", matrix, tensor, vector);
+   
+   compatible(vector, tensor);
+   
+   switch (tensor->strategy) {
+   case strategy::array:
+-    threaded_mode_1_product_array(matrix, vector, tensor);
++    operation_mode_1_product_array(matrix, tensor, vector);
+     break;
+   default:
+-    die("threaded_mode_1_product: tensor product for '%s' strategy (using threads) is not currently supported.\n",
++    die("operation_mode_1_product: tensor product for '%s' strategy (using threads) is not currently supported.\n",
+ 	strategy_to_string(tensor->strategy));
+     break;
+   }
+ }
+ 
+-void
+-serial_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+-{
+-  debug("serial_mode_1_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+-  
+-  compatible(vector, tensor);
+-  
+-  switch (tensor->strategy) {
+-  case strategy::array:
+-    /* in this case, we want to compare the single thread version of
+-       the same algo against the n-threaded version */
+-    threaded_mode_1_product_array(matrix, vector, tensor);
+-    break;
+-  default:
+-    die("serial_mode_1_product: tensor product for '%s' strategy is not currently supported.\n",
+-	strategy_to_string(tensor->strategy));
+-    break;
+-  }
+-}
+-
+-void
+-operation_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+-{
+-  debug("operation_mode_1_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+-  
+-  if (thread_count <= 1) {
+-    serial_mode_1_product(matrix, vector, tensor);
+-  } else {
+-    threaded_mode_1_product(matrix, vector, tensor);
+-  }
+-}
+-
+ matrix_t*
+ operation_mode_1_product(vector_t const *vector, tensor_t const *tensor)
+ {
+   matrix_t *matrix;
+   
+   compatible(vector, tensor);
+-  debug("operation_mode_1_product(vector=0x%x, tensor=0x%x)\n", vector, tensor);
++  debug("operation_mode_1_product(tensor=0x%x, vector=0x%x)\n", tensor, vector);
+   
+   matrix = matrix_malloc(tensor->m, tensor->n, ownership::creator);
+   debug("operation_mode_1_product: matrix=0x%x\n", matrix);
+  
+-  operation_mode_1_product(matrix, vector, tensor);
++  operation_mode_1_product(matrix, tensor, vector);
+   
+   return matrix;
+ }
+diff --git i/src/operation.h w/src/operation.h
+index 69eb2dc..458c312 100644
+--- i/src/operation.h
++++ w/src/operation.h
+@@ -14,16 +14,18 @@ namespace operation {
+   } type_t;
+ }
+ 
++void operation_mode_1_product(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector);
++matrix_t *operation_mode_1_product(tensor_t const *tensor, vector_t const *vector);
++void operation_mode_2_product(tensor_t *result, tensor_t const *tensor, matrix_t const *matrix);
++tensor_t *operation_mode_2_product(tensor_t const *tensor, matrix_t const *matrix);
++
++void operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector);
++void operation_mode_2_product_array(tensor_t *result, tensor_t const *tensor, matrix_t const *matrix);
++
+ char const* operation_to_string(operation::type_t operation);
+ char const* operation_to_description_string(operation::type_t operation);
+ operation::type_t string_to_operation(char const *name);
+ 
+-void operation_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+-matrix_t *operation_mode_1_product(vector_t const *vector, tensor_t const *tensor);
+-
+-void serial_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+-void threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor);
+-
+ #endif
+ 
+ /*
+diff --git i/src/operation_mode_1_product.cc w/src/operation_mode_1_product.cc
+index 5828d66..86f4657 100644
+--- i/src/operation_mode_1_product.cc
++++ w/src/operation_mode_1_product.cc
+@@ -191,7 +191,7 @@ slice_block_consumer(thread_argument_t *argument)
+ }
+ 
+ void
+-threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t producer, thread_function_t consumer)
++operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector, thread_function_t producer, thread_function_t consumer)
+ {
+   product_thread_data_t data;
+   
+@@ -208,7 +208,7 @@ threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
+ }
+ 
+ void
+-threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
++operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
+ {
+   thread_function_t consumer, producer;
+   
+@@ -234,18 +234,18 @@ threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
+     break;
+   }
+   
+-  threaded_mode_1_product_array(matrix, vector, tensor, producer, consumer);
++  operation_mode_1_product_array(matrix, tensor, vector, producer, consumer);
+ }
+  
+ void
+-serial_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
++serial_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
+ {
+   uint   i, j, k;
+   uint   index, sum;
+   uint   n;
+   double **M, *T, *P;
+   
+-  debug("mode_1_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
++  debug("mode_1_product_array(matrix=0x%x, tensor=0x%x, vector=0x%x)\n", matrix, tensor, vector);
+   
+   n = tensor->n;
+   M = matrix->data;
+diff --git i/src/tool_effectuate.cc w/src/tool_effectuate.cc
+index a1d5e42..c093663 100644
+--- i/src/tool_effectuate.cc
++++ w/src/tool_effectuate.cc
+@@ -105,7 +105,7 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
+ }
+ 
+ void
+-timed_operation_mode_1_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
++timed_operation_mode_1_product(matrix_t *matrix, tensor_t *tensor, vector_t *vector)
+ {
+   precision_timer_t  t;
+   
+@@ -113,7 +113,7 @@ timed_operation_mode_1_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
+   progress("Performing operation '%s' ... ", 
+ 	   operation_to_description_string(operation::mode_1_product));
+   timer_start(&t);
+-  operation_mode_1_product(matrix, vector, tensor);
++  operation_mode_1_product(matrix, tensor, vector);
+   timer_end(&t);
+   print_elapsed_time(t);
+ }
+@@ -130,13 +130,13 @@ timed_operation_mode_1_product(int argc, char *argv[])
+   
+   offset = optind;
+   name   = argv[offset++];
+-  vector = timed_vector_read(name);
+-  debug("timed_operation_mode_1_product: vector=0x%x\n", vector);
+-  
+-  name   = argv[offset++];
+   tensor = timed_tensor_read(name);
+   debug("timed_operation_mode_1_product: tensor=0x%x\n", tensor);
+   
++  name   = argv[offset++];
++  vector = timed_vector_read(name);
++  debug("timed_operation_mode_1_product: vector=0x%x\n", vector);
++  
+   compatible(vector, tensor);
+   matrix = matrix_malloc(tensor->m, tensor->n);
+   debug("timed_operation_mode_1_product: matrix=0x%x\n", matrix);
+@@ -148,7 +148,7 @@ timed_operation_mode_1_product(int argc, char *argv[])
+   }
+   
+   for (i = 0; i < iterations; ++i) {
+-    timed_operation_mode_1_product(matrix, vector, tensor);
++    timed_operation_mode_1_product(matrix, tensor, vector);
+   }
+   
+   if (write_results) {
+@@ -196,7 +196,7 @@ effectuate_tool_main(int argc, char *argv[])
+   storage_orientation = DEFAULT_ORIENTATION;
+   storage_strategy    = DEFAULT_STRATEGY;
+   thread_count        = DEFAULT_THREAD_COUNT;
+-  data_partition    = DEFAULT_THREAD_PARTITION;
++  data_partition      = DEFAULT_THREAD_PARTITION;
+   
+   /* we will privide our own error messages */
+   opterr = 0;
