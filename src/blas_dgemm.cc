@@ -24,7 +24,7 @@ void usage()
 }
 #endif
 
-long int lsame_(char * a, char *b)
+long int lsame_(char const *a, char const *b)
 {
   if(a ==b)
    return 1;
@@ -40,7 +40,7 @@ long int max(long int a, long int b)
    return a;
 }
 
-/* Subroutine */ int dgemm_(char *transa, char *transb, long int *m, long int *
+/* Subroutine */ void dgemm_(char *transa, char *transb, long int *m, long int *
                             n, long int *k, double *alpha, double *a, long int *lda, 
                             double *b, long int *ldb, double *beta, double *c, long int 
                             *ldc)
@@ -48,8 +48,8 @@ long int max(long int a, long int b)
   
   
   /* System generated locals */
-  long int a_dim1, a_offset, b_dim1, b_offset, c_dim1, c_offset, i__1, i__2, 
-  i__3;
+  //long int a_dim1, a_offset, b_dim1, b_offset, c_dim1, c_offset;
+  long int i__1, i__2, i__3;
   
   /* Local variables */
   static long int info;
@@ -104,8 +104,8 @@ long int max(long int a, long int b)
   
   /*     Quick return if possible. */
   
-  if (*m == 0 || *n == 0 || (*alpha == 0. || *k == 0) && *beta == 1.) {
-    return 0;
+  if (*m == 0 || *n == 0 || ((*alpha == 0. || *k == 0) && *beta == 1.)) {
+    return;
   }
   
   /*     And if  alpha.eq.zero. */
@@ -132,7 +132,7 @@ long int max(long int a, long int b)
         /* L40: */
 	    }
     }
-    return 0;
+    return;
   }
  /*   dgemm(nota, notb, alpha, beta, m, n, k, a, b, c, lda, ldb, ldc)
   return 0; 
