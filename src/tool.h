@@ -23,7 +23,7 @@ namespace tool {
 #define DEFAULT_HUMAN_READABLE        true
 #define DEFAULT_ITERATIONS            1
 #define DEFAULT_MEMORY_STRIDE         32
-#define DEFAULT_OPERATION             operation::n_mode_product
+#define DEFAULT_OPERATION             operation::mode_1_product
 #define DEFAULT_ORIENTATION           orientation::tube
 #define DEFAULT_SIMULATE              false
 #define DEFAULT_STRATEGY              strategy::array

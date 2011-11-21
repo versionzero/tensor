@@ -42,7 +42,7 @@ typedef struct {
   tensor_t const *tensor;
 } product_thread_data_t;
 
-typedef void (*n_mode_product_t)(product_thread_data_t *data, uint n, double **M, double *P, double *T);
+typedef void (*mode_1_product_t)(product_thread_data_t *data, uint n, double **M, double *P, double *T);
 
 int
 fiber_next(product_thread_data_t *data)
@@ -191,7 +191,7 @@ slice_block_consumer(thread_argument_t *argument)
 }
 
 void
-threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t producer, thread_function_t consumer)
+threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t producer, thread_function_t consumer)
 {
   product_thread_data_t data;
   
@@ -208,7 +208,7 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
 }
 
 void
-threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   thread_function_t consumer, producer;
   
@@ -229,23 +229,23 @@ threaded_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t
     consumer = (thread_function_t) &slice_block_consumer;
     break;
   default:
-    die("threaded_n_mode_product_array: tensor product for '%s' partition is not currently supported.\n",
+    die("threaded_mode_1_product_array: tensor product for '%s' partition is not currently supported.\n",
 	data_partition_to_string(data_partition));
     break;
   }
   
-  threaded_n_mode_product_array(matrix, vector, tensor, producer, consumer);
+  threaded_mode_1_product_array(matrix, vector, tensor, producer, consumer);
 }
  
 void
-serial_n_mode_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+serial_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint   i, j, k;
   uint   index, sum;
   uint   n;
   double **M, *T, *P;
   
-  debug("n_mode_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("mode_1_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   n = tensor->n;
   M = matrix->data;

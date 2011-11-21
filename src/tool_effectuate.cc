@@ -66,6 +66,7 @@ effectuate_tool_usage()
   print_data_partitions_with_descriptions("\t\t- %s : %s\n");
   message("\t-t\tnumber of threads to use for operation (default: %d)\n", DEFAULT_THREAD_COUNT);
   message("\t-T\ttoggle tracing (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_TRACING));
+  message("\t-u\ttoggle human-readable output (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_HUMAN_READABLE));
   message("\t-v\ttoggle verbosity (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_VERBOSE));
   message("\t-V\tdebug verbosity level (default: %d/%d)\n", DEFAULT_VERBOSITY, verbosity::max);
   message("\t-w\twrite results (default: %s)\n", DEFAULT_ON_OR_OFF(DEFAULT_WRITE_RESULTS));
@@ -104,21 +105,21 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
 }
 
 void
-timed_operation_n_mode_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
+timed_operation_mode_1_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
 {
   precision_timer_t  t;
   
   matrix_clear(matrix);
   progress("Performing operation '%s' ... ", 
-	   operation_to_description_string(operation::n_mode_product));
+	   operation_to_description_string(operation::mode_1_product));
   timer_start(&t);
-  operation_n_mode_product(matrix, vector, tensor);
+  operation_mode_1_product(matrix, vector, tensor);
   timer_end(&t);
   print_elapsed_time(t);
 }
 
 void
-timed_operation_n_mode_product(int argc, char *argv[])
+timed_operation_mode_1_product(int argc, char *argv[])
 {
   uint     i;
   int      offset;
@@ -130,15 +131,15 @@ timed_operation_n_mode_product(int argc, char *argv[])
   offset = optind;
   name   = argv[offset++];
   vector = timed_vector_read(name);
-  debug("timed_operation_n_mode_product: vector=0x%x\n", vector);
+  debug("timed_operation_mode_1_product: vector=0x%x\n", vector);
   
   name   = argv[offset++];
   tensor = timed_tensor_read(name);
-  debug("timed_operation_n_mode_product: tensor=0x%x\n", tensor);
+  debug("timed_operation_mode_1_product: tensor=0x%x\n", tensor);
   
   compatible(vector, tensor);
   matrix = matrix_malloc(tensor->m, tensor->n);
-  debug("timed_operation_n_mode_product: matrix=0x%x\n", matrix);
+  debug("timed_operation_mode_1_product: matrix=0x%x\n", matrix);
   
   cache = NULL;
   if (simulate) {
@@ -147,7 +148,7 @@ timed_operation_n_mode_product(int argc, char *argv[])
   }
   
   for (i = 0; i < iterations; ++i) {
-    timed_operation_n_mode_product(matrix, vector, tensor);
+    timed_operation_mode_1_product(matrix, vector, tensor);
   }
   
   if (write_results) {
@@ -175,8 +176,8 @@ void
 timed_operation(int argc, char *argv[])
 {
   switch (optcode) {
-  case operation::n_mode_product:
-    timed_operation_n_mode_product(argc, argv);
+  case operation::mode_1_product:
+    timed_operation_mode_1_product(argc, argv);
     break;
   default:
     die("Operation '%d' not currently supported.\n", optcode);
