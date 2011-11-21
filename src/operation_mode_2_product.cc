@@ -191,7 +191,7 @@ slice_block_consumer(thread_argument_t *argument)
 }
 
 void
-operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector, thread_function_t producer, thread_function_t consumer)
+threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor, thread_function_t producer, thread_function_t consumer)
 {
   product_thread_data_t data;
   
@@ -208,7 +208,7 @@ operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_
 }
 
 void
-operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
+threaded_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   thread_function_t consumer, producer;
   
@@ -234,18 +234,18 @@ operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_
     break;
   }
   
-  operation_mode_1_product_array(matrix, tensor, vector, producer, consumer);
+  threaded_mode_1_product_array(matrix, vector, tensor, producer, consumer);
 }
  
 void
-serial_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
+serial_mode_1_product_array(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
 {
   uint   i, j, k;
   uint   index, sum;
   uint   n;
   double **M, *T, *P;
   
-  debug("mode_1_product_array(matrix=0x%x, tensor=0x%x, vector=0x%x)\n", matrix, tensor, vector);
+  debug("mode_1_product_array(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
   
   n = tensor->n;
   M = matrix->data;

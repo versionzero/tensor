@@ -14,52 +14,20 @@
 extern uint thread_count;
 
 void
-threaded_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
+operation_mode_1_product(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
 {
-  debug("threaded_mode_1_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
+  debug("operation_mode_1_product(matrix=0x%x, tensor=0x%x, vector=0x%x)\n", matrix, tensor, vector);
   
   compatible(vector, tensor);
   
   switch (tensor->strategy) {
   case strategy::array:
-    threaded_mode_1_product_array(matrix, vector, tensor);
+    operation_mode_1_product_array(matrix, tensor, vector);
     break;
   default:
-    die("threaded_mode_1_product: tensor product for '%s' strategy (using threads) is not currently supported.\n",
+    die("operation_mode_1_product: tensor product for '%s' strategy (using threads) is not currently supported.\n",
 	strategy_to_string(tensor->strategy));
     break;
-  }
-}
-
-void
-serial_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("serial_mode_1_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  compatible(vector, tensor);
-  
-  switch (tensor->strategy) {
-  case strategy::array:
-    /* in this case, we want to compare the single thread version of
-       the same algo against the n-threaded version */
-    threaded_mode_1_product_array(matrix, vector, tensor);
-    break;
-  default:
-    die("serial_mode_1_product: tensor product for '%s' strategy is not currently supported.\n",
-	strategy_to_string(tensor->strategy));
-    break;
-  }
-}
-
-void
-operation_mode_1_product(matrix_t *matrix, vector_t const *vector, tensor_t const *tensor)
-{
-  debug("operation_mode_1_product(matrix=0x%x, vector=0x%x, tensor=0x%x)\n", matrix, vector, tensor);
-  
-  if (thread_count <= 1) {
-    serial_mode_1_product(matrix, vector, tensor);
-  } else {
-    threaded_mode_1_product(matrix, vector, tensor);
   }
 }
 
@@ -69,12 +37,12 @@ operation_mode_1_product(vector_t const *vector, tensor_t const *tensor)
   matrix_t *matrix;
   
   compatible(vector, tensor);
-  debug("operation_mode_1_product(vector=0x%x, tensor=0x%x)\n", vector, tensor);
+  debug("operation_mode_1_product(tensor=0x%x, vector=0x%x)\n", tensor, vector);
   
   matrix = matrix_malloc(tensor->m, tensor->n, ownership::creator);
   debug("operation_mode_1_product: matrix=0x%x\n", matrix);
  
-  operation_mode_1_product(matrix, vector, tensor);
+  operation_mode_1_product(matrix, tensor, vector);
   
   return matrix;
 }

@@ -25,12 +25,12 @@ ifeq ($(OS),Linux)
 	EXTRA_LDFLAGS += -lpthread
 endif
 ifeq ($(OS),Darwin)
-	EXTRA_LDFLAGS += -thread -framework Accelerate
+	EXTRA_LDFLAGS += -lpthread -framework Accelerate
 endif
 
 EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
 ifeq ($(OS),Linux)
-	#EXTRA_CXXFLAGS += -march=i686
+	EXTRA_CXXFLAGS += -march=i686
 endif
 
 HEADERS_CACHE=address.h cache.h hash.h

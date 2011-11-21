@@ -105,7 +105,7 @@ timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *mat
 }
 
 void
-timed_operation_mode_1_product(matrix_t *matrix, vector_t *vector, tensor_t *tensor)
+timed_operation_mode_1_product(matrix_t *matrix, tensor_t *tensor, vector_t *vector)
 {
   precision_timer_t  t;
   
@@ -113,7 +113,7 @@ timed_operation_mode_1_product(matrix_t *matrix, vector_t *vector, tensor_t *ten
   progress("Performing operation '%s' ... ", 
 	   operation_to_description_string(operation::mode_1_product));
   timer_start(&t);
-  operation_mode_1_product(matrix, vector, tensor);
+  operation_mode_1_product(matrix, tensor, vector);
   timer_end(&t);
   print_elapsed_time(t);
 }
@@ -130,12 +130,12 @@ timed_operation_mode_1_product(int argc, char *argv[])
   
   offset = optind;
   name   = argv[offset++];
-  vector = timed_vector_read(name);
-  debug("timed_operation_mode_1_product: vector=0x%x\n", vector);
-  
-  name   = argv[offset++];
   tensor = timed_tensor_read(name);
   debug("timed_operation_mode_1_product: tensor=0x%x\n", tensor);
+  
+  name   = argv[offset++];
+  vector = timed_vector_read(name);
+  debug("timed_operation_mode_1_product: vector=0x%x\n", vector);
   
   compatible(vector, tensor);
   matrix = matrix_malloc(tensor->m, tensor->n);
@@ -148,7 +148,7 @@ timed_operation_mode_1_product(int argc, char *argv[])
   }
   
   for (i = 0; i < iterations; ++i) {
-    timed_operation_mode_1_product(matrix, vector, tensor);
+    timed_operation_mode_1_product(matrix, tensor, vector);
   }
   
   if (write_results) {
@@ -196,7 +196,7 @@ effectuate_tool_main(int argc, char *argv[])
   storage_orientation = DEFAULT_ORIENTATION;
   storage_strategy    = DEFAULT_STRATEGY;
   thread_count        = DEFAULT_THREAD_COUNT;
-  data_partition    = DEFAULT_THREAD_PARTITION;
+  data_partition      = DEFAULT_THREAD_PARTITION;
   
   /* we will privide our own error messages */
   opterr = 0;
