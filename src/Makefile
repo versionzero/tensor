@@ -1,12 +1,14 @@
-OS=`uname`
-ifeq "$(OS)" "Darwin"
+OS := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+
+CXX=g++
+SYMBOLS=echo
+CPPX11=
+ifeq ($(OS),Darwin)
 	CXX=clang
 	CPPX11=-std=c++0x -stdlib=libc++
 	SYMBOLS=dsymutil
-else
-	CXX=g++
-	SYMBOLS=echo
 endif
+
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
 
@@ -18,11 +20,15 @@ ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
 
-EXTRA_LDFLAGS=-Wall -thread $(EXTRA_DEBUG)
-EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
-ifeq "$(OS)" "Darwin"
-	EXTRA_LDFLAGS += -framework Accelerate
+EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
+ifeq ($(OS),Linux)
+	EXTRA_LDFLAGS += -lpthread
 endif
+ifeq ($(OS),Darwin)
+	EXTRA_LDFLAGS += -thread -framework Accelerate
+endif
+
+EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_BLAS=cblas.h
@@ -41,7 +47,7 @@ SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_BLAS=blas_ddot.cc blas_dgemm.cc
 SOURCES_GENERAL=arithmetic.cc data.cc compatible.cc error.cc file.cc	\
 	information.cc latex.cc algebra.cc memory.cc mmio.cc		\
-	operation.cc operation_n_mode_product.cc operation_utility.cc	\
+	operation.cc operation_mode_1_product.cc operation_utility.cc	\
 	queue.cc random.cc strings.cc thread.cc timer.cc		\
 	tool_effectuate.cc tool_generate.cc tool_timing.cc		\
 	tool_utility.cc types.cc utility.cc
