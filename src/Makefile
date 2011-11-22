@@ -4,8 +4,8 @@ CXX=g++
 SYMBOLS=echo
 CPPX11=
 ifeq ($(OS),Darwin)
-	CXX=clang
-	CPPX11=-std=c++0x -stdlib=libc++
+	#CXX=clang
+	#CPPX11=-std=c++0x -stdlib=libc++
 	SYMBOLS=dsymutil
 endif
 
@@ -20,12 +20,9 @@ ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
 
-EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
-ifeq ($(OS),Linux)
-	EXTRA_LDFLAGS += -lpthread
-endif
+EXTRA_LDFLAGS=-Wall -lpthread $(EXTRA_DEBUG)
 ifeq ($(OS),Darwin)
-	EXTRA_LDFLAGS += -lpthread -framework Accelerate
+	#EXTRA_LDFLAGS += -framework Accelerate
 endif
 
 EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
@@ -50,10 +47,11 @@ SOURCES_CACHE=address.cc cache.cc hash.cc
 SOURCES_BLAS=blas_ddot.cc blas_dgemm.cc
 SOURCES_GENERAL=arithmetic.cc data.cc compatible.cc error.cc file.cc	\
 	information.cc latex.cc algebra.cc memory.cc mmio.cc		\
-	operation.cc operation_mode_1_product.cc operation_utility.cc	\
-	queue.cc random.cc strings.cc thread.cc timer.cc		\
-	tool_effectuate.cc tool_generate.cc tool_timing.cc		\
-	tool_utility.cc types.cc utility.cc
+	operation.cc operation_mode_1_product.cc			\
+	operation_mode_2_product.cc operation_utility.cc queue.cc	\
+	random.cc strings.cc thread.cc timer.cc tool_effectuate.cc	\
+	tool_generate.cc tool_timing.cc tool_utility.cc types.cc	\
+	utility.cc
 SOURCES_GENERATE=generate_tensor_from_matrix.cc
 SOURCES_MATRIX=matrix_arithmetic.cc matrix_clear.cc			\
 	matrix_compatible.cc matrix_copy.cc matrix_free.cc		\
