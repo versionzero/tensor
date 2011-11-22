@@ -19,8 +19,10 @@
  */
 #ifdef __linux__
 #  define _REENTRANT
-#  define _POSIX_SOURCE
 #  define _P __P
+#  ifndef _POSIX_SOURCE
+#    define _POSIX_SOURCE
+#  endif
 #endif
 
 #include <pthread.h>
