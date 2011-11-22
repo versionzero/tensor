@@ -23,16 +23,22 @@ cblas_dgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
     if (TransA == CblasTrans)            TA='T';
     else if ( TransA == CblasConjTrans ) TA='C';
     else if ( TransA == CblasNoTrans )   TA='N';
+    else die("cblas_dgemm: Illegal TransA setting, %d\n", TransA);
     if (TransB == CblasTrans)            TB='T';
     else if ( TransB == CblasConjTrans ) TB='C';
     else if ( TransB == CblasNoTrans )   TB='N';
+    else die("cblas_dgemm: Illegal TransB setting, %d\n", TransB);
   } else if (Order == CblasRowMajor) {
     if(TransA == CblasTrans)             TB='T';
     else if ( TransA == CblasConjTrans ) TB='C';
     else if ( TransA == CblasNoTrans )   TB='N';
+    else die("cblas_dgemm: Illegal TransA setting, %d\n", TransA);
     if(TransB == CblasTrans)             TA='T';
     else if ( TransB == CblasConjTrans ) TA='C';
     else if ( TransB == CblasNoTrans )   TA='N';
+    else die("cblas_dgemm: Illegal TransB setting, %d\n", TransB);
+  } else {
+    die("cblas_dgemm: Illegal Order setting, %d\n", Order);
   }
   
   dgemm_(&TA, &TB, &M, &N, &K, &alpha, B, &ldb, A, &lda, &beta, C, &ldc);
@@ -219,14 +225,11 @@ dgemm_(char const *transa, char const *transb, int const *m, int const *n, int c
     /* Parameter adjustments */
     a_dim1 = *lda;
     a_offset = a_dim1;
-    a -= a_offset;
     b_dim1 = *ldb;
     b_offset = b_dim1;
-    b -= b_offset;
     c_dim1 = *ldc;
     c_offset = c_dim1;
-    c__ -= c_offset;
-
+    
     /* Function Body */
     nota = lsame_(transa, "N");
     notb = lsame_(transb, "N");
@@ -265,7 +268,8 @@ dgemm_(char const *transa, char const *transb, int const *m, int const *n, int c
 	info = 13;
     }
     if (info != 0) {
-      return info;
+      die("DGEMM: %d\n", info);
+      return 0;
     }
 
 /*     Quick return if possible. */
