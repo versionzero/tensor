@@ -25,7 +25,7 @@ ifeq ($(OS),Darwin)
 	#EXTRA_LDFLAGS += -framework Accelerate
 endif
 
-EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
+EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
 ifeq ($(OS),Linux)
 	EXTRA_CXXFLAGS += -march=i686
 endif
@@ -92,12 +92,6 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 
 .cc.o: $(HEADERS)
 	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -o $@ $<
-
-#$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -MM -MF $(patsubst %.o,%.d,$@) $<
-
-.cc.s: $(HEADERS)
-	$(CXX) $(CXXFLAGS) -S $<
-	$(CXX) $(CXXFLAGS) $@ -o $(@:.s=.o)
 
 debug:
 	@make -j4 DEBUG=1
