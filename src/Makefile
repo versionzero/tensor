@@ -2,10 +2,7 @@ OS := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
 CXX=g++
 SYMBOLS=echo
-CPPX11=
 ifeq ($(OS),Darwin)
-	#CXX=clang
-	#CPPX11=-std=c++0x -stdlib=libc++
 	SYMBOLS=dsymutil
 endif
 
@@ -20,9 +17,12 @@ ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
 
-EXTRA_LDFLAGS=-Wall -lpthread $(EXTRA_DEBUG)
+EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
+ifeq ($(OS),Linux)
+	EXTRA_LDFLAGS += -lpthread
+endif
 ifeq ($(OS),Darwin)
-	#EXTRA_LDFLAGS += -framework Accelerate
+	EXTRA_LDFLAGS += -thread
 endif
 
 EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
