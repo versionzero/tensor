@@ -246,30 +246,3 @@ operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_
   
   operation_mode_1_product_array(matrix, tensor, vector, producer, consumer);
 }
- 
-void
-serial_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_t const *vector)
-{
-  uint   i, j, k;
-  uint   index, sum;
-  uint   n;
-  double **M, *T, *P;
-  
-  debug("mode_1_product_array(matrix=0x%x, tensor=0x%x, vector=0x%x)\n", matrix, tensor, vector);
-  
-  n = tensor->n;
-  M = matrix->data;
-  P = vector->data;
-  T = tensor->values;
-  
-  for (i = 0; i < n; ++i) {
-    for (j = 0; j < n; ++j) {
-      sum = 0;
-      for (k = 0; k < n; ++k) {
-	index = tensor_index(tensor, i, j, k);
-	sum += P[k] * T[index];
-      }
-      M[i][j] = sum;
-    }
-  }
-}
