@@ -45,6 +45,7 @@ compatible(matrix_t const *lhs, tensor_t const *rhs)
   debug("compatible(matrix=0x%x, tensor=0x%x)\n", lhs, rhs);
   
   switch (rhs->strategy) {
+  case strategy::array:
   case strategy::compressed:
   case strategy::slice:
   case strategy::ekmr:
@@ -61,6 +62,7 @@ compatible(matrix_t const *lhs, tensor_t const *rhs)
 	strategy_to_string(rhs->strategy));
   }
   
+#if 0
   switch (rhs->orientation) {
   case orientation::row:
   case orientation::column:
@@ -74,6 +76,9 @@ compatible(matrix_t const *lhs, tensor_t const *rhs)
     compatible = false;
     break;
   }
+#endif
+  
+  compatible = (lhs->n == rhs->n);
   
   if (!compatible) {
     print_information(lhs);
