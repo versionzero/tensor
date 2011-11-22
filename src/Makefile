@@ -1,4 +1,5 @@
-OS := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+OS      := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+MACHINE := $(shell sh -c 'uname -n 2>/dev/null || echo not')
 
 CXX=g++
 SYMBOLS=echo
@@ -27,7 +28,9 @@ endif
 
 EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
 ifeq ($(OS),Linux)
+ifneq ($(MACHINE),hera)
 	EXTRA_CXXFLAGS += -march=i686
+endif
 endif
 
 HEADERS_CACHE=address.h cache.h hash.h
