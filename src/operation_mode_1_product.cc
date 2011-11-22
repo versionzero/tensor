@@ -44,6 +44,7 @@ typedef struct {
 
 typedef void (*mode_1_product_t)(product_thread_data_t *data, uint n, double **M, double *P, double *T);
 
+static
 int
 fiber_next(product_thread_data_t *data)
 {
@@ -55,6 +56,7 @@ fiber_next(product_thread_data_t *data)
   return k < (data->tensor->n*data->tensor->n) ? k : -1;
 }
 
+static
 void
 fiber_consumer_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
@@ -69,6 +71,7 @@ fiber_consumer_implementation(product_thread_data_t *data, uint n, double **M, d
   }
 }
 
+static
 thread_address_t
 fiber_consumer(thread_argument_t *argument)
 {
@@ -81,6 +84,7 @@ fiber_consumer(thread_argument_t *argument)
   return NULL;
 }
 
+static
 void
 fiber_block_consumer_implementation(product_thread_data_t *data, uint n, uint start, uint end, double **M, double *P, double *T)
 {
@@ -94,6 +98,7 @@ fiber_block_consumer_implementation(product_thread_data_t *data, uint n, uint st
   }
 }
 
+static
 thread_address_t
 fiber_block_consumer(thread_argument_t *argument)
 {
@@ -114,6 +119,7 @@ fiber_block_consumer(thread_argument_t *argument)
   return NULL;
 }
 
+static
 int
 slice_next(product_thread_data_t *data)
 {
@@ -125,6 +131,7 @@ slice_next(product_thread_data_t *data)
   return k < data->tensor->n ? k : -1;
 }
 
+static
 void
 slice_consumer_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
@@ -141,6 +148,7 @@ slice_consumer_implementation(product_thread_data_t *data, uint n, double **M, d
   }
 }
 
+static
 thread_address_t
 slice_consumer(thread_argument_t *argument)
 {
@@ -153,6 +161,7 @@ slice_consumer(thread_argument_t *argument)
   return NULL;
 }
 
+static
 void
 slice_block_consumer_implementation(int id, product_thread_data_t *data, uint n, uint start, uint end, double **M, double *P, double *T)
 {
@@ -168,6 +177,7 @@ slice_block_consumer_implementation(int id, product_thread_data_t *data, uint n,
   }
 }
 
+static
 thread_address_t
 slice_block_consumer(thread_argument_t *argument)
 {
