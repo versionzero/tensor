@@ -18,15 +18,12 @@ array_inner_product(const int N, const double *X, const int incX, const double *
   return cblas_ddot(N, X, incX, Y, incY);
 }
 
-#if 0
-ml_matrix matrix_multiply(const ml_matrix &A,const ml_matrix &B)
+void
+array_matrix_multiply(int const rowsA, int const colsB, int const colsA, 
+		      double const *A, int const lba, double const *B, int const lbb,
+		      double *C, int const lbc)
 {
-    ml_matrix C(A.rows(),B.cols());
-    cblas_dgemm(ML_BLAS_STORAGE,CblasNoTrans,CBlasNoTrans,
-                A.rows(),B.cols(),A.rows(),
-                1.0,A.raw_data(),A.data_stride(),
-                B.raw_data(),B.data_stride(),
-                0.0,C.raw_data(),C.data_stride());
-    return C;
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
+	      rowsA, colsB, colsA, 1.0, A, lba, B, lbb, 0.0, C, lbc);
 }
-#endif
+
