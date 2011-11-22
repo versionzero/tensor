@@ -26,7 +26,7 @@ tensor_fwrite_array(FILE *file, tensor_t const *tensor)
   int         l, m, n;
   int         result;
   MM_typecode type;
-  double      ***T;
+  double      *t;
   
   debug("tensor_fwrite_array(file=0x%x, tensor=0x%x)\n", file, tensor);
   
@@ -42,10 +42,15 @@ tensor_fwrite_array(FILE *file, tensor_t const *tensor)
     die("Failed to write array tensor of size %d x %d x %d (%d).\n", tensor->l, tensor->m, tensor->n, result);
   }
   
+  l = tensor->l;
+  m = tensor->m;
+  n = tensor->n;
+  t = tensor->values;
+  
   for (i = 0; i < m; ++i) {
     for (j = 0; j < n; ++j) {
       for (k = 0; k < l; ++k) {
-	fprintf(file, "%10.6g\n", T[i][j][k]);
+	fprintf(file, "%10.6g\n", *t++);
       }
     }
   }
