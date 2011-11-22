@@ -47,6 +47,39 @@ timed_matrix_read(char const *name)
   return matrix;
 }
 
+void
+timed_matrix_fwrite(FILE *file, matrix_t const *matrix)
+{
+  precision_timer_t t;
+  
+  timer_start(&t);
+  matrix_fwrite(file, matrix, format::array);
+  timer_end(&t);
+  print_elapsed_time(t);
+}
+
+void
+timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *matrix)
+{
+  char *name;
+  FILE *file;
+  
+  if (offset == argc) {
+    file = stdout;
+    progress("Writing matrix to stdout ... ");
+  } else {
+    name = argv[offset];
+    file = fopen_or_die(name, "w+");
+    progress("Writing matrix to %s ... ", name);
+  }
+  
+  timed_matrix_fwrite(file, matrix);
+  
+  if (stdout != file) {
+    fclose(file);
+  }
+}
+
 tensor_t*
 timed_tensor_read(char const *name)
 {
@@ -76,8 +109,8 @@ timed_tensor_fwrite(FILE *file, tensor_t const *tensor)
 void
 timed_tensor_write(int argc, char *argv[], int const offset, tensor_t const *tensor)
 {
-  char     *name;
-  FILE     *file;
+  char *name;
+  FILE *file;
   
   if (offset == argc) {
     file = stdout;

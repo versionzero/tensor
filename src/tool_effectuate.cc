@@ -79,32 +79,6 @@ effectuate_tool_usage()
 }
 
 void
-timed_matrix_write(int argc, char *argv[], int const offset, matrix_t const *matrix)
-{
-  precision_timer_t  t;
-  char     *name;
-  FILE     *file;
-  
-  if (offset == argc) {
-    file = stdout;
-    progress("Writing matrix to stdout ... ");
-  } else {
-    name = argv[offset];
-    file = fopen_or_die(name, "w+");
-    progress("Writing matrix to %s ... ", name);
-  }
-  
-  timer_start(&t);
-  matrix_fwrite(file, matrix, format::array);
-  timer_end(&t);
-  print_elapsed_time(t);
-  
-  if (stdout != file) {
-    fclose(file);
-  }
-}
-
-void
 timed_operation_mode_1_product(matrix_t *matrix, tensor_t *tensor, vector_t *vector)
 {
   precision_timer_t  t;
@@ -173,11 +147,69 @@ timed_operation_mode_1_product(int argc, char *argv[])
 }
 
 void
+timed_operation_mode_2_product(tensor_t *result, tensor_t *tensor, matrix_t *matrix)
+{
+  precision_timer_t  t;
+  
+  tensor_clear(tensor);
+  progress("Performing operation '%s' ... ", 
+	   operation_to_description_string(operation::mode_2_product));
+  timer_start(&t);
+  operation_mode_2_product(result, tensor, matrix);
+  timer_end(&t);
+  print_elapsed_time(t);
+}
+
+void
+timed_operation_mode_2_product(int argc, char *argv[])
+{
+  uint     i;
+  int      offset;
+  char     *name;
+  matrix_t *matrix;
+  tensor_t *tensor, *result;
+  
+  offset = optind;
+  name   = argv[offset++];
+  tensor = timed_tensor_read(name);
+  debug("timed_operation_mode_2_product: tensor=0x%x\n", tensor);
+  
+  name   = argv[offset++];
+  matrix = timed_matrix_read(name);
+  debug("timed_operation_mode_2_product: matrix=0x%x\n", matrix);
+  
+  compatible(matrix, tensor);
+  result = tensor_malloc(tensor->l, tensor->m, tensor->n);
+  debug("timed_operation_mode_2_product: matrix=0x%x\n", result);
+  
+  for (i = 0; i < iterations; ++i) {
+    timed_operation_mode_2_product(result, tensor, matrix);
+  }
+  
+  if (write_results) {
+    timed_tensor_write(argc, argv, offset, result);
+  }
+  
+  /* if we are not printing times for each procedure out in a human
+     consumable way, then we need to terminate the line containing all
+     the timings for this instance */
+  if (!human_readable) {
+    message("\n");
+  }
+  
+  matrix_free(matrix);
+  tensor_free(result);
+  tensor_free(tensor);
+}
+void
 timed_operation(int argc, char *argv[])
 {
   switch (optcode) {
   case operation::mode_1_product:
     timed_operation_mode_1_product(argc, argv);
+    break;
+  case operation::mode_2_product:
+    timed_operation_mode_2_product(argc, argv);
     break;
   default:
     die("Operation '%d' not currently supported.\n", optcode);
