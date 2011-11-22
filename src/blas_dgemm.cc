@@ -1,50 +1,14 @@
+/* dgemm.f -- translated by f2c (version 20100827). */
 
-/*  -- translated by f2c (version 19940927).
- You must link the resulting object file with the libraries:
- -lf2c -lm   (in that order)
-
- From: http://trac.mcs.anl.gov/projects/performance/browser/pbound/examples/clapack/clapack/cblas/dgemm.c?rev=515
- */
-
-//#include "f2c.h"
-//#include "dgemm.h"
 #include <stdio.h>
 #include <math.h>
 #include "cblas.h"
 #include "error.h"
 
-#define A(I,J) a[(I)-1 + ((J)-1)* ( *lda)]
-#define B(I,J) b[(I)-1 + ((J)-1)* ( *ldb)]
-#define C(I,J) c[(I)-1 + ((J)-1)* ( *ldc)]
-
-
-#if 0
-void usage()
-{
-  printf(" \n USAGE: -h - help \n -i input_file \n -o ouput_file \n -a a_file \n -x x_file \n"); 
-  exit(0);
-}
-#endif
-
-long int lsame_(char const *a, char const *b)
-{
-  if(a ==b)
-   return 1;
-  else
-   return 0;
-}
-
-long int max(long int a, long int b)
-{
-  if(a < b)
-   return b;
-  else
-   return a;
-}
-
-void dgemm_(char *transa, char *transb, int const *m, int const *n, int const *k,
-	    double const *alpha, double const *a, int const *lda, double const *b, 
-	    int const *ldb, double const *beta, double *c, int const *ldc);
+int
+dgemm_(char const *transa, char const *transb, int const *m, int const *n, int const *k,
+       double const *alpha, double const *a, int const *lda, double const *b, int const *ldb, 
+       double const *beta, double *c__, int const *ldc);
 
 void 
 cblas_dgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
@@ -80,308 +44,399 @@ cblas_dgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
   dgemm_(&TA, &TB, &M, &N, &K, &alpha, B, &ldb, A, &lda, &beta, C, &ldc);
 }
 
-/* Subroutine */ 
-void 
-dgemm_(char *transa, char *transb, int const *m, int const *n, int const *k,
-       double const *alpha, double const *a, int const *lda, double const *b, 
-       int const *ldb, double const *beta, double *c, int const *ldc)
+int
+lsame_(char const *a, char const *b)
 {
-  
-  
-  /* System generated locals */
-  //long int a_dim1, a_offset, b_dim1, b_offset, c_dim1, c_offset;
-  long int i__1, i__2, i__3;
-  
-  /* Local variables */
-  static long int info;
-  static long int nota, notb;
-  static double temp;
-  static long int i, j, l, ncola;
-  //extern long int lsame_(char *, char *);
-  static long int nrowa, nrowb;
-  extern /* Subroutine */ int xerbla_(char *, long int *);
-   
-  
-  nota = lsame_(transa, "N");
-  notb = lsame_(transb, "N");
-  if (nota) {
-    nrowa = *m;
-    ncola = *k;
-  } else {
-    nrowa = *k;
-    ncola = *m;
-  }
-  if (notb) {
-    nrowb = *k;
-  } else {
-    nrowb = *n;
-  }
-  
-  /*     Test the input parameters. */
-  
-  info = 0;
-  if (! nota && ! lsame_(transa, "C") && ! lsame_(transa, "T")) {
-    info = 1;
-  } else if (! notb && ! lsame_(transb, "C") && ! lsame_(transb, 
-                                                         "T")) {
-    info = 2;
-  } else if (*m < 0) {
-    info = 3;
-  } else if (*n < 0) {
-    info = 4;
-  } else if (*k < 0) {
-    info = 5;
-  } else if (*lda < max(1,nrowa)) {
-    info = 8;
-  } else if (*ldb < max(1,nrowb)) {
-    info = 10;
-  } else if (*ldc < max(1,*m)) {
-    info = 13;
-  }
- /* if (info != 0) {
-    xerbla_("DGEMM ", &info);
-    return 0;
-  }*/
-  
-  /*     Quick return if possible. */
-  
-  if (*m == 0 || *n == 0 || ((*alpha == 0. || *k == 0) && *beta == 1.)) {
-    return;
-  }
-  
-  /*     And if  alpha.eq.zero. */
-  
-  if (*alpha == 0.) {
-    if (*beta == 0.) {
-	    i__1 = *n;
-	    for (j = 1; j <= *n; ++j) {
-        i__2 = *m;
-        for (i = 1; i <= *m; ++i) {
-          C(i,j) = 0.;
-          /* L10: */
-        }
-        /* L20: */
-	    }
-    } else {
-	    i__1 = *n;
-	    for (j = 1; j <= *n; ++j) {
-        i__2 = *m;
-        for (i = 1; i <= *m; ++i) {
-          C(i,j) = *beta * C(i,j);
-          /* L30: */
-        }
-        /* L40: */
-	    }
-    }
-    return;
-  }
- /*   dgemm(nota, notb, alpha, beta, m, n, k, a, b, c, lda, ldb, ldc)
-  return 0; 
-}  
-
-void dgemm(nota, notb, alpha, beta, m, n, k, a, b, c, lda, ldb, ldc)
-{  
-*/    
-  /*     Start the operations. */
-  
-  if (notb) {
-    if (nota) {
-      
-      /*           Form  C := alpha*A*B + beta*C. */
-      
-	    i__1 = *n;
-	    for (j = 1; j <= *n; ++j) {
-        if (*beta == 0.) {
-          i__2 = *m;
-          for (i = 1; i <= *m; ++i) {
-            C(i,j) = 0.;
-            /* L50: */
-          }
-        } else if (*beta != 1.) {
-          i__2 = *m;
-          for (i = 1; i <= *m; ++i) {
-            C(i,j) = *beta * C(i,j);
-            /* L60: */
-          }
-        }
-        i__2 = *k;
-        for (l = 1; l <= *k; ++l) {
-          if (B(l,j) != 0.) {
-            temp = *alpha * B(l,j);
-            i__3 = *m;
-            for (i = 1; i <= *m; ++i) {
-              C(i,j) += temp * A(i,l);
-              /* L70: */
-            }
-          }
-          /* L80: */
-        }
-        /* L90: */
-	    }
-    } else {
-      
-      /*           Form  C := alpha*A'*B + beta*C */
-      
-	    i__1 = *n;
-	    for (j = 1; j <= *n; ++j) {
-        i__2 = *m;
-        for (i = 1; i <= *m; ++i) {
-          temp = 0.;
-          i__3 = *k;
-          for (l = 1; l <= *k; ++l) {
-            temp += A(l,i) * B(l,j);
-            /* L100: */
-          }
-          if (*beta == 0.) {
-            C(i,j) = *alpha * temp;
-          } else {
-            C(i,j) = *alpha * temp + *beta * C(i,j);
-          }
-          /* L110: */
-        }
-        /* L120: */
-	    }
-    }
-  } else {
-    if (nota) {
-      
-      /*           Form  C := alpha*A*B' + beta*C */
-      
-	    i__1 = *n;
-	    for (j = 1; j <= *n; ++j) {
-        if (*beta == 0.) {
-          i__2 = *m;
-          for (i = 1; i <= *m; ++i) {
-            C(i,j) = 0.;
-            /* L130: */
-          }
-        } else if (*beta != 1.) {
-          i__2 = *m;
-          for (i = 1; i <= *m; ++i) {
-            C(i,j) = *beta * C(i,j);
-            /* L140: */
-          }
-        }
-        i__2 = *k;
-        for (l = 1; l <= *k; ++l) {
-          if (B(j,l) != 0.) {
-            temp = *alpha * B(j,l);
-            i__3 = *m;
-            for (i = 1; i <= *m; ++i) {
-              C(i,j) += temp * A(i,l);
-              /* L150: */
-            }
-          }
-          /* L160: */
-        }
-        /* L170: */
-	    }
-    } else {
-      
-      /*           Form  C := alpha*A'*B' + beta*C */
-      
-	    i__1 = *n;
-	    for (j = 1; j <= *n; ++j) {
-        i__2 = *m;
-        for (i = 1; i <= *m; ++i) {
-          temp = 0.;
-          i__3 = *k;
-          for (l = 1; l <= *k; ++l) {
-            temp += A(l,i) * B(j,l);
-            /* L180: */
-          }
-          if (*beta == 0.) {
-            C(i,j) = *alpha * temp;
-          } else {
-            C(i,j) = *alpha * temp + *beta * C(i,j);
-          }
-          /* L190: */
-        }
-        /* L200: */
-	    }
-    }
-  }
-  
-
-  
-  /*     End of DGEMM . */
-  
-} /* dgemm_ */
-
-#if 0
-
-int main(int argc, char **argv)
-{
-  int iflag = 0,  xflag = 0, aflag = 0,  oflag = 0, usage_flag = 0;
-  FILE * input_file, *output_file, *x_file, *a_file;
-  char ch;
-  
-  int  i, n;
-  double a1, a2, a3, a4, *x1 , *x2 , *x3, *x4, *y;
-
-  while ((ch = getopt(argc, argv, "i:o:h")) != -1) {
-    switch (ch) {
-      case 'h':
-        usage();
-        break;
-      case 'i':
-        iflag++;
-        if ((input_file = fopen(optarg, "r")) < 0) {
-          (void)fprintf(stderr,
-                        "Unable to open : %s \n", optarg);
-          usage_flag=1;
-        }
-        break; 
-      case 'o':
-        oflag++;
-        if ((output_file = fopen(optarg, "w")) < 0) {
-          (void)fprintf(stderr,
-                        "Unable to create : %s \n", optarg);
-          usage_flag=1;
-        }
-        break;
-      /*case 'r':
-        if (optarg<=0) {
-          (void)fprintf(stderr,
-                        " Repeat should be greater than zero \n");
-          usage_flag=1;
-        }
-        repeat = strtoimax(optarg,NULL,10);    
-        break;5
-      case 's':
-        if (optarg<=0) {
-          (void)fprintf(stderr,
-                        " Iter should be greater than zero \n");
-          iter=1;
-        }
-        iter = strtoimax(optarg,NULL,10);    
-        break; */       
-      case '?':
-      default:
-        usage();
-    }
-  }
-  
-  if(iflag==0 || oflag==0 || usage_flag==1){
-    usage();
-  }
-  
-
-
-
-  
-  x1 = (double *) malloc(n * sizeof(double));
-  x2 = (double *) malloc(n * sizeof(double));
-  x3 = (double *) malloc(n * sizeof(double));
-  x4 = (double *) malloc(n * sizeof(double));
-  y =  (double *) malloc(n * sizeof(double));
-    
- 
-  //papi_axpy4(output_file, n, y, a1, x1, a2, x2, a3, x3, a4, x4);
-  
+  if (*a == *b) {
+    return 1;
+  } 
   return 0;
-
-
 }
 
+int
+max_(int a, int b)
+{
+  if (a < b) {
+   return b;
+  }
+  return a;
+}
+
+/* Subroutine */ 
+int 
+dgemm_(char const *transa, char const *transb, int const *m, int const *n, int const *k,
+       double const *alpha, double const *a, int const *lda, double const *b, int const *ldb, 
+       double const *beta, double *c__, int const *ldc)
+{
+    /* System generated locals */
+    int a_dim1, a_offset, b_dim1, b_offset, c_dim1, c_offset, i__1, i__2, 
+	    i__3;
+
+    /* Local variables */
+    static int i__, j, l, info;
+    static int nota, notb;
+    static double temp;
+    static int ncola;
+    static int nrowa, nrowb;
+    
+/*     .. Scalar Arguments .. */
+/*     .. */
+/*     .. Array Arguments .. */
+/*     .. */
+
+/*  Purpose */
+/*  ======= */
+
+/*  DGEMM  performs one of the matrix-matrix operations */
+
+/*     C := alpha*op( A )*op( B ) + beta*C, */
+
+/*  where  op( X ) is one of */
+
+/*     op( X ) = X   or   op( X ) = X**T, */
+
+/*  alpha and beta are scalars, and A, B and C are matrices, with op( A ) */
+/*  an m by k matrix,  op( B )  a  k by n matrix and  C an m by n matrix. */
+
+/*  Arguments */
+/*  ========== */
+
+/*  TRANSA - CHARACTER*1. */
+/*           On entry, TRANSA specifies the form of op( A ) to be used in */
+/*           the matrix multiplication as follows: */
+
+/*              TRANSA = 'N' or 'n',  op( A ) = A. */
+
+/*              TRANSA = 'T' or 't',  op( A ) = A**T. */
+
+/*              TRANSA = 'C' or 'c',  op( A ) = A**T. */
+
+/*           Unchanged on exit. */
+
+/*  TRANSB - CHARACTER*1. */
+/*           On entry, TRANSB specifies the form of op( B ) to be used in */
+/*           the matrix multiplication as follows: */
+
+/*              TRANSB = 'N' or 'n',  op( B ) = B. */
+
+/*              TRANSB = 'T' or 't',  op( B ) = B**T. */
+
+/*              TRANSB = 'C' or 'c',  op( B ) = B**T. */
+
+/*           Unchanged on exit. */
+
+/*  M      - INT. */
+/*           On entry,  M  specifies  the number  of rows  of the  matrix */
+/*           op( A )  and of the  matrix  C.  M  must  be at least  zero. */
+/*           Unchanged on exit. */
+
+/*  N      - INT. */
+/*           On entry,  N  specifies the number  of columns of the matrix */
+/*           op( B ) and the number of columns of the matrix C. N must be */
+/*           at least zero. */
+/*           Unchanged on exit. */
+
+/*  K      - INT. */
+/*           On entry,  K  specifies  the number of columns of the matrix */
+/*           op( A ) and the number of rows of the matrix op( B ). K must */
+/*           be at least  zero. */
+/*           Unchanged on exit. */
+
+/*  ALPHA  - DOUBLE PRECISION. */
+/*           On entry, ALPHA specifies the scalar alpha. */
+/*           Unchanged on exit. */
+
+/*  A      - DOUBLE PRECISION array of DIMENSION ( LDA, ka ), where ka is */
+/*           k  when  TRANSA = 'N' or 'n',  and is  m  otherwise. */
+/*           Before entry with  TRANSA = 'N' or 'n',  the leading  m by k */
+/*           part of the array  A  must contain the matrix  A,  otherwise */
+/*           the leading  k by m  part of the array  A  must contain  the */
+/*           matrix A. */
+/*           Unchanged on exit. */
+
+/*  LDA    - INT. */
+/*           On entry, LDA specifies the first dimension of A as declared */
+/*           in the calling (sub) program. When  TRANSA = 'N' or 'n' then */
+/*           LDA must be at least  max( 1, m ), otherwise  LDA must be at */
+/*           least  max( 1, k ). */
+/*           Unchanged on exit. */
+
+/*  B      - DOUBLE PRECISION array of DIMENSION ( LDB, kb ), where kb is */
+/*           n  when  TRANSB = 'N' or 'n',  and is  k  otherwise. */
+/*           Before entry with  TRANSB = 'N' or 'n',  the leading  k by n */
+/*           part of the array  B  must contain the matrix  B,  otherwise */
+/*           the leading  n by k  part of the array  B  must contain  the */
+/*           matrix B. */
+/*           Unchanged on exit. */
+
+/*  LDB    - INT. */
+/*           On entry, LDB specifies the first dimension of B as declared */
+/*           in the calling (sub) program. When  TRANSB = 'N' or 'n' then */
+/*           LDB must be at least  max( 1, k ), otherwise  LDB must be at */
+/*           least  max( 1, n ). */
+/*           Unchanged on exit. */
+
+/*  BETA   - DOUBLE PRECISION. */
+/*           On entry,  BETA  specifies the scalar  beta.  When  BETA  is */
+/*           supplied as zero then C need not be set on input. */
+/*           Unchanged on exit. */
+
+/*  C      - DOUBLE PRECISION array of DIMENSION ( LDC, n ). */
+/*           Before entry, the leading  m by n  part of the array  C must */
+/*           contain the matrix  C,  except when  beta  is zero, in which */
+/*           case C need not be set on entry. */
+/*           On exit, the array  C  is overwritten by the  m by n  matrix */
+/*           ( alpha*op( A )*op( B ) + beta*C ). */
+
+/*  LDC    - INT. */
+/*           On entry, LDC specifies the first dimension of C as declared */
+/*           in  the  calling  (sub)  program.   LDC  must  be  at  least */
+/*           max( 1, m ). */
+/*           Unchanged on exit. */
+
+/*  Further Details */
+/*  =============== */
+
+/*  Level 3 Blas routine. */
+
+/*  -- Written on 8-February-1989. */
+/*     Jack Dongarra, Argonne National Laboratory. */
+/*     Iain Duff, AERE Harwell. */
+/*     Jeremy Du Croz, Numerical Algorithms Group Ltd. */
+/*     Sven Hammarling, Numerical Algorithms Group Ltd. */
+
+/*  ===================================================================== */
+
+/*     .. External Functions .. */
+/*     .. */
+/*     .. External Subroutines .. */
+/*     .. */
+/*     .. Intrinsic Functions .. */
+/*     .. */
+/*     .. Local Scalars .. */
+/*     .. */
+/*     .. Parameters .. */
+/*     .. */
+
+/*     Set  NOTA  and  NOTB  as  true if  A  and  B  respectively are not */
+/*     transposed and set  NROWA, NCOLA and  NROWB  as the number of rows */
+/*     and  columns of  A  and the  number of  rows  of  B  respectively. */
+
+    /* Parameter adjustments */
+    a_dim1 = *lda;
+    a_offset = a_dim1;
+    a -= a_offset;
+    b_dim1 = *ldb;
+    b_offset = b_dim1;
+    b -= b_offset;
+    c_dim1 = *ldc;
+    c_offset = c_dim1;
+    c__ -= c_offset;
+
+    /* Function Body */
+    nota = lsame_(transa, "N");
+    notb = lsame_(transb, "N");
+    if (nota) {
+	nrowa = *m;
+	ncola = *k;
+    } else {
+	nrowa = *k;
+	ncola = *m;
+    }
+    if (notb) {
+	nrowb = *k;
+    } else {
+	nrowb = *n;
+    }
+
+/*     Test the input parameters. */
+
+    info = 0;
+    if (! nota && ! lsame_(transa, "C") && ! lsame_(transa, "T")) {
+	info = 1;
+    } else if (! notb && ! lsame_(transb, "C") && ! 
+	    lsame_(transb, "T")) {
+	info = 2;
+    } else if (*m < 0) {
+	info = 3;
+    } else if (*n < 0) {
+	info = 4;
+    } else if (*k < 0) {
+	info = 5;
+    } else if (*lda < max_(0,nrowa)) {
+	info = 8;
+    } else if (*ldb < max_(0,nrowb)) {
+	info = 10;
+    } else if (*ldc < max_(0,*m)) {
+	info = 13;
+    }
+    if (info != 0) {
+      die("DGEMM: %d\n", info);
+      return 0;
+    }
+
+/*     Quick return if possible. */
+
+#if 0
+    if (*m == 0 || *n == 0 || (*alpha == 0. || *k == 0) && *beta == 1.) {
+	return 0;
+    }
 #endif
+
+/*     And if  alpha.eq.zero. */
+
+    if (*alpha == 0.) {
+	if (*beta == 0.) {
+	    i__1 = *n;
+	    for (j = 0; j < i__1; ++j) {
+		i__2 = *m;
+		for (i__ = 0; i__ < i__2; ++i__) {
+		    c__[i__ + j * c_dim1] = 0.;
+/* L10: */
+		}
+/* L20: */
+	    }
+	} else {
+	    i__1 = *n;
+	    for (j = 0; j < i__1; ++j) {
+		i__2 = *m;
+		for (i__ = 0; i__ < i__2; ++i__) {
+		    c__[i__ + j * c_dim1] = *beta * c__[i__ + j * c_dim1];
+/* L30: */
+		}
+/* L40: */
+	    }
+	}
+	return 0;
+    }
+
+/*     Start the operations. */
+
+    if (notb) {
+	if (nota) {
+
+/*           Form  C := alpha*A*B + beta*C. */
+
+	    i__1 = *n;
+	    for (j = 0; j < i__1; ++j) {
+		if (*beta == 0.) {
+		    i__2 = *m;
+		    for (i__ = 0; i__ < i__2; ++i__) {
+			c__[i__ + j * c_dim1] = 0.;
+/* L50: */
+		    }
+		} else if (*beta != 1.) {
+		    i__2 = *m;
+		    for (i__ = 0; i__ < i__2; ++i__) {
+			c__[i__ + j * c_dim1] = *beta * c__[i__ + j * c_dim1];
+/* L60: */
+		    }
+		}
+		i__2 = *k;
+		for (l = 0; l < i__2; ++l) {
+		    if (b[l + j * b_dim1] != 0.) {
+			temp = *alpha * b[l + j * b_dim1];
+			i__3 = *m;
+			for (i__ = 0; i__ < i__3; ++i__) {
+			    c__[i__ + j * c_dim1] += temp * a[i__ + l * 
+				    a_dim1];
+/* L70: */
+			}
+		    }
+/* L80: */
+		}
+/* L90: */
+	    }
+	} else {
+
+/*           Form  C := alpha*A**T*B + beta*C */
+
+	    i__1 = *n;
+	    for (j = 0; j < i__1; ++j) {
+		i__2 = *m;
+		for (i__ = 0; i__ < i__2; ++i__) {
+		    temp = 0.;
+		    i__3 = *k;
+		    for (l = 0; l < i__3; ++l) {
+			temp += a[l + i__ * a_dim1] * b[l + j * b_dim1];
+/* L100: */
+		    }
+		    if (*beta == 0.) {
+			c__[i__ + j * c_dim1] = *alpha * temp;
+		    } else {
+			c__[i__ + j * c_dim1] = *alpha * temp + *beta * c__[
+				i__ + j * c_dim1];
+		    }
+/* L110: */
+		}
+/* L120: */
+	    }
+	}
+    } else {
+	if (nota) {
+
+/*           Form  C := alpha*A*B**T + beta*C */
+
+	    i__1 = *n;
+	    for (j = 0; j < i__1; ++j) {
+		if (*beta == 0.) {
+		    i__2 = *m;
+		    for (i__ = 0; i__ < i__2; ++i__) {
+			c__[i__ + j * c_dim1] = 0.;
+/* L130: */
+		    }
+		} else if (*beta != 1.) {
+		    i__2 = *m;
+		    for (i__ = 0; i__ < i__2; ++i__) {
+			c__[i__ + j * c_dim1] = *beta * c__[i__ + j * c_dim1];
+/* L140: */
+		    }
+		}
+		i__2 = *k;
+		for (l = 0; l < i__2; ++l) {
+		    if (b[j + l * b_dim1] != 0.) {
+			temp = *alpha * b[j + l * b_dim1];
+			i__3 = *m;
+			for (i__ = 0; i__ < i__3; ++i__) {
+			    c__[i__ + j * c_dim1] += temp * a[i__ + l * 
+				    a_dim1];
+/* L150: */
+			}
+		    }
+/* L160: */
+		}
+/* L170: */
+	    }
+	} else {
+
+/*           Form  C := alpha*A**T*B**T + beta*C */
+
+	    i__1 = *n;
+	    for (j = 0; j < i__1; ++j) {
+		i__2 = *m;
+		for (i__ = 0; i__ < i__2; ++i__) {
+		    temp = 0.;
+		    i__3 = *k;
+		    for (l = 0; l < i__3; ++l) {
+			temp += a[l + i__ * a_dim1] * b[j + l * b_dim1];
+/* L180: */
+		    }
+		    if (*beta == 0.) {
+			c__[i__ + j * c_dim1] = *alpha * temp;
+		    } else {
+			c__[i__ + j * c_dim1] = *alpha * temp + *beta * c__[
+				i__ + j * c_dim1];
+		    }
+/* L190: */
+		}
+/* L200: */
+	    }
+	}
+    }
+
+    return 0;
+
+/*     End of DGEMM . */
+
+} /* dgemm_ */
+
