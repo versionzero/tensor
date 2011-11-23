@@ -95,12 +95,10 @@ fiber_consumer_column_implementation(product_thread_data_t *data, uint n, double
   uint i, j, offset;
   
   while (-1 != (t = fiber_next(data))) {
-    offset  = t/n; 
-    offset *= n*n; 
-    offset += t%n;
+    offset  = t; 
     i       = t/n;
     j       = t%n;
-    M[i][j] = array_inner_product(n, P, 1, T+offset, n);
+    M[i][j] = array_inner_product(n, P, 1, T+offset, n*n);
   }
 }
 
