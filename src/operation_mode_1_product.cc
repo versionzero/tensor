@@ -13,6 +13,7 @@
 #include "vector.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 extern cache_t		       *cache;
 extern uint		       memory_stride;
@@ -36,10 +37,11 @@ extern data::partition::type_t data_partition;
 */
 
 typedef struct {
-  uint           done;
-  matrix_t       *matrix;
-  vector_t const *vector;
-  tensor_t const *tensor;
+  uint                done;
+  orientation::type_t orientation;
+  matrix_t            *matrix;
+  vector_t const      *vector;
+  tensor_t const      *tensor;
 } product_thread_data_t;
 
 typedef void (*mode_1_product_t)(product_thread_data_t *data, uint n, double **M, double *P, double *T);
@@ -58,7 +60,53 @@ fiber_next(product_thread_data_t *data)
 
 static
 void
-fiber_consumer_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+fiber_consumer_row_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+{
+  int  t;
+  uint i, j, offset;
+  
+#if 0
+  for (i = 0; i < n; ++i) {
+    for (j = 0; j < n; ++j) {
+      sum = 0;
+      for (k = 0; k < n; ++k) {
+	sum += P[k] * T[i][k][j];
+      }
+      M[i][j] = sum;
+    }
+  }
+#endif
+  
+  while (-1 != (t = fiber_next(data))) {
+    offset  = t/n; 
+    offset *= n*n; 
+    offset += t%n;
+    i       = t/n;
+    j       = t%n;
+    M[i][j] = array_inner_product(n, P, 1, T+offset, n);
+  }
+}
+
+static
+void
+fiber_consumer_column_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
+{
+  int  t;
+  uint i, j, offset;
+  
+  while (-1 != (t = fiber_next(data))) {
+    offset  = t/n; 
+    offset *= n*n; 
+    offset += t%n;
+    i       = t/n;
+    j       = t%n;
+    M[i][j] = array_inner_product(n, P, 1, T+offset, n);
+  }
+}
+
+static
+void
+fiber_consumer_tube_implementation(product_thread_data_t *data, uint n, double **M, double *P, double *T)
 {
   int  t;
   uint i, j, offset;
@@ -76,10 +124,28 @@ thread_address_t
 fiber_consumer(thread_argument_t *argument)
 {
   product_thread_data_t *data;
+  mode_1_product_t      function;
   
-  data = (product_thread_data_t*) thread_data(argument);
+  data     = (product_thread_data_t*) thread_data(argument);
+  function = NULL;
   
-  fiber_consumer_implementation(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
+  switch (data->orientation) {
+  case orientation::row:
+    function = &fiber_consumer_row_implementation;
+    break;
+  case orientation::column:
+    function = &fiber_consumer_column_implementation;
+    break;
+  case orientation::tube:
+    function = &fiber_consumer_tube_implementation;
+    break;
+  default:
+    die("fiber_consumer: tensor product for '%s' orientation is not currently supported.\n",
+	orientation_to_string(data->orientation));
+    break;
+  }
+  
+  (*function)(data, data->tensor->n, data->matrix->data, data->vector->data, data->tensor->values);
   
   return NULL;
 }
@@ -205,10 +271,11 @@ operation_mode_1_product_array(matrix_t *matrix, tensor_t const *tensor, vector_
 {
   product_thread_data_t data;
   
-  data.done   = 0;
-  data.matrix = matrix;
-  data.vector = vector;
-  data.tensor = tensor;
+  data.done        = 0;
+  data.orientation = storage_orientation;
+  data.matrix      = matrix;
+  data.vector      = vector;
+  data.tensor      = tensor;
   
   if (NULL != producer) {
     thread_create_detached(producer, &data);
