@@ -9,21 +9,21 @@
 #include <stdlib.h>
 
 void
-copier_for_row(tensor_storage_jagged_diagonal_t *destination, tensor_storage_coordinate_t const *source, uint i)
+copier_for_row(tensor_storage_compressed_t *destination, tensor_storage_coordinate_t const *source, uint i)
 {
   destination->CO[i] = source->tuples[i].j;
   destination->KO[i] = source->tuples[i].k;
 }
 
 void
-copier_for_column(tensor_storage_jagged_diagonal_t *destination, tensor_storage_coordinate_t const *source, uint i)
+copier_for_column(tensor_storage_compressed_t *destination, tensor_storage_coordinate_t const *source, uint i)
 {
   destination->CO[i] = source->tuples[i].i;
   destination->KO[i] = source->tuples[i].k;
 }
 
 void
-copier_for_tube(tensor_storage_jagged_diagonal_t *destination, tensor_storage_coordinate_t const *source, uint i)
+copier_for_tube(tensor_storage_compressed_t *destination, tensor_storage_coordinate_t const *source, uint i)
 {
   destination->CO[i] = source->tuples[i].k;
   destination->KO[i] = source->tuples[i].j;
@@ -34,7 +34,7 @@ tensor_storage_convert_from_coordinate_to_jagged_diagonal(tensor_t *destination,
 {
   int                         n, nnz;
   tensor_storage_base_t       *base;
-  tensor_storage_jagged_diagonal_t *d;
+  tensor_storage_compressed_t *d;
   tensor_storage_coordinate_t *s;
   coordinate_tuple_t          *tuples;
   double                      *values;
@@ -56,16 +56,16 @@ tensor_storage_convert_from_coordinate_to_jagged_diagonal(tensor_t *destination,
   tensor_storage_copy(destination, source, nnz, (index_copy_t) &copier_for_values);
 }
 
-tensor_storage_jagged_diagonal_t*
+tensor_storage_compressed_t*
 tensor_storage_malloc_jagged_diagonal(tensor_t const *tensor)
 {
   tensor_storage_base_t       *base;
-  tensor_storage_jagged_diagonal_t *storage;
+  tensor_storage_compressed_t *storage;
   conversion_callbacks_t      *callbacks;
   
   superfluous("tensor_storage_malloc_jagged_diagonal(tensor=0x%x)\n", tensor);
   
-  storage     = MALLOC(tensor_storage_jagged_diagonal_t);
+  storage     = MALLOC(tensor_storage_compressed_t);
   storage->rn = 0;
   storage->cn = tensor->nnz;
   storage->kn = tensor->nnz;
