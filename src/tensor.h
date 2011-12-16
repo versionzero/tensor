@@ -32,7 +32,8 @@ namespace strategy {
     gundersen,
     slice,
     ekmr,
-    zzekmr
+    zzekmr,
+    jds
   } type_t;
 }
 

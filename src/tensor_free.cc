@@ -59,6 +59,7 @@ tensor_storage_free(tensor_t *tensor)
     break;
   case strategy::compressed:
   case strategy::slice:
+  case strategy::jds:
     tensor_storage_free(STORAGE_COMPRESSED(tensor));
     break;
   case strategy::ekmr:
@@ -66,7 +67,7 @@ tensor_storage_free(tensor_t *tensor)
     tensor_storage_free(STORAGE_EXTENDED(tensor));
     break;
   default:
-    die("Tensor storage strategy '%d' is not supported.\n", 
+    die("tensor_storage_free: tensor storage strategy '%d' is not supported.\n", 
 	strategy_to_string(tensor->strategy));
   }
   

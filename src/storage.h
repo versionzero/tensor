@@ -10,7 +10,7 @@ tensor_storage_compressed_t* tensor_storage_malloc_compressed(tensor_t const *te
 tensor_storage_compressed_t* tensor_storage_malloc_compressed_slice(tensor_t const *tensor);
 tensor_storage_extended_t* tensor_storage_malloc_ekmr(tensor_t const *tensor);
 tensor_storage_extended_t* tensor_storage_malloc_zzekmr(tensor_t const *tensor);
-tensor_storage_jagged_diagonal_t* tensor_storage_malloc_jagged_diagonal(tensor_t const *tensor);
+tensor_storage_compressed_t* tensor_storage_malloc_jds(tensor_t const *tensor);
 
 void tensor_storage_convert(tensor_t *destination, tensor_t *source);
 void tensor_storage_convert_from_coordinate_to_compressed(tensor_t *destination, tensor_t *source);
@@ -18,8 +18,8 @@ void tensor_storage_convert_from_coordinate_to_compressed_slice(tensor_t *destin
 void tensor_storage_convert_from_coordinate_to_gundersen(tensor_t *destination, tensor_t *source);
 void tensor_storage_convert_from_coordinate_to_ekmr(tensor_t *destination, tensor_t *source);
 void tensor_storage_convert_from_coordinate_to_zzekmr(tensor_t *destination, tensor_t *source);
+void tensor_storage_convert_from_coordinate_to_jds(tensor_t *destination, tensor_t *source);
 void tensor_storage_convert_from_compressed_to_coordinate(tensor_t *destination, tensor_t *source);
-void tensor_storage_convert_from_coordinate_to_jagged_diagonal(tensor_t *destination, tensor_t *source);
 
 int index_compare_ijk(coordinate_tuple_t const *ta, coordinate_tuple_t const *tb);
 int index_compare_jik(coordinate_tuple_t const *ta, coordinate_tuple_t const *tb);

@@ -62,6 +62,30 @@ tensor_storage_clear_extended(tensor_t *tensor)
 }
 
 void
+tensor_storage_clear_jds(tensor_t *tensor)
+{
+  uint i;
+  tensor_storage_compressed_t *storage;
+  
+  debug("tensor_storage_clear_jds(0x%x)\n", tensor);
+  
+  storage = STORAGE_COMPRESSED(tensor);
+  
+  for (i = 0; i < storage->kn; ++i) {
+    storage->KO[i] = 0;
+  }
+  
+  for (i = 0; i < storage->tn; ++i) {
+    storage->TO[i] = 0;
+  }
+  
+  for (i = 0; i < tensor->nnz; ++i) {
+    storage->RO[i] = 0;
+    storage->CO[i] = 0;
+  }
+}
+
+void
 tensor_clear(tensor_t *tensor)
 {
   uint i;
@@ -84,8 +108,12 @@ tensor_clear(tensor_t *tensor)
   case strategy::zzekmr:
     tensor_storage_clear_extended(tensor);
     break;
+  case strategy::jds:
+    tensor_storage_clear_jds(tensor);
+    break;
   default:
-    die("Tensor storage strategy '%d' is not supported.\n", tensor->strategy);
+    die("tensor_clear: tensor storage strategy '%d' is not supported.\n", tensor->strategy);
+    break;
   }
 }
 

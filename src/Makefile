@@ -1,13 +1,15 @@
+OS      := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+MACHINE := $(shell sh -c 'uname -n 2>/dev/null || echo not')
+
 CXX=g++
 SYMBOLS=echo
-OS=`uname`
-ifeq ($(OS), Darwin)
-	CXX=clang
-	CPPX11=-std=c++0x -stdlib=libc++
+ifeq ($(OS),Darwin)
 	SYMBOLS=dsymutil
 endif
+
 INCLUDES=-I.
 STRICT=-pedantic -Wall -Wno-variadic-macros
+
 EXTRA_DEBUG=-g
 ifndef DEBUG
 	EXTRA_DEBUG += -DNODEBUG
@@ -15,8 +17,21 @@ endif
 ifndef SIMULATE
 	EXTRA_DEBUG += -DNOSIMULATE
 endif
-EXTRA_CXXFLAGS=-c $(EXTRA_DEBUG) $(STRICT) $(INCLUDES) $(CPPX11)
+
 EXTRA_LDFLAGS=-Wall $(EXTRA_DEBUG)
+ifeq ($(OS),Linux)
+	EXTRA_LDFLAGS += -lpthread
+endif
+ifeq ($(OS),Darwin)
+	EXTRA_LDFLAGS += -thread
+endif
+
+EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
+ifeq ($(OS),Linux)
+ifneq ($(MACHINE),hera)
+	EXTRA_CXXFLAGS += -march=i686
+endif
+endif
 
 HEADERS_CACHE=address.h cache.h hash.h
 HEADERS_GENERAL=arithmetic.h error.h file.h information.h latex.h	\
@@ -46,8 +61,9 @@ SOURCES_STORAGE=tensor_storage_convert.cc				\
 	tensor_storage_compressed_slice.cc				\
 	tensor_storage_coordinate.cc tensor_storage_matrix_slice.cc	\
 	tensor_emit_latex.cc tensor_storage_ekmr.cc			\
-	tensor_storage_gundersen.cc tensor_storage_malloc.cc		\
-	tensor_storage_utility.cc tensor_storage_zzekmr.cc
+	tensor_storage_gundersen.cc tensor_storage_jds.cc		\
+	tensor_storage_malloc.cc tensor_storage_utility.cc		\
+	tensor_storage_zzekmr.cc
 SOURCES_TENSOR=tensor_arithmetic.cc tensor_clear.cc tensor_convert.cc	\
 	tensor_copy.cc tensor_free.cc tensor_malloc.cc			\
 	tensor_ownership.cc tensor_permute.cc tensor_supported.cc	\
@@ -59,8 +75,7 @@ SOURCES=$(SOURCES_CACHE) $(SOURCES_GENERAL) $(SOURCES_GENERATE)	\
 	$(SOURCES_MATRIX) $(SOURCES_STORAGE) $(SOURCES_TENSOR)	\
 	$(SOURCES_VECTOR) main.cc
 
-ASSEMBLER=$(SOURCES:.cc=.s)
-OBJECTS=$(ASSEMBLER:.s=.o)
+OBJECTS=$(SOURCES:.cc=.o)
 EXECUTABLE=tensor
 
 default: dependencies
@@ -68,9 +83,6 @@ default: dependencies
 	@make -j4 all
 
 all: $(HEADERS) $(SOURCES) $(EXECUTABLE)
-
-asm: $(HEADERS) $(ASSEMBLER) $(OBJECTS)
-	$(SYMBOLS) $(EXECUTABLE)
 
 # Use Clang's static analysis tool on our source
 analysis:
@@ -85,12 +97,6 @@ $(EXECUTABLE): $(HEADERS) $(OBJECTS)
 .cc.o: $(HEADERS)
 	$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -o $@ $<
 
-#$(CXX) $(EXTRA_CXXFLAGS) $(CXXFLAGS) -MM -MF $(patsubst %.o,%.d,$@) $<
-
-.cc.s: $(HEADERS)
-	$(CXX) $(CXXFLAGS) -S $<
-	$(CXX) $(CXXFLAGS) $@ -o $(@:.s=.o)
-
 debug:
 	@make -j4 DEBUG=1
 
@@ -98,9 +104,8 @@ rebuild: clean
 	@make -j4 all
 
 clean:
-	@rm -rf *~ *\# *.dSYM/ $(ASSEMBLER) $(OBJECTS) $(CONVERSION)	\
-		$(EXECUTABLE) *.o *.d annotate.*.h cache.*.dat a.out	\
-		*.plist *.bak;
+	@rm -rf *~ *\# *.dSYM/ $(OBJECTS) $(CONVERSION) $(EXECUTABLE)	\
+		*.o *.d annotate.*.h cache.*.dat a.out *.plist *.bak;
 
 dependencies:
 	@touch Makefile.d

@@ -215,6 +215,62 @@ tensor_fwrite_extended_compressed(FILE *file, tensor_t const *tensor)
 }
 
 void
+tensor_fwrite_jds(FILE *file, tensor_t const *tensor)
+{
+  uint                        l, m, n;
+  int                         i, nnz, kn, tn, result;
+  MM_typecode                 type;
+  tensor_storage_compressed_t *storage;
+  char const                  *name;
+  
+  debug("tensor_fwrite_jds(file=0x%x, tensor=0x%x)\n", file, tensor);
+  debug("tensor_fwrite_jds: strategy='%s'.\n", 
+	strategy_to_string(tensor->strategy));
+  
+  tensor_initialize_typecode(&type, strategy::ekmr);
+  
+  if (0 != (result = mm_write_banner(file, type))) {
+    die("Could not write Tensor Market banner (%d).\n", result);
+  }
+  
+  storage = STORAGE_COMPRESSED(tensor);
+  l       = tensor->l;
+  m       = tensor->m;
+  n       = tensor->n;
+  nnz     = tensor->nnz;
+  kn      = storage->kn;
+  tn      = storage->tn;
+  name    = orientation_to_string(tensor->orientation);
+  
+  debug("tensor_fwrite_jds: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', kn=%d, tn=%d.\n", 
+	l, m, n, nnz, name, kn, tn);
+  
+  /* Fixing zeros here may be tricky, so I'll leave it until it is
+     required.  The problem with zeros here is that if we find one, we
+     will need to update the offset indices in KO.  Addmitedly, this
+     should not be too difficult, but it may take some time to ensure
+     the re-indexing is correct. */
+  
+  if (0 != (result = mm_write_tensor_jds_size(file, l, m, n, nnz, name, kn, tn))) {
+    die("Failed to write compressed tensor of size %d (%d).\n", nnz, result);
+  }
+  
+  for (i = 0; i < kn; ++i) {
+    fprintf(file, "%d\n", storage->KO[i]);
+  }
+  
+  for (i = 0; i < tn; ++i) {
+    fprintf(file, "%d\n", storage->TO[i]);
+  }
+  
+  for (i = 0; i < nnz; ++i) {
+    fprintf(file, "%d %d %10.32g\n", 
+	    storage->RO[i], storage->CO[i], 
+	    tensor->values[i]);
+  }
+}
+
+void
 tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
 {
   debug("tensor_fwrite_implementation(file=0x%x, tensor=0x%x)\n", file, tensor);
@@ -234,8 +290,11 @@ tensor_fwrite_implementation(FILE *file, tensor_t const *tensor)
   case strategy::zzekmr:
     tensor_fwrite_extended_compressed(file, tensor);
     break;
+  case strategy::jds:
+    tensor_fwrite_jds(file, tensor);
+    break;
   default:
-    die("Tensor storage strategy '%d' is not supported.\n", 
+    die("tensor_fwrite_implementation: tensor storage strategy '%d' is not supported.\n", 
 	strategy_to_string(tensor->strategy));
   }
 }

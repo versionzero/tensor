@@ -131,6 +131,24 @@ convert_from_coordinate_to_zzekmr(tensor_t *destination, tensor_t *source)
 }
 
 void
+convert_from_coordinate_to_jds(tensor_t *destination, tensor_t *source)
+{
+  debug("convert_from_coordinate_to_jds(destination=0x%x, source=0x%x)\n", destination, source);
+  
+  switch (destination->orientation) {
+  case orientation::lateral:
+  case orientation::horizontal:
+  case orientation::frontal:
+    tensor_storage_convert_from_coordinate_to_jds(destination, source);
+    break;
+  default:
+    die("Conversion to orientation '%s' is not currently supported.\n",
+	orientation_to_string(destination->orientation));
+    break;
+  }
+}
+
+void
 convert_to_compressed(tensor_t *destination, tensor_t *source)
 {
   debug("convert_to_compressed(destination=0x%x, source=0x%x)\n", destination, source);
@@ -199,6 +217,23 @@ convert_to_zzekmr(tensor_t *destination, tensor_t *source)
 }
 
 void
+convert_to_jds(tensor_t *destination, tensor_t *source)
+{
+  debug("convert_to_jds(destination=0x%x, source=0x%x)\n", destination, source);
+  
+  switch (source->strategy) {
+  case strategy::coordinate:
+    convert_from_coordinate_to_jds(destination, source);
+    break;
+  default:
+    die("Conversion from '%s' strategy to '%s' is not currently supported.\n",
+	strategy_to_string(source->strategy), 
+	strategy_to_string(destination->strategy));
+    break;
+  }
+}
+
+void
 tensor_storage_convert(tensor_t *destination, tensor_t *source)
 {
   debug("tensor_storage_convert(destination=0x%x, source=0x%x)\n", destination, source);
@@ -219,6 +254,9 @@ tensor_storage_convert(tensor_t *destination, tensor_t *source)
     break;
   case strategy::zzekmr:
     convert_to_zzekmr(destination, source);
+    break;
+  case strategy::jds:
+    convert_to_jds(destination, source);
     break;
   default:
     die("Conversion from '%s' strategy to '%s' is not currently supported.\n",

@@ -258,8 +258,14 @@ tensor_fread_mmio_data(FILE *file, MM_typecode type)
   case strategy::zzekmr:
     tensor = tensor_fread_extended_compressed(file, strategy);
     break;
+#if 0
+  case strategy::jds:
+    tensor = tensor_fread_jds(file);
+    break;
+#endif
   default:
-    die("Tensor storage strategy '%d' is not supported.\n", strategy);
+    die("tensor_fread_mmio_data: tensor storage strategy '%d' is not supported.\n", strategy);
+    break;
   }
   
   debug("tensor_fread: tensor=0x%x\n", tensor);

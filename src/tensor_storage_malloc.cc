@@ -34,8 +34,11 @@ tensor_storage_malloc(tensor_t const *tensor)
   case strategy::zzekmr:
     storage = tensor_storage_malloc_zzekmr(tensor);
     break;
+  case strategy::jds:
+    storage = tensor_storage_malloc_jds(tensor);
+    break;
   default:
-    die("Tensor storage strategy '%d' is not supported.\n", tensor->strategy);
+    die("tensor_storage_malloc: tensor storage strategy '%d' is not supported.\n", tensor->strategy);
   }
   
   superfluous("tensor_storage_malloc: storage=0x%x\n", storage);

@@ -35,6 +35,7 @@ int mm_write_matrix_coordinate_size(FILE *f, int M, int N, int nz);
 int mm_write_tensor_coordinate_size(FILE *f, int L, int M, int N, int nz);
 int mm_write_tensor_compressed_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int size);
 int mm_write_tensor_compressed_slice_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int rn);
+int mm_write_tensor_jds_size(FILE *f, int L, int M, int N, int nz, char const *orientation, int kn, int tn);
 int mm_write_vector_array_size(FILE *f, int N);
 int mm_write_matrix_array_size(FILE *f, int M, int N);
 int mm_write_tensor_array_size(FILE *f, int L, int M, int N);
@@ -55,6 +56,7 @@ int mm_write_tensor_array_size(FILE *f, int L, int M, int N);
 #define mm_is_slice(typecode)      ((typecode)[1]=='S')
 #define mm_is_ekmr(typecode)       ((typecode)[1]=='K')
 #define mm_is_zzekmr(typecode)     ((typecode)[1]=='Z')
+#define mm_is_jds(typecode)        ((typecode)[1]=='J')
 
 #define mm_is_complex(typecode)	   ((typecode)[2]=='C')
 #define mm_is_real(typecode)	   ((typecode)[2]=='R')
@@ -84,6 +86,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define mm_set_slice(typecode)      ((*typecode)[1]='S')
 #define mm_set_ekmr(typecode)       ((*typecode)[1]='K')
 #define mm_set_zzekmr(typecode)     ((*typecode)[1]='Z')
+#define mm_set_jds(typecode)        ((*typecode)[1]='J')
 
 #define mm_set_complex(typecode)    ((*typecode)[2]='C')
 #define mm_set_real(typecode)	    ((*typecode)[2]='R')

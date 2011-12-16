@@ -65,7 +65,8 @@ static char const *map_strategy_to_string[] = {
   "gundersen",
   "slice",
   "ekmr",
-  "zzekmr"
+  "zzekmr",
+  "jds"
 };
 
 strategy::type_t
@@ -172,6 +173,8 @@ typecode_to_strategy(MM_typecode type)
     return strategy::ekmr;
   } else if (mm_is_zzekmr(type)) {
     return strategy::zzekmr;
+  } else if (mm_is_jds(type)) {
+    return strategy::jds;
   }
   
   return strategy::unknown;
@@ -198,6 +201,9 @@ strategy_to_typecode(MM_typecode *type, strategy::type_t strategy)
     break;
   case strategy::zzekmr:
     mm_set_zzekmr(type);
+    break;
+  case strategy::jds:
+    mm_set_jds(type);
     break;
   default:
     die("Storage strategy '%d' not supported for Matrix Maket type code.\n", strategy);
