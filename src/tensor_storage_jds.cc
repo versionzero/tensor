@@ -97,7 +97,7 @@ coordinate_to_jds_compressed_horizontal_columns(tensor_t *destination, tensor_t 
   
   /* count the number of non-zeros in the columns of each lateral
      slice */
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < nnz; ++i) {
     k                = tuples[i].k;
     columns[k].index = k;
     columns[k].nnz++;
@@ -205,6 +205,8 @@ tensor_storage_malloc_jds(tensor_t const *tensor)
   base            = (tensor_storage_base_t*) storage;
   base->callbacks = NULL;
   
+  superfluous("tensor_storage_malloc_jds: base=0x%x\n", base);
+  superfluous("tensor_storage_malloc_jds: base->callbacks=0x%x\n", base->callbacks);
   superfluous("tensor_storage_malloc_jds: storage->CO=0x%x\n", storage->CO);
   superfluous("tensor_storage_malloc_jds: storage->RO=0x%x\n", storage->RO);
   superfluous("tensor_storage_malloc_jds: storage->TO=0x%x\n", storage->TO);
