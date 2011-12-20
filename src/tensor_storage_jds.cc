@@ -98,19 +98,22 @@ coordinate_to_jds_compressed_horizontal_columns(tensor_t *destination, tensor_t 
   /* count the number of non-zeros in the columns of each lateral
      slice */
   for (i = 0; i < nnz; ++i) {
+    
+    message("%d %d %d\n", tuples[i].i, tuples[i].j, tuples[i].k);
+    
     k                = tuples[i].k;
     columns[k].index = k;
     columns[k].nnz++;
+  }
+  
+  for (i = 0; i < n; ++i) {
+    DEBUG("col(%d) has %d nnz\n", i, columns[i].nnz);
   }
   
   /* find the shortest column of nonzeros.  this will determine the
      largest possible set of dense tubes we can create. */
   minimum = nnz;
   for (i = 0; i < n; ++i) {
-    
-    message("coordinate_to_jds_compressed_horizontal_columns: nnz(k=%d)=%d\n",
-	    i, columns[i].nnz);
-    
     if (minimum > columns[i].nnz) {
       minimum = columns[i].nnz;
     }
@@ -121,9 +124,10 @@ coordinate_to_jds_compressed_horizontal_columns(tensor_t *destination, tensor_t 
   for (i = 0; i < nnz; ++i) {
     k = tuples[i].k;
     if (!used[i] && sizes[k] < minimum) {
+      DEBUG("storing> %d %d %d\t%f\n", tuples[i].i, tuples[i].j, tuples[i].k, src[tuples[i].index]);
       used[i]        = true;
-      offset         = minimum * k + sizes[k];
-      dest[offset]   = src[tuples[k].index];
+      offset         = (minimum - 1) * sizes[k] + k;
+      dest[offset]   = src[tuples[i].index];
       colind[offset] = tuples[i].j;
       rowind[offset] = tuples[i].i;
       sizes[k]++;
@@ -132,20 +136,21 @@ coordinate_to_jds_compressed_horizontal_columns(tensor_t *destination, tensor_t 
   
   /* Sort the remaining unused non-zeros from the unfolded tensor by
      nnz per column and set up permutation array. */
+  for (i = 0; i < n; ++i) {
+    columns[i].nnz -= minimum;
+  }
+  
   qsort(columns, n, sizeof(location_t), 
 	(index_compare_t) &compare_location);
   
   for (i = 0; i < n; ++i) {
-    j               = columns[i].index;
-    permutation[i]  = j;
-    lengths[i]      = columns[i].nnz - minimum;
-    
-    message("coordinate_to_jds_compressed_horizontal_columns: columns[i=%d].nnz=%d - minimum=%d = %d\n",
-	    i, columns[i].nnz, minimum, lengths[i]);
+    j              = columns[i].index;
+    permutation[i] = j;
+    lengths[i]     = columns[i].nnz;
   }
   
   /* configure jdptr */
-  jdptr[0] = minimum * n;
+  jdptr[0] = (minimum) * n;
   for(i = 1; i < n + 1; ++i) {
     jdptr[i] = jdptr[i-1] + lengths[i-1];
   }
@@ -160,6 +165,7 @@ coordinate_to_jds_compressed_horizontal_columns(tensor_t *destination, tensor_t 
     if (!used[i]) {
       used[i]        = true;
       offset         = jdptr[k] + sizes[k];
+      message("storing2> %d %d %d\t%f\t@\t%d\n", tuples[i].i, tuples[i].j, tuples[i].k, src[tuples[i].index], offset);
       dest[offset]   = src[tuples[i].index];
       colind[offset] = tuples[i].j;
       rowind[offset] = tuples[i].i;
