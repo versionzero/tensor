@@ -33,11 +33,13 @@ random_between(int min, int max)
 void
 zero(double *A, int n)
 {
-  int i, j;
-     
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n; j++) {
-      A[i * n + j] = 0.0;
+  int i, j, k;
+  
+  for (k = 0; k < n; k++) {
+    for (i = 0; i < n; i++) {
+      for (j = 0; j < n; j++) {
+	A[k * n * n + i * n + j] = 0.0;
+      }
     }
   }
 }
@@ -58,34 +60,6 @@ init(double *A, int n, int m)
   }
 }
 
-int
-row_col_to_diag(int i, int j, int n) {
-  int d;
-  
-  d = i * n + j;
-  if (i + j > n) {
-    d = ++i * n + --j;
-  }
-  
-  return d;
-}
-
-void
-compress_diag(double *A, int n)
-{
-  int i, j, k, cur, prev;
-  
-  for (k = 0; k < n; k++) {
-    for (i = 0; i < n; i++) {
-      cur = prev = 0;
-      for (j = 0; j < n*n; j += n) {
-	printf("%g ", A[k * n * n + i + j]);
-      }
-      printf("\n");
-    }
-    printf("\n");
-  }
-}
 
 void
 print(double *A, int n)
@@ -99,7 +73,83 @@ print(double *A, int n)
       }
       printf("\n");
     }
+    break;
     printf("\n");
+  }
+}
+
+void
+print_diag(double *A, int n)
+{
+  int i, j, k;
+  
+  for (k = 0; k < n; k++) {
+    for (i = 0; i < n; i++) {
+      printf("%2d  ", k * n * n + i * n);
+      for (j = 0; j < i; j++) {	
+	printf("  ");
+      }
+      for (j = i; j < n + i; j++) {
+	printf("%g ", A[k * n * n + i * n + (j % n)]);
+      }
+      printf("\n");
+    }
+    break;
+    printf("\n");
+  }
+}
+
+int
+diag_to_row_col(int i, int j, int n) {
+  int d;
+  
+  d = i + j * n + j;
+  if (i + j > n) {
+    d %= d;
+  }
+  
+  return d;
+}
+
+void
+compress_diag(double *A, int n)
+{
+  int i, j, k, cur, prev;
+  
+  for (k = 0; k < n; k++) {
+    for (i = 0; i < n; i++) {
+      printf("i=%d\n", i);
+      cur = prev = 0;
+      /* find first zero diagonal entry */
+      for (j = 0; j < n; j++) {
+	//cur = k * n * n + i + j * n + j;
+	cur = k * n * n + diag_to_row_col(i, j, n);
+	
+	if (A[cur] == 0.0) {
+	  printf("%g %d\n", A[cur], cur);
+	  prev = cur;
+	  break;
+	}
+      }
+      /* move all non-zeros such that they are contiguous */
+      for (j++; j < n; j++) {
+	//cur = k * n * n + i + j * n + j;
+	cur = k * n * n + diag_to_row_col(i, j, n);
+	
+	if (A[cur] != 0.0) {
+	  printf("%g %d -> %d\n", A[cur], cur, prev);
+	  A[prev] = A[cur];
+	  A[cur]  = 0.0;
+	  prev = cur;
+	} else {
+	  printf("%g %d\n", A[cur], cur);
+	}
+      }
+      printf("\n");
+      print_diag(A, n);
+      printf("\n");
+    }
+    break;
   }
 }
 
@@ -109,25 +159,30 @@ int main(int argc, char *argv[])
   double *A;
   
   if (argc < 2) {
-    fprintf(stderr, "Usage: matmul <n>\n");
+    fprintf(stderr, "Usage: matmul <n> [seed]\n");
     exit(1);
   }
   
   n    = atoi(argv[1]);
-  seed = atoi(argv[2]);
+  seed = argc > 2 ? atoi(argv[2]) : 0;
   A    = (double*) malloc(n * n * n * sizeof(double));
   
   random_seed(seed);
+  zero(A, n);
   init(A, n, 10);
   
   printf("A^[%d] (seed=%d):\n\n", n, seed);
   print(A, n);
+  printf("diag(A^[%d]) (seed=%d):\n\n", n, seed);
+  print_diag(A, n);
   printf("\n");
   
   compress_diag(A, n);
   
-  printf("diag(A^[%d]):\n\n", n, seed);
+  printf("compress_diag(A^[%d]):\n\n", n, seed);
   print(A, n);
+  printf("compress_diag(diag(A^[%d])) (seed=%d):\n\n", n, seed);
+  print_diag(A, n);
   printf("\n");
   
   free(A);
