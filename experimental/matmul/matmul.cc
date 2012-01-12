@@ -104,8 +104,8 @@ diag_to_row_col(int i, int j, int n) {
   int d;
   
   d = i + j * n + j;
-  if (i + j > n) {
-    d %= d;
+  if (i + j >= n) {
+    d -= n;
   }
   
   return d;
@@ -114,36 +114,43 @@ diag_to_row_col(int i, int j, int n) {
 void
 compress_diag(double *A, int n)
 {
-  int i, j, k, cur, prev;
+  int  i, j, k, m, cur, prev;
+  bool searching, swapping;
   
   for (k = 0; k < n; k++) {
     for (i = 0; i < n; i++) {
       printf("i=%d\n", i);
-      cur = prev = 0;
-      /* find first zero diagonal entry */
-      for (j = 0; j < n; j++) {
-	//cur = k * n * n + i + j * n + j;
-	cur = k * n * n + diag_to_row_col(i, j, n);
-	
-	if (A[cur] == 0.0) {
-	  printf("%g %d\n", A[cur], cur);
-	  prev = cur;
-	  break;
+      j = cur = prev = 0;
+      while (j < n) {
+	/* find first zero diagonal entry */
+	searching = true;
+	for (j = prev; j < n && searching; j++) {
+	  //cur = k * n * n + i + j * n + j;
+	  cur = k * n * n + diag_to_row_col(i, j, n);
+	  if (A[cur] == 0.0) {
+	    printf("searching> %g %d\n", A[cur], cur);
+	    prev      = cur;
+	    searching = false;
+	    break;
+	  }
 	}
-      }
-      /* move all non-zeros such that they are contiguous */
-      for (j++; j < n; j++) {
-	//cur = k * n * n + i + j * n + j;
-	cur = k * n * n + diag_to_row_col(i, j, n);
-	
-	if (A[cur] != 0.0) {
-	  printf("%g %d -> %d\n", A[cur], cur, prev);
-	  A[prev] = A[cur];
-	  A[cur]  = 0.0;
-	  prev = cur;
-	} else {
-	  printf("%g %d\n", A[cur], cur);
+	/* move the next non-zero such that it is contiguous with
+	   those previously seen */	
+	swapping = true;
+	for (j++; j < n && swapping; j++) {
+	  //cur = k * n * n + i + j * n + j;
+	  cur = k * n * n + diag_to_row_col(i, j, n);	
+	  if (A[cur] != 0.0) {
+	    printf(" swapping> %g %d -> %d\n", A[cur], cur, prev);
+	    A[prev]  = A[cur];
+	    A[cur]   = 0.0;
+	    swapping = false;
+	    prev++;
+	  } else {
+	    printf("%g %d\n", A[cur], cur);
+	  }
 	}
+	printf("\n\nj = %d; n = %d\n\n", j, n);
       }
       printf("\n");
       print_diag(A, n);
