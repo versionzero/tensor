@@ -39,8 +39,10 @@ public:
   virtual size_type m() const { return m_; }
   virtual size_type n() const { return n_; }
   
-  virtual reference       at(size_type i, size_type j, size_type k);
-  virtual const reference at(size_type i, size_type j, size_type k) const;
+#if 0
+  virtual reference       at(size_type i, size_type j, size_type k) = 0;
+  virtual const reference at(size_type i, size_type j, size_type k) = 0;
+#endif
   
   virtual void clear() { l_ = m_ = n_ = 0; values_.clear(); }
   
@@ -80,27 +82,18 @@ public:
 public:
   
   typedef struct {
-    index_type x, y, z, i;
+    size_type x, y, z, i;
   } coordinate_tuple;
     
 public:
   
-  virtual
   bool
   read(std::istream &in) {
   }
   
-  virtual
   bool
   write(std::ostream &out) {
   }
-  
-}
-
-public:
-  
-  bool read(std::istream &in);
-  bool write(std::ostream &out);
   
 };
 
