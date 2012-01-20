@@ -6,6 +6,9 @@
 static int w = 1;
 static int z = 2;
 
+//#define debugf printf
+#define debugf 
+
 void
 random_seed(int seed)
 {
@@ -31,7 +34,29 @@ random_between(int min, int max)
 }
 
 void
-zero(double *A, int n)
+vector_fill(double *A, int n, double d = 0.0)
+{
+  int i;
+  
+  for (i = 0; i < n; i++) {
+    A[i] = d;
+  }
+}
+
+void
+matrix_fill(double *A, int n)
+{
+  int i, j;
+  
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      A[i * n + j] = 0.0;
+    }
+  }
+}
+
+void
+tensor_fill(double *A, int n)
 {
   int i, j, k;
   
@@ -45,7 +70,7 @@ zero(double *A, int n)
 }
 
 void
-init(double *A, int n, int m)
+tensor_init(double *A, int n, int m)
 {
   int i, j, k;
   
@@ -60,26 +85,50 @@ init(double *A, int n, int m)
   }
 }
 
+void
+vector_print(double *A, int n)
+{
+  int i;
+  
+  for (i = 0; i < n; i++) {
+    printf("%g ", A[i]);
+  }
+  printf("\n");
+}
 
 void
-print(double *A, int n)
+matrix_print(double *A, int n)
 {
-  int i, j, k;
+  int i, j;
   
-  for (k = 0; k < n; k++) {
-    for (i = 0; i < n; i++) {
-      for (j = 0; j < n; j++) {
-	printf("%g ", A[k * n * n + i * n + j]);
-      }
-      printf("\n");
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      printf("%g ", A[i * n + j]);
     }
-    break;
     printf("\n");
   }
 }
 
 void
-print_diag(double *A, int n)
+tensor_print(double *A, double *S, int n)
+{
+  int i, j, k;
+  
+  for (k = 0; k < n; k++) {
+    if (S[k] != 0.0) {
+      for (i = 0; i < n; i++) {
+	for (j = 0; j < n; j++) {
+	  printf("%g ", A[k * n * n + i * n + j]);
+	}
+	printf("\n");
+      }
+      printf("\n");
+    }
+  }
+}
+
+void
+tensor_print_diag(double *A, int n)
 {
   int i, j, k;
   
@@ -100,7 +149,8 @@ print_diag(double *A, int n)
 }
 
 int
-diag_to_row_col(int i, int j, int n) {
+diag_to_row_col(int i, int j, int n) 
+{
   int d;
   
   d = i + j * n + j;
@@ -112,86 +162,264 @@ diag_to_row_col(int i, int j, int n) {
 }
 
 void
-compress_diag(double *A, int n)
+compress_diagonal(double *A, int n)
 {
   int  i, j, k, m, cur, prev;
-  bool searching, swapping;
   
   for (k = 0; k < n; k++) {
     for (i = 0; i < n; i++) {
-      printf("i=%d\n", i);
-      j = cur = prev = 0;
+      debugf("i=%d\n", i);
+      j = m = cur = prev = 0;
       while (j < n) {
 	/* find first zero diagonal entry */
-	searching = true;
-	for (j = prev; j < n && searching; j++) {
-	  //cur = k * n * n + i + j * n + j;
+	for (j = m; j < n; j++) {
 	  cur = k * n * n + diag_to_row_col(i, j, n);
 	  if (A[cur] == 0.0) {
-	    printf("searching> %g %d\n", A[cur], cur);
-	    prev      = cur;
-	    searching = false;
+	    debugf("done> %g %d\n", A[cur], cur);
+	    prev = cur;
+	    m    = j;
+	    break;
+	  }
+	}
+	/* move the next non-zero such that it is contiguous with
+	   those previously seen */
+	for (; j < n; j++) {
+	  cur = k * n * n + diag_to_row_col(i, j, n);	
+	  if (A[cur] != 0.0) {
+	    debugf(" done> %g %d -> %d\n", A[cur], cur, prev);
+	    A[prev] = A[cur];
+	    A[cur]  = 0.0;
+	    break;
+	  } else {
+	    debugf("      cur> %g %d\n", A[cur], cur);
+	  }
+	}
+	debugf("\n\nj = %d; n = %d\n\n", j, n);
+      }
+      debugf("\n");
+      //print_diag(A, n);
+      //debugf("\n");
+    }
+  }
+}
+
+void
+compress_column(double *A, int n)
+{
+  int  i, j, k, m, cur, prev;
+  
+  for (k = 0; k < n; k++) {
+    for (j = 0; j < n; j++) {
+      i = m = cur = prev = 0;
+      while (i < n) {
+	/* find first zero diagonal entry */
+	for (i = m; i < n; i++) {
+	  cur = k * n * n + i * n + j;
+	  if (A[cur] == 0.0) {
+	    prev = cur;
+	    m    = i;
 	    break;
 	  }
 	}
 	/* move the next non-zero such that it is contiguous with
 	   those previously seen */	
-	swapping = true;
-	for (j++; j < n && swapping; j++) {
-	  //cur = k * n * n + i + j * n + j;
-	  cur = k * n * n + diag_to_row_col(i, j, n);	
+	for (; i < n; i++) {
+	  cur = k * n * n + i * n + j;
 	  if (A[cur] != 0.0) {
-	    printf(" swapping> %g %d -> %d\n", A[cur], cur, prev);
-	    A[prev]  = A[cur];
-	    A[cur]   = 0.0;
-	    swapping = false;
-	    prev++;
-	  } else {
-	    printf("%g %d\n", A[cur], cur);
-	  }
+	    A[prev] = A[cur];
+	    A[cur]  = 0.0;
+	    break;
+	  } 
 	}
-	printf("\n\nj = %d; n = %d\n\n", j, n);
       }
-      printf("\n");
-      print_diag(A, n);
-      printf("\n");
     }
-    break;
   }
 }
 
-int main(int argc, char *argv[])
+void
+compress_row(double *A, int n)
 {
-  int n, seed;
-  double *A;
+  int  i, j, k, m, cur, prev;
+  
+  for (k = 0; k < n; k++) {
+    for (i = 0; i < n; i++) {
+      j = m = cur = prev = 0;
+      while (j < n) {
+	/* find first zero row entry */
+	for (j = m; j < n; j++) {
+	  cur = k * n * n + i * n + j;
+	  if (A[cur] == 0.0) {
+	    prev = cur;
+	    m    = j;
+	    break;
+	  }
+	}
+	/* move the next non-zero such that it is contiguous with
+	   those previously seen */	
+	for (; j < n; j++) {
+	  cur = k * n * n + i * n + j;
+	  if (A[cur] != 0.0) {
+	    A[prev] = A[cur];
+	    A[cur]  = 0.0;
+	    break;
+	  } 
+	}
+      }
+    }
+  }
+}
+
+int
+count_tubes(double *A, double *B, int n, int m)
+{
+  int  i, j, k, t, u, cur;
+  
+  t = 0;
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      u = 0;
+      for (k = 0; k < n; k++) {
+	cur = k * n * n + i * n + j;
+	if (A[cur] != 0.0) {
+	  u++;
+	}
+      }
+      if (u == m) {
+	B[i * n + j] = 1.0;
+	t++;
+      }
+    }
+  }
+  
+  return t;
+}
+
+void
+drop_tubes(double *A, double *B, int n)
+{
+  int  i, j, k, m, cur;
+  
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      if (B[i * n + j] == 1.0) {
+	for (k = 0; k < n; k++) {
+	  cur = k * n * n + i * n + j;
+	  A[cur] = 0.0;
+	}
+      }
+    }
+  }
+}
+
+int
+mark_empty_slices(double *A, double *S, int n)
+{
+  int i, j, k, m, cur;
+  bool empty;
+  
+  m = 0;
+  for (k = 0; k < n; k++) {
+    if (S[k] != 0.0) {
+      empty = true;
+      for (i = 0; i < n && empty; i++) {
+	for (j = 0; j < n && empty; j++) {
+	  cur = k * n * n + i * n + j;
+	  if (A[cur] != 0.0) {
+	    empty = false;
+	  }
+	}
+      }
+      if (empty) {
+	S[k] = 0.0;
+	m++;
+      }
+    }
+  }
+  
+  return m;
+}
+
+int
+main(int argc, char *argv[])
+{
+  int m, n, r, seed;
+  double *A, *B, *S;
   
   if (argc < 2) {
-    fprintf(stderr, "Usage: matmul <n> [seed]\n");
+    fprintf(stderr, "Usage: %s <n> [seed]\n", argv[0]);
     exit(1);
   }
   
   n    = atoi(argv[1]);
   seed = argc > 2 ? atoi(argv[2]) : 0;
   A    = (double*) malloc(n * n * n * sizeof(double));
+  B    = (double*) malloc(n * n * sizeof(double));
+  S    = (double*) malloc(n * sizeof(double));
+  
+  vector_fill(S, n, 1.0);
+  tensor_fill(A, n);
   
   random_seed(seed);
-  zero(A, n);
-  init(A, n, 10);
+  tensor_init(A, n, 10);
   
-  printf("A^[%d] (seed=%d):\n\n", n, seed);
-  print(A, n);
-  printf("diag(A^[%d]) (seed=%d):\n\n", n, seed);
-  print_diag(A, n);
-  printf("\n");
+  r = 0;
+  while (r < n) {
+    
+    m = mark_empty_slices(A, S, n);
   
-  compress_diag(A, n);
+    //printf("Removed %d empty matricies:\n\n", m);
+    //vector_print(S, n);
+    //printf("\n");
+    
+    r += m;
+    if (r == n) {
+      break;
+    }
+    
+    //printf("A^[%d] (seed=%d):\n\n", n, seed);
+    //tensor_print(A, S, n);
+    //printf("\ndiag(A^[%d]) (seed=%d):\n\n", n, seed);
+    //tensor_print_diag(A, n);
+    //printf("\n");
+    
+    compress_diagonal(A, n);
+    
+    //printf("compress_diagonal(diag(A^[%d])) (seed=%d):\n\n", n, seed);
+    //tensor_print_diag(A, n);
+    //printf("\ncompress_diagonal(A^[%d]):\n\n", n, seed);
+    //tensor_print(A, S, n);
+    //printf("\n");
+    
+    compress_column(A, n);
+    
+    //printf("\ncompress_column(A^[%d]):\n\n", n, seed);
+    //tensor_print(A, S, n);
+    //printf("\n");
+    
+    compress_row(A, n);
+    
+    //printf("\ncompress_row(A^[%d]):\n\n", n, seed);
+    //tensor_print(A, S, n);
+    //printf("\n");
+    
+    matrix_fill(B, n);
+    m = count_tubes(A, B, n, n - r);
+    
+    printf("%d size %d\n", m, n - r);
+    //printf("There are %d dense tubes of size %d:\n\n", m, n - r);
+    //matrix_print(B, n);
+    //printf("\n");
+    
+    drop_tubes(A, B, n);
+    
+    //printf("\nA^[%d]:\n\n", n, seed);
+    //tensor_print(A, S, n);
+    //printf("\n");
+    
+  }
   
-  printf("compress_diag(A^[%d]):\n\n", n, seed);
-  print(A, n);
-  printf("compress_diag(diag(A^[%d])) (seed=%d):\n\n", n, seed);
-  print_diag(A, n);
-  printf("\n");
-  
+  free(S);
+  free(B);
   free(A);
   
   return 0;
