@@ -342,27 +342,28 @@ mark_empty_slices(double *A, double *S, int n)
 int
 main(int argc, char *argv[])
 {
-  int m, n, r, seed;
+  int m, n, r, vectors, seed, density;
   double *A, *B, *S;
   
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <n> [seed]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <n> [seed] [density (1 in n)]\n", argv[0]);
     exit(1);
   }
   
-  n    = atoi(argv[1]);
-  seed = argc > 2 ? atoi(argv[2]) : 0;
-  A    = (double*) malloc(n * n * n * sizeof(double));
-  B    = (double*) malloc(n * n * sizeof(double));
-  S    = (double*) malloc(n * sizeof(double));
+  n       = atoi(argv[1]);
+  seed    = argc > 2 ? atoi(argv[2]) : 0;
+  density = argc > 3 ? atoi(argv[3]) : 10;
+  A       = (double*) malloc(n * n * n * sizeof(double));
+  B       = (double*) malloc(n * n * sizeof(double));
+  S       = (double*) malloc(n * sizeof(double));
   
   vector_fill(S, n, 1.0);
   tensor_fill(A, n);
   
   random_seed(seed);
-  tensor_init(A, n, 10);
+  tensor_init(A, n, density);
   
-  r = 0;
+  r = vectors = 0;
   while (r < n) {
     
     m = mark_empty_slices(A, S, n);
@@ -375,6 +376,8 @@ main(int argc, char *argv[])
     if (r == n) {
       break;
     }
+    
+    vectors++;
     
     //printf("A^[%d] (seed=%d):\n\n", n, seed);
     //tensor_print(A, S, n);
@@ -417,6 +420,8 @@ main(int argc, char *argv[])
     //printf("\n");
     
   }
+  
+  printf("Requires %d sub-vectors\n", vectors);
   
   free(S);
   free(B);
