@@ -51,7 +51,7 @@ tensor_storage_free(tensor_t *tensor)
     return;
   }
   
-  tensor_storage_free(STORAGE_BASE(tensor));
+  //tensor_storage_free(STORAGE_BASE(tensor));
   
   switch (tensor->strategy) {
   case strategy::coordinate:

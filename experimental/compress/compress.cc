@@ -311,15 +311,33 @@ drop_tubes(double *A, double *B, int n)
   }
 }
 
+void
+tensor_slice_calculate_densities(double *A, double *S, int n)
+{
+  int i, j, k, m, cur;
+  
+  for (k = 0; k < n; k++) {
+    S[k] = 0.0;
+    for (i = 0; i < n; i++) {
+      for (j = 0; j < n; j++) {
+	cur = k * n * n + i * n + j;
+	if (A[cur] != 0.0) {
+	  S[k] += 1.0;
+	}
+      }
+    }
+  }
+}
+
 int
-mark_empty_slices(double *A, double *S, int n)
+tensor_slice_mark_empty(double *A, double *E, int n)
 {
   int i, j, k, m, cur;
   bool empty;
   
   m = 0;
   for (k = 0; k < n; k++) {
-    if (S[k] != 0.0) {
+    if (E[k] != 0.0) {
       empty = true;
       for (i = 0; i < n && empty; i++) {
 	for (j = 0; j < n && empty; j++) {
@@ -330,7 +348,7 @@ mark_empty_slices(double *A, double *S, int n)
 	}
       }
       if (empty) {
-	S[k] = 0.0;
+	E[k] = 0.0;
 	m++;
       }
     }
@@ -343,10 +361,10 @@ int
 main(int argc, char *argv[])
 {
   int m, n, r, vectors, seed, density;
-  double *A, *B, *S;
+  double *A, *B, *E, *V;
   
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <n> [seed] [density (1 in n)]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <n> [seed] [density]\n", argv[0]);
     exit(1);
   }
   
@@ -356,20 +374,23 @@ main(int argc, char *argv[])
   A       = (double*) malloc(n * n * n * sizeof(double));
   B       = (double*) malloc(n * n * sizeof(double));
   S       = (double*) malloc(n * sizeof(double));
+  E       = (double*) malloc(n * sizeof(double));
   
-  vector_fill(S, n, 1.0);
+  vector_fill(E, n, 1.0);
   tensor_fill(A, n);
   
   random_seed(seed);
   tensor_init(A, n, density);
   
-  r = vectors = 0;
+  //tensor_slice_calculate_densities(A, S, n);
+  
+  r = m = vectors = 0;
   while (r < n) {
     
-    m = mark_empty_slices(A, S, n);
+    m = tensor_slice_mark_empty(A, E, n);
   
     //printf("Removed %d empty matricies:\n\n", m);
-    //vector_print(S, n);
+    //vector_print(E, n);
     //printf("\n");
     
     r += m;
@@ -380,7 +401,7 @@ main(int argc, char *argv[])
     vectors++;
     
     //printf("A^[%d] (seed=%d):\n\n", n, seed);
-    //tensor_print(A, S, n);
+    //tensor_print(A, E, n);
     //printf("\ndiag(A^[%d]) (seed=%d):\n\n", n, seed);
     //tensor_print_diag(A, n);
     //printf("\n");
@@ -390,19 +411,19 @@ main(int argc, char *argv[])
     //printf("compress_diagonal(diag(A^[%d])) (seed=%d):\n\n", n, seed);
     //tensor_print_diag(A, n);
     //printf("\ncompress_diagonal(A^[%d]):\n\n", n, seed);
-    //tensor_print(A, S, n);
+    //tensor_print(A, E, n);
     //printf("\n");
     
     compress_column(A, n);
     
     //printf("\ncompress_column(A^[%d]):\n\n", n, seed);
-    //tensor_print(A, S, n);
+    //tensor_print(A, E, n);
     //printf("\n");
     
     compress_row(A, n);
     
     //printf("\ncompress_row(A^[%d]):\n\n", n, seed);
-    //tensor_print(A, S, n);
+    //tensor_print(A, E, n);
     //printf("\n");
     
     matrix_fill(B, n);
@@ -416,14 +437,15 @@ main(int argc, char *argv[])
     drop_tubes(A, B, n);
     
     //printf("\nA^[%d]:\n\n", n, seed);
-    //tensor_print(A, S, n);
+    //tensor_print(A, E, n);
     //printf("\n");
     
   }
   
-  printf("Requires %d sub-vectors\n", vectors);
+  printf("Will require %d sub-vectors: %d / %d = %g\n", vectors, vectors, n, vectors/(double)n);
   
   free(S);
+  free(E);
   free(B);
   free(A);
   
