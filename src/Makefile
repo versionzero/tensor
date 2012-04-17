@@ -28,8 +28,8 @@ endif
 
 EXTRA_CXXFLAGS=-c -O3 $(EXTRA_DEBUG) $(STRICT) $(INCLUDES)
 ifeq ($(OS),Linux)
-ifneq ($(MACHINE),hera)
-	EXTRA_CXXFLAGS += -march=i686
+ifneq (findstring $(MACHINE),hera medusa)
+	echo $(MACHINE); EXTRA_CXXFLAGS += -march=i686
 endif
 endif
 
