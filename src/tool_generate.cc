@@ -73,7 +73,6 @@ void
 generate_tool_main(int argc, char *argv[])
 {
   int  c;
-  uint seed;
   
   /* we will privide our own error messages */
   opterr = 0;
