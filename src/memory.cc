@@ -10,8 +10,14 @@ malloc_or_die(size_t size, char const* file, uint const line)
   
   superfluous("malloc_or_die(size=%d), %s:%d\n", size, file, line);
   
+#if 0
   if (NULL == (p = malloc(size))) {
     die("%s:%d: Failed to allocate memory block: %d.\n", file, line, size);
+  }
+#endif
+  
+  if (0 == posix_memalign((void**)&p, 64, size*sizeof(double))) {
+     die("%s:%d: Failed to allocate memory block: %d.\n", file, line, size);
   }
   
   superfluous("malloc_or_die: p=0x%x\n", p);
