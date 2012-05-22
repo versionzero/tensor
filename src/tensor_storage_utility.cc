@@ -109,7 +109,7 @@ encoder_for_k(coordinate_tuple_t const *tuple)
 uint
 tensor_storage_index_encode(uint *indices, uint n, coordinate_tuple_t const *tuple, uint nnz, index_encoder_t encoder)
 {
-  uint i, t;
+  uint i, current, previous;
   uint index;
   
   debug("tensor_storage_index_encode(indices=0x%x, tuple=0x%x, nnz=%d)\n", indices, tuple, nnz);
@@ -138,15 +138,19 @@ tensor_storage_index_encode(uint *indices, uint n, coordinate_tuple_t const *tup
   for (i = 1; i < index; ++i) {
     indices[i] = 0;
   }
-
-  for (t = 0; t < nnz; ++t) {
-    DEBUG("t=%u: i=%u, j=%u, k=%u, index=%u\n", t, tuple[t].i, tuple[t].j, tuple[t].k, tuple[t].index);
-    index = encoder(&tuple[t]);
-    if (i != index) {
-      DEBUG("indices[i=%u]=%u\n", i, t);
-      for (; i < index; ++i) {
-	indices[i] = t;
+  
+  for (current = 1, previous = index; current < nnz; ++current) {
+    DEBUG("current=%u: t.i=%u, t.j=%u, t.k=%u, t.index=%u, index=%u\n", 
+	  current, tuple[current].i, tuple[current].j, tuple[current].k, 
+	  tuple[current].index, index);
+    index = encoder(&tuple[current]);
+    if (previous != index) {
+      DEBUG("i=%u, current=%u, previous=%u, index=%u\n", i, current, previous, index);
+      for (; i <= index; ++i) {
+	DEBUG("indices[i=%u]=%u\n", i, current);
+	indices[i] = current;
       }
+      previous = index;
     }
   }
   
@@ -154,7 +158,7 @@ tensor_storage_index_encode(uint *indices, uint n, coordinate_tuple_t const *tup
     indices[i] = nnz;
   }
   
-  DEBUG("indices[i=%u]=%u\n", i, nnz);
+  DEBUG("last: indices[i=%u]=%u\n", i, nnz);
   indices[i++] = nnz;
   DEBUG("i=%u\n", i);
   
