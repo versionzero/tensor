@@ -28,7 +28,7 @@ print_header(FILE *file, int size)
   int i, j;
   
   fprintf(file, "\\begin{tabular}{r|*{%d}{c|}}\n", size);
-  fprintf(file, "\\multicolumn{1}{r}{$k$} &\n");
+  fprintf(file, "\\multicolumn{1}{r}{$q$} &\n");
   for (i = 0, j = size-1; i < size; ++i) {
     fprintf(file, "\\multicolumn{1}{r}{%d}%s", i, ((i != j) ? " &\n" : " \\\\\n"));
   }
@@ -64,24 +64,21 @@ tensor_fwrite_compressed_latex(FILE *file, tensor_t const *tensor)
   name    = orientation_to_string(tensor->orientation);
   macro   = orientation_to_latex_macro(tensor->orientation);
   
-  debug("tensor_fwrite_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, orientation='%s', macro='%s'.\n", 
-	l, m, n, nnz, name, macro);
+  debug("tensor_fwrite_compressed_latex: l=%d, m=%d, n=%d, nnz=%d, size=%d, orientation='%s', macro='%s'.\n", 
+	l, m, n, nnz, storage->rn, name, macro);
   
   print_header(file, nnz);
   print_hline(file, storage->rn);
-  fprintf(file, "$\\row_{\\%s}$ & ", macro);
+  fprintf(file, "$\\row%s$ & ", macro);
   for_each_fprintf(file, "%d%s", storage->RO, storage->rn, " & ", " \\\\\n");
-  print_hline(file, storage->cn);
-  fprintf(file, "$\\col_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->CO, storage->cn,  " & ", " \\\\\n");  
-  print_hline(file, storage->tn);
-  fprintf(file, "$\\tube_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->TO, storage->tn,  " & ", " \\\\\n");  
-  print_hline(file, storage->kn);
-  fprintf(file, "$KO_{\\%s}$ & ", macro);
-  for_each_fprintf(file, "%d%s", storage->KO, storage->kn,  " & ", " \\\\\n");
   print_hline(file, nnz);
-  fprintf(file, "$\\val_{\\%s}$ & ", macro);
+  fprintf(file, "$\\col%s$ & ", macro);
+  for_each_fprintf(file, "%d%s", storage->CO, nnz,  " & ", " \\\\\n");  
+  print_hline(file, nnz);
+  fprintf(file, "$\\tube%s$ & ", macro);
+  for_each_fprintf(file, "%d%s", storage->KO, nnz,  " & ", " \\\\\n");  
+  print_hline(file, nnz);
+  fprintf(file, "$\\val%s$ & ", macro);
   for_each_fprintf(file, "%g%s", tensor->values, nnz,  " & ", " \\\\\n");
   print_hline(file, nnz);
   print_footer(file);
