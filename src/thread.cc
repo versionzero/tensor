@@ -79,6 +79,8 @@ thread_wait(pthread_t *thread, thread_address_t exitcode)
 /*************************************************
  * run nthreads threads in the routine start
  */
+
+#if 0
 void _thread_fork(int nthreads,
 		  thread_function_t start,
 		  thread_address_t arg,
@@ -107,8 +109,8 @@ void _thread_fork(int nthreads,
   }
   free(args);
 }
+#endif
 
-#if 0
 void _thread_fork(int nthreads,
 		  thread_function_t start,
 		  thread_address_t arg,
@@ -118,8 +120,9 @@ void _thread_fork(int nthreads,
   int i;
   thread_argument_t *args;
   thread_address_t *address;
-  pthread_attr_t attr, *pattr;
 #ifdef __linux__
+  int ncpus;
+  pthread_attr_t attr, *pattr;
   cpu_set_t mask;
 #endif
   
@@ -132,31 +135,27 @@ void _thread_fork(int nthreads,
   for (i=0; i<nthreads; i++) {
     args[i].nthreads=nthreads; args[i].myid=i; args[i].data=arg;
   }
+#ifdef __linux__
+  ncpus = thread_get_cpu_count();
   pthread_attr_init(&attr);
   for (i=0; i<nthreads; i++) {
     pattr = NULL;
-#if 0
-    /* for this to work correctly, we need to detect the number of
-       CPUs */
-#ifdef __linux__
     if (setaffinity) {
       CPU_ZERO(&mask);
-      CPU_SET(i%thread_count,&mask);
+      CPU_SET(i%ncpus,&mask);
       pthread_attr_setaffinity_np(&attr,sizeof(mask),&mask);
       pattr = &attr;
-#endif
     }
     thread_create_with_attr(&args[i].self,pattr,start,args+i);
-#endif
   }
   pthread_attr_destroy(&attr);
+#endif
   for (i=0; i<nthreads; i++) {
     address = (exitcodes==NULL?NULL:exitcodes+i);
     thread_wait(&args[i].self,address);
   }
   free(args);
 }
-#endif
 
 /*************************************************
  * initialize a gate
