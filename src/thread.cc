@@ -120,9 +120,9 @@ void _thread_fork(int nthreads,
   int i;
   thread_argument_t *args;
   thread_address_t *address;
+  pthread_attr_t attr, *pattr;
 #ifdef __linux__
   int ncpus;
-  pthread_attr_t attr, *pattr;
   cpu_set_t mask;
 #endif
   
@@ -137,8 +137,10 @@ void _thread_fork(int nthreads,
   }
 #ifdef __linux__
   ncpus = thread_get_cpu_count();
+#endif
   pthread_attr_init(&attr);
   for (i=0; i<nthreads; i++) {
+#ifdef __linux__
     pattr = NULL;
     if (setaffinity) {
       CPU_ZERO(&mask);
@@ -146,10 +148,11 @@ void _thread_fork(int nthreads,
       pthread_attr_setaffinity_np(&attr,sizeof(mask),&mask);
       pattr = &attr;
     }
+#endif
     thread_create_with_attr(&args[i].self,pattr,start,args+i);
   }
   pthread_attr_destroy(&attr);
-#endif
+
   for (i=0; i<nthreads; i++) {
     address = (exitcodes==NULL?NULL:exitcodes+i);
     thread_wait(&args[i].self,address);
